@@ -47,9 +47,9 @@ def experiment_start(api: experiment.service.db.ExperimentRestAPI) -> str:
 
     Notes:
 
-      The method expects that you have already created the homo-lumo-dft-gamess-us
+      The method expects that you have already created the band-gap-dft-gamess-us
       parameterised package on your ST4SD registry and have synthesized (or imported)
-      a surrogate parameterised package that can substitute homo-lumo-dft-gamess-us.
+      a surrogate parameterised package that can substitute band-gap-dft-gamess-us.
 
     Returns:
         The UID of the resulting instance
@@ -66,7 +66,7 @@ def experiment_start(api: experiment.service.db.ExperimentRestAPI) -> str:
 
     return api.api_experiment_start(
         # the identifier of the parameterised virtual experiment package
-        "homo-lumo-dft-gamess-us",
+        "band-gap-dft-gamess-us",
         payload)
 ```
 

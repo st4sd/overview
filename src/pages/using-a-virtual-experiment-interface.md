@@ -36,7 +36,7 @@ Some virtual experiments define interfaces which make it simpler for users to re
 
 <InlineNotification>
 
-Check the [accompanying python notebook](https://github.com/st4sd/st4sd-examples/blob/master/main/ST4SD%20Runtime%20API%20Property%20Retrieval.ipynb) for examples of all the features and code described here .
+Check the [accompanying python notebook](https://github.com/st4sd/st4sd-examples/blob/main/notebooks/ST4SD%20Runtime%20API%20Property%20Retrieval.ipynb) for examples of all the features and code described here .
 
 </InlineNotification>
 

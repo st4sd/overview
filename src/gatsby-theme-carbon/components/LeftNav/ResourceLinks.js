@@ -3,19 +3,19 @@ import ResourceLinks from 'gatsby-theme-carbon/src/components/LeftNav/ResourceLi
 
 const links = [
   {
-    title: 'ST4SD Registry',
+    title: 'Experiment Registry',
     href: 'https://registry.st4sd.res.ibm.com/',
   },
   {
-    title: 'ST4SD GitHub',
+    title: 'GitHub',
     href: 'https://github.com/st4sd/',
   },
   {
-    title: 'ST4SD Example Notebooks',
+    title: 'Example Notebooks',
     href: 'https://github.com/st4sd/st4sd-examples/',
   },
   {
-    title: 'ST4SD APIs',
+    title: 'APIs',
     href: '/apis',
   },
 ];

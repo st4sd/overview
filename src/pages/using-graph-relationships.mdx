@@ -126,23 +126,23 @@ def relationship_push(api: experiment.service.db.ExperimentRestAPI):
       packages from the ST4SD global registry into your private registry.
       The parameterised packages are: ::
 
-        1. configuration-generator-ani-gamess (contains the inputGraph)
-        2. homo-lumo-dft-gamess-us (contains the outputGraph)
+        1. configuration-generator-ani (contains the inputGraph)
+        2. band-gap-dft-gamess-us (contains the outputGraph)
     """
 
     relationship = {
-      "identifier": "optimizedconfiguration-to-anionsmiles",
+      "identifier": "optimizedconfiguration-to-smilesinput",
       "transform": {
         "inputGraph": {
-          "identifier": "configuration-generator-ani-gamess:latest",
+          "identifier": "configuration-generator-ani:latest",
           "components": [
             "stage0.GenerateOptimizedConfiguration"
           ]
         },
         "outputGraph": {
-          "identifier": "homo-lumo-dft-gamess-us:latest",
+          "identifier": "band-gap-dft-gamess-us:latest",
           "components": [
-            "stage0.AnionSMILESToGAMESSInput"
+            "stage0.SMILESToGAMESSInput"
           ]
         }
       }
@@ -248,7 +248,7 @@ def relationship_synthesize(api: experiment.service.db.ExperimentRestAPI):
     Notes:
 
       The method expects that you have already created the transformation
-      relationship "optimizedconfiguration-to-anionsmiles" in your
+      relationship "optimizedconfiguration-to-smilesinput" in your
       ST4SD registry.
     """
 
@@ -277,7 +277,7 @@ def relationship_synthesize(api: experiment.service.db.ExperimentRestAPI):
 
     synthetic_pvep = api.api_relationship_synthesize(
         # relationship identifier
-        "optimizedconfiguration-to-anionsmiles",
+        "optimizedconfiguration-to-smilesinput",
         config,
         # name of new PVEP
         "synthetic")

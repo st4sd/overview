@@ -72,7 +72,7 @@ override:
     <component-field> #Any top-level field (with the sub-keys to be overriden) except name, stage  command and reference
 ```
 
-The main reason to do this is change `variables` ,`worklfow-attributes` `resourceManager` or `resourceRequest`, based on e.g. GPU or CPU deployment (see [platform][#platforms]).
+The main reason to do this is change `variables` ,`workflowAttributes` `resourceManager` or `resourceRequest`, based on e.g. GPU or CPU deployment (see [platform][#platforms]).
 
 Only the key/values specified are changed or added. Existing key/values that aren't specified remain with their base values. For example:
 
@@ -110,16 +110,23 @@ In this case on platform `bigmem` this component would still ask for 16 cores bu
   - numberThreads
   - ranksPerNode
   - threadsPerCore
-  - memory
+  - memory: In Bytes or as Mi/Gi (e.g. 128Mi, 16Gi)
+  - gpus: Only used by tasks that execute on the Kubernetes backend
 - resourceManager:
   - config:
     - backend: Which backend to use. Valid options are:
       - local (default option)
       - kubernetes
       - lsf
+    - walltime: Maximum execution time of a single task for this component (in minutes). This option is only valid for `kubernetes` and `lsf` backends. The defaults is `60` (one hour).
   - kubernetes: Options to use when the `kubernetes` backend is selected for this component
-    - image:
-- variables: Collection of variables; can either override those defined in platform or introduce new ones. In both cases the value specified here is visible to *this* component only. See [FlowIR options/variable inheritance sequence](#flowir-optionsvariable-inheritance-sequence) for details on how scope layering/inheritance functions in FlowIR.
+    - image: which image to use
+    - gracePeriod: Kubernetes waits `gracePeriod` seconds between asking a container to terminate and forcing it to terminate. This applies to tasks that use the Kubernetes backend and their execution time exceeds `resourceManager.config.walltime` minutes.
+    - qos: One of "guaranteed" (default), "burstable", "besteffort". See Kubernetes [documentation](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/) for the definition of Quality Of Service (QoS) classes.
+  - lsf:
+    - queue: Name of queue to submit jobs to.
+    - resourceString: A LSF request string e.g. `"rusage[ngpus_physical=4.00] select[(v100&&infiniband)]"`
+- variables: A `key: value` collection of variables; can either override those defined in platform or introduce new ones. In both cases the value specified here is visible to *this* component only. See [FlowIR options/variable inheritance sequence](#flowir-optionsvariable-inheritance-sequence) for details on how scope layering/inheritance functions in FlowIR.
 
 #### Defining components
 
@@ -382,7 +389,7 @@ blueprint:
 
 ## Platforms
 
-A platform is a named collection of [blueprints](#blueprints), [variables](#variables), [overrides][#override] and [environments](#environments). 
+A platform is a named collection of [blueprints](#blueprints), [variables](#variables), [overrides](#override) and [environments](#environments).
 
 You define the named platforms using the top-level `platform` array
 

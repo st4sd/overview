@@ -7,7 +7,7 @@ module.exports = {
     description: 'Documentation for the Simulation Toolkit for Scientific Discovery',
     keywords: 'discovery,accelerator,materials,experiment,workflow,knowledge-base',
   },
-  pathPrefix: '/st4sd/overview',
+  pathPrefix: '/overview',
   plugins: [
     {
       resolve: 'gatsby-plugin-manifest',
