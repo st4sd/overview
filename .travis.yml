@@ -1,0 +1,29 @@
+language: node_js
+group: beta
+stages:
+  - name: test-website
+    if: type = pull_request
+  - name: test-and-push-website
+    if: branch = main AND type != pull_request AND tag is blank
+
+jobs:
+  include:
+    - stage: test-website
+      language: node_js
+      os: linux
+      node_js: lts/*
+      before_script: 
+        - npm install gh-pages --save-dev
+      script: 
+        - gatsby build --prefix-paths
+        - bash test/check_broken_links.sh
+    - stage: test-and-push-website
+      language: node_js
+      os: linux
+      node_js: lts/*
+      before_script:
+        - npm install gh-pages --save-dev
+      script:
+        - gatsby build --prefix-paths
+        - bash test/check_broken_links.sh
+        - npx gh-pages -d public
