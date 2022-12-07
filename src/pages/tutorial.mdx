@@ -1,0 +1,562 @@
+---
+title: Tutorial
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<PageDescription>
+
+This page will teach you how to write a workflow via a toy-example.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Introduction to FlowIR</AnchorLink>
+
+  <AnchorLink>The sum-numbers workflow</AnchorLink>
+  <AnchorLink>Providing inputs to workflows</AnchorLink>
+  <AnchorLink>Key-Outputs</AnchorLink>
+  <AnchorLink>Executing sum-numbers</AnchorLink>
+</AnchorLinks>
+
+Our toy-example calculates the sum of a set of integers. It can be found [here](https://github.com/st4sd/sum-numbers/) or cloned via:
+
+```
+git clone https://github.com/st4sd/sum-numbers.git
+```
+
+Before we dive into the `sum-numbers` example, first we give brief introduction to key-concepts of the language used to specify workflows in ST4SD, FlowIR. 
+
+## Introduction to FlowIR
+
+We term the internal workflow specification language of ST4SD, `FlowIR`. FlowIR is a feature rich workflow definition language for describing the computational graph of a virtual experiment.
+
+More detailed information on FlowIR elements can be found in [workflow specification](/workflow-specification) which also references the `sum-numbers` workflow for illustration purposes.
+
+<InlineNotification>
+
+In order to illustrate a wide-range of FlowIR features the sum-numbers example is slightly complex. The [hello world file](https://github.com/st4sd/sum-numbers/blob/main/hello_world.md) in the same repository contains a simpler `hello world` workflow.
+
+</InlineNotification>
+
+### Components
+
+In `FlowIR` a workflow consists of components. These are the steps in the workflow or the nodes/vertices in the workflow graph. A workflow may also define  [key-outputs](/workflow-specification/#key-outputs), and [an interface](/writing-a-virtual-experiment-interface).  An interface allows easy retrieval of the properties measured by an instance of a workflow (virtual experiment).
+
+Each component is associated with a program or script and its command line arguments. A components inputs are files or directories. These come from other components in the workflow; or are provided by the user running the workflow; or are configuration files present in the workflow by default. Components produce their output under their working directory.
+
+A component defines its inputs using a `FlowIR` object called a `DataReference`. The set of `DataReferences` between components in a workflow defines the edges of the workflow graph. 
+
+
+#### An example component
+
+Lets look at how the first component in the `sum-numbers` workflow, **GenerateInput**, is defined
+
+```yaml
+- stage: 0
+  name: GenerateInput
+  command:
+    executable: "bin/generate_input_file.py"
+    arguments: "%(numberOfPoints)s  %(my_random_seed)s"
+```
+
+### Stages
+
+In FlowIR, components can be optionally grouped into stages by the value of their `stage` key. For the above component you can see it is `stage: 0`.
+
+Components which do not specify a `stage` are automatically grouped under `stage` 0. In the interest of keeping this grouping simple we currently only support `integers` as stage identifiers. Components in the same stage must have different names. The `st4sd-runtime` also raises an error if a stage contains no components.
+
+<InlineNotification>
+Stages are a logical grouping. They do not define the execution order of components. A component is ready to execute once its input dependencies are satisfied. 
+</InlineNotification>
+
+### Component Identifier
+
+The`identifier` of a component is a string built out of the `stage` and `name` fields of the component like so: `stage{stage index}.{component name}`.
+
+The identifier of our simple example component would be `stage0.GenerateInput`
+
+### DataReference
+
+A`DataReference` points to
+
+- data that exists before the workflow starts e.g. user provided inputs and configuration files
+- data that are generated  by a component in the workflow
+
+
+
+The format of a `DataReference` is
+
+```
+ <producer reference>[/<file reference>]:<type>
+```
+
+There are 3 parts: `producer reference`, an optional `file reference`, and finally `type`
+
+The `producer reference` can be either:
+
+1. A  full component identifier (e.g. `stage1.PartialSum`).
+2. A relative component identifier (e.g. `ExtractRow`). Relative component references assume that the addressed component is in the same stage as the referrer component.
+3. An absolute path.
+4. A  path relative to the top-level directory of the workflow instance directory e.g. `bin`, `data`, and `input`.
+
+<InlineNotification>
+
+You define the directories that will be present in a workflow instance as part of writing the workflow - see [project types](/packaging-workflows).
+
+</InlineNotification>
+
+The `file reference`  is an optional relative path to a folder or file that's hosted under the producer i.e. in a directory or produced by a component. If this part of the `DataReference` is omitted the `st4sd-runtime-core` treats the  `DataReference` as a pointing to the directory of the producer.
+
+The third part of a `DataReference` is its `method`. This controls what the `st4sd-runtime` will do with the reference. See [here](/workflow-specification#datareference) for more information.
+
+<InlineNotification>
+
+`st4sd-runtime` guarantees that at runtime a `DataReference` will point to the desired component data. However the exact location of that data can be determined by the runtime. This allows you to write a workflow that consumes data from other components without have to be concerned about how that data is stored. 
+
+</InlineNotification>
+
+
+
+#### DataReferences and Dependencies
+
+`DataReferences`indicate the dependencies between components as well as dependencies of components to the filesystem. 
+
+A component will not start executing until either:
+
+1. The producers of its `DataReferences` have finished (sequential processing mode)
+2.  The producers of its `DataReferences` have started (co-processing mode). 
+
+The mode is defined by the component. 
+
+#### Example
+
+Let's look at an example `DataReference` and decompose it
+
+```
+stage0.GenerateInput/output.csv:ref
+```
+
+This `DataReference` points to the `output.csv` file (`/output.csv`) that the `stage0.GenerateInput` (producer identifier) component produces. The method is `ref` which means the `st4sd-runtime` will expand the `DataReference` to an absolute path to the referenced file. 
+
+See the `references` section in the [description of basic FlowIR component fields section](/workflow-specification#description-of-basic-flowir-component-fields).
+
+
+
+## The sum-numbers workflow
+
+The workflow is defined in [conf/flowir_package.yaml](https://github.com/st4sd/sum-numbers/blob/main/conf/flowir_package.yaml) in the `sum-numbers` repository. In this toy workflow there are four components.
+
+1. **GenerateInput**: The first step a single task generates a file with `N`  lines each with 10 space separated numbers.
+2. **ExtractRow**: In the next step `N` tasks read this file in parallel and print 1 of the lines (from 1 to `N`).
+3. **PartialSum**: In this step for each of the above tasks, another task reads their output, sums the numbers and print the result (`N` tasks total)
+4. **Sum**: A final task aggregates all the partial sums, and prints the total sum.
+
+The following sections show how to:
+
+1. Write simple components in FlowIR.
+2. Group components in stages and use `DataReferences` to define component input dependencies.
+3. Specify inputs to workflows.
+
+
+### Project structure
+
+The ST4SD runtime supports two ways of structuring  workflow projects, `standard projects` and `standalone projects` - see [project types](/packaging-workflows). 
+
+`sum-numbers` uses the `standalone project`  approach. In this project type, the workflow definition is stored under the `conf/flowir_package.yaml` file inside the root directory of the workflow project structure.
+
+FlowIR supports defining a workflow package using multiple files by means of importing sub-workflow documents. However, for simplicity we omit this information from this toy example.
+
+### Examining the `sum-numbers` components
+
+ Component definitions are grouped under the top-level `components` field of the `flowir_package.yaml` file. The order of component definitions does define the execution order of the components - this is defined by the edges of the graph i.e. the `DataReferences` between the components.
+
+In the snippet below we show the definition of 3 components, `stage1.ExtractRow`, `stage1.PartialSum`, and `stage2.Sum` from the `sum-numbers` example
+
+```yaml
+# ... omitted ...
+components:
+# ... omitted ...
+- stage: 1
+  name: ExtractRow
+  command:
+    executable: "bin/extract_row.py"
+    arguments: "stage0.GenerateInput/output.csv:ref %(replica)s"
+  references:
+    - "stage0.GenerateInput/output.csv:ref"
+  workflowAttributes:
+    replicate: "%(numberOfPoints)s"
+
+- stage: 1
+  name: PartialSum
+  command:
+    executable: "bin/sum.py"
+    # Eliding the stage<integer> prefix defaults to the stage of the referencing
+    # component (PartialSum). Since ExtractRow is in the same stage with PartialSum:
+    arguments: "ExtractRow:output"
+  references:
+  - "ExtractRow:output"
+
+- stage: 2
+  name: Sum
+  command:
+    executable: "bin/sum.py"
+    arguments: "stage1.PartialSum:output %(addToSum)s"
+  references:
+    - "stage1.PartialSum:output"
+  workflowAttributes:
+    aggregate: True
+# ... omitted ...
+```
+
+Let's focus on `stage1.ExtractRow` first. Its `command` field specifies the executable and arguments. The executable is a relative path (`bin/extract_row.py`) as it does not start with a `/` character. The `st4sd-runtime` interprets this to look for the `extract_row.py` executable under the `bin` folder of the workflow package definition. If the executable was an absolute path, or did not contain any `/` characters it'd be resolved using the `$PATH` environment variable of the `ExtractRow` component. See [environments](/workflow-specification#environments) for information on defining and using environment variables.
+
+The arguments string of `stage1.ExtractRow` are `stage0.GenerateInput/output.csv:ref %(replica)s`. It consists of a `DataReference` (`stage0.GenerateInput/output.csv:ref`) and a variable reference (`%(replica)s`). The `DataReference` will resolve to the absolute path of the file `output.csv` which is produced by the `GenerateInput` component in stage `0`.
+
+Notice that the `DataReference` is also part of the `references` array. All component references must be written in this array, otherwise the `st4sd-runtime` raises an invalid workflow package exception. This is primarily for error-checking. We also support more `DataReference` methods which cannot be a part of the `command.arguments` field. See the `references` section in the [description of basic FlowIR component fields section](/workflow-specification#description-of-basic-flowir-component-fields).
+
+The variable reference `%(replica)s` instructs the `st4sd-runtime` to replace the reference with the value of the variable. See the [variables section](/workflow-specification#variables) more information about variables, and variable scope. In this particular instance, the `replica` variable is a special one. It is automatically generated by the `st4sd-runtime` for components which contain the `workflowAttributes.replicate` field. In this instance, the `st4sd-runtime` will generate `numberOfPoints` replicas of the `ExtractRow` component. Each of these replicas will have a `replica` variable with one value out of the integer range `[0, numberOfPoints)` (in this particular example the value range is `[0, 1, 2]`).
+
+Next up is the `PartialSum` component. Notice its arguments `ExtractRow:output`. This is a DataReference with a relative-component-reference, so the `st4sd-runtime` understands that this is a reference to `stage1.ExtractRow`. However, recall that `stage1.ExtractRow` component is a replicated component. How does the `st4sd-runttime` pick, which of those components to reference here?
+
+Because the `stage1.PartialSum` component does not contain a `workflowAttributes.aggregate` option, the `st4sd-runtime` will also replicate `PartialSum` the same number of times as its upstream replicated component (i.e. `stage1.ExtractRow`). It will then resolve the reference of replica `X` of `stage1.PartialSum` to the replica `X` of `stage1.ExtractRow`.
+
+Component `stage2.Sum` is an example of an `aggregating` component. Aggregated components do not get replicated by the `st4sd-runtime`, they act as a sentinel node in the computational graph which stops the replication propagation.
+
+The arguments of this component are `stage1.PartialSum:output %(addToSum)s`. The `st4sd-runtime` will first replace the `stage1.PartialSum:output` DataReference to multiple space separated DataReferences. One for each replica like so:`stage1.PartialSum0:output stage1.PartialSum1:output stage1.PartialSum2:output`. Right before the execution of the component, these DataRereferences to replicas will be expanded to the stdout contents of each of the 3 components.
+
+## Providing inputs to workflows
+
+ST4SD workflows support 3 flavours of inputs:
+
+1. Input files - files user must provide when they execute the workflow
+2. Data files - configuration files that optionally can be overridden
+3. User variables - user provided values for workflow variables
+
+### Input Files
+
+Input files are the files you require a user to provide. You define them implicitly whenever you have a data-reference to a file in a top-level folder called `input/` i.e.
+
+```
+input/<filename>:<DataReference type>
+```
+
+You don't include input files in a workflow project. 
+As a result for each data-reference to a file in `input/` you have in your worklfow configuration, the user *must* provide a matching input file when they launch the workflow.
+For example if directly running the workflow they would use the `-i` option to `elaunch.py`.
+
+When the workflow execution starts, `st4sd-runtime-core` creates the `input/` directory in the top-level of the workflow instance directory and copies the files the user provided for the inputs into this folder.
+In this way the input files are where components expect them to be at runtime.
+
+`st4sd-runtime-core` will check all required input files are present before starting the workflow and stop, raising an error, if they are not.
+
+
+ ### Data files
+
+
+Data files are configuration files users can optionally override. 
+You define them implicitly whenever you have a data-reference to file in a top-level folder called `data/` i.e.
+
+```
+data/<filename>:<DataReference type>
+```
+
+You must provide defaults for these files. 
+If you are using a [standard project structure](/packaging-workflows#standard-project) you do this by placing all the data files in a directory and then using a manifest to specify that this directory should be used as the data directory. 
+For example, if you put all the data files in a directory called `shared_data` your manifest would look like: 
+```
+data: ../shared_data
+```
+
+If you are are using a [standalone project structure](/packaging-workflows#standalone-project) then the data-files are placed in the `data` folder of your project.
+
+In the sum-numbers example the `stage3.Cat` component references one such data file:
+
+```yaml
+# ... omitted ...
+components:
+# ... omitted ...
+- stage: 3
+  name: Cat
+  command:
+    executable: "cat"
+    arguments: "cat_me.txt"
+  references:
+    - "data/cat_me.txt:copy"
+# ... omitted ...
+```
+
+In this example the `st4sd-runtime` will copy the file `$INSTANCE_DIR/data/cat_me.txt` into the working directory of the `stage3.Cat` file right before the component executes. 
+
+The `st4sd-runtime` supports replacing files under the `data` folder via the `-d` option of `elaunch.py`. Keep in mind that the argument to `-d` must be the absolute, or relative, path to a file whose name matches one of the files under the `data` folder. If there's no `-d` option to override a `data` file, the `st4sd-runtime` will use the one provided by the workflow package to fulfil the DataReferences to it.
+
+
+### Variables
+
+Finally, the `st4sd-runtime` supports providing a file containing user defined variables via the `-a` commandline argument to the `elaunch.py` script. User variables overwrite global and stage variables but not variables defined by components. The schema of the file is:
+
+```yaml
+global: # dictionary of variables which are visible to all components
+  name: some-primitive-value(str, float, int)
+stages:
+  stageIndex(integer): # dictionary of variables visible to components in stageIndex
+    name: some-primitive-value(str, float, int)
+```
+
+User variables can be used to overwrite the behaviour of components (e.g. arguments or even FlowIR configuration fields). Here is an example user-variables file for this workflow which changes the number of replicas from 3 to just 1:
+
+```yaml
+global:
+  numberOfPoints: 1
+```
+
+Currently, we expect that user variables are stored in a file with the extension `.yaml` OR `.yml`. The [variables section](/workflow-specification#variables) contains more information about variables and variable scopes.
+
+## Key-Outputs
+
+[Key-Outputs](/workflow-specification#key-outputs) are named `DataReferences` that point to important paths which the virtual experiment produced.
+
+In sum-numbers there is only 1 key-output with the name `TotalSum`. It points to a file `out.stdout` that the `stage2.Sum` component produces.
+This file contains the sum of all the numbers that this toy virtual experiment calculates.DataReferences
+
+This is the relevant FlowIR snippet from sum-numbers:
+
+```yaml
+output:
+  TotalSum:
+    data-in: "stage2.Sum/out.stdout:copy"
+```
+
+## Executing `sum-numbers`
+
+This section assumes that you've already installed [st4sd-runtime-core](/installation#set-up-local-client) locally and cloned `sum-numbers`. If you've installed `st4sd-runtime-core` in a virtual environment take a moment to load it before continuing.
+
+To execute this workflow use `elaunch.py` (the script should take a couple of minutes to complete).
+
+```bash
+elaunch.py sum-numbers
+```
+
+An `instance directory` will be created in the directory you execute `elaunch.py`.  The instance directory will have the name `sum-numbers-<TIMESTAMP>.instance` (in the example below: `sum-numbers-2021-03-01T094529.183587`).
+
+Each `sum-numbers` workflow component has its own working directory under the instance directory called: `$INSTANCE_DIR/stages/stage<stage_index:%d>/<component_name>/`.
+
+ `elaunch.py` will output text that is similar to the following:
+
+```bash
+$ elaunch.py sum-numbers
+Unable to import pythonlsf - limited LSF functionality will be available
+INFO      MainThread                     root                          : point_logger_to_random_file 2021-03-01 09:45:29,125: Experiment log at /tmp/tmpso2ajxxe
+INFO      MainThread                     root                          : <module>             2021-03-01 09:45:29,126: Using modules in /home/username/projects/st4sd-runtime/python/experiment
+INFO      MainThread                     root                          : CreateHaltClosure    2021-03-01 09:45:29,126: Creating halt closure monitoring /home/shared/CHPCBackend/.halt_backend for pid 888
+INFO      MainThread                     root                          : CreateHaltClosure    2021-03-01 09:45:29,126: Creating halt closure monitoring /home/shared/CHPCBackend/.kill_backend for pid 888
+INFO      MainThread                     root                          : <module>             2021-03-01 09:45:29,126: Deploying Experiment at SumNumbers.package/ 
+INFO      MainThread                     FlowIRConf                    : __init__             2021-03-01 09:45:29,127: Load FLOWIR, the default platform is default
+INFO      MainThread                     flowir                        : apply_replicate      2021-03-01 09:45:29,151: Replicate job stage1.ExtractRow (3) (replicated refs: [])
+INFO      MainThread                     flowir                        : apply_replicate      2021-03-01 09:45:29,151: Replicate job stage1.PartialSum (3) (replicated refs: ['ExtractRow:output'])
+INFO      MainThread                     flowir                        : apply_replicate      2021-03-01 09:45:29,152: Aggregate job stage2.Sum
+INFO      MainThread                     root                          : ValidatePackage      2021-03-01 09:45:29,183: <experiment.conf.FlowIRExperimentConfiguration object at 0x7fc55fe10eb0>
+WARNING   MainThread                     root                          : ValidatePackage      2021-03-01 09:45:29,183: TESTING EXPERIMENT FROM PACKAGE
+INFO      MainThread                     FlowIRConf                    : __init__             2021-03-01 09:45:29,229: Load FLOWIR, the default platform is default
+INFO      MainThread                     data.experiment               : experimentFromPackage 2021-03-01 09:45:29,258: Detected use of virtual env - will link in python bin directory
+INFO      MainThread                     data.experiment               : experimentFromPackage 2021-03-01 09:45:29,259: Created python link /home/username/projects/packages/SumNumbers-2021-03-01T094529.183587.instance/python to /home/username/anaconda2/envs/flow3.8
+WARNING   MainThread                     data.experiment               : __init__             2021-03-01 09:45:29,259: Explicitly instructed to load a package
+INFO      MainThread                     FlowIRConf                    : __init__             2021-03-01 09:45:29,259: Load FLOWIR, the default platform is default
+INFO      MainThread                     flowir                        : apply_replicate      2021-03-01 09:45:29,317: Replicate job stage1.ExtractRow (3) (replicated refs: [])
+INFO      MainThread                     flowir                        : apply_replicate      2021-03-01 09:45:29,318: Replicate job stage1.PartialSum (3) (replicated refs: ['ExtractRow:output'])
+INFO      MainThread                     flowir                        : apply_replicate      2021-03-01 09:45:29,318: Aggregate job stage2.Sum
+INFO      MainThread                     root                          : ValidatePackage      2021-03-01 09:45:29,355: Created experiment: There are 4 stages. Current stage 0
+INFO      MainThread                     root                          : point_logger_to_logfile 2021-03-01 09:45:29,355: Experiment log at /home/username/projects/packages/SumNumbers-2021-03-01T094529.183587.instance/output/experiment.log
+WARNING   MainThread                     executors.localchecker        : _findExecutablePath  2021-03-01 09:45:29,370: Found pathless executable (cat) - checking if resolvable in command environment
+INFO      MainThread                     executors.localchecker        : _findExecutablePath  2021-03-01 09:45:29,378: Found executable in command environment - using /usr/bin/cat
+DEBUG     MainThread                     output.outputmonitor          : checkDataReferences  2021-03-01 09:45:29,387: Monitoring /home/username/projects/packages/SumNumbers-2021-03-01T094529.183587.instance/stages/stage2/Sum/out.stdout
+INFO      MainThread                     root                          : <module>             2021-03-01 09:45:29,391: Status after deployment:
+INFO      MainThread                     control.controller            : parse_workflow_graph 2021-03-01 09:45:29,417: Updating WorkflowGraph
+INFO      MainThread                     root                          : <module>             2021-03-01 09:45:29,417: Starting Experiment
+INFO      StatusMonitor                  output.statusmonitor          : CheckStatus          2021-03-01 09:45:29,435: No stage running
+INFO      MainThread                     root                          : Run                  2021-03-01 09:45:29,435: Running Stage 0 (stage0) with 1 jobs. Data located at SumNumbers-2021-03-01T094529.183587.instance/stages/stage0
+INFO      MainThread                     control.controller            : initialise           2021-03-01 09:45:29,436: Initial dependency analysis:<Component(s) report>
+  stage0.GenerateInput[pending] inputs: []
+  stage1.ExtractRow1[pending] inputs: [stage0.GenerateInput]
+  stage1.PartialSum1[pending] inputs: [stage1.ExtractRow1]
+  stage1.ExtractRow2[pending] inputs: [stage0.GenerateInput]
+  stage1.PartialSum2[pending] inputs: [stage1.ExtractRow2]
+  stage1.ExtractRow0[pending] inputs: [stage0.GenerateInput]
+  stage1.PartialSum0[pending] inputs: [stage1.ExtractRow0]
+  stage2.Sum[pending] inputs: [stage1.PartialSum0, stage1.PartialSum1, stage1.PartialSum2]
+  stage3.Cat[pending] inputs: []
+<\Component(s) report, (*) indicates Subject->Observer dependency, P: a placeholder, C: the latest condition of a DoWhile>
+INFO      MainThread                     output.outputmonitor          : run                  2021-03-01 09:45:29,437: No output to monitor in stage 0
+INFO      MainThread                     control.controller            : run                  2021-03-01 09:45:29,437: Report for stage 0
+<Component(s) report>
+  stage0.GenerateInput[pending] inputs: []
+<\Component(s) report, (*) indicates Subject->Observer dependency, P: a placeholder, C: the latest condition of a DoWhile>
+INFO      MainThread                     control.controller            : WaitOnStability      2021-03-01 09:45:29,438: System appears stable - no new exceptions in last 30 secs
+WARNING   MainThread                     control.controller            : WaitOnStability      2021-03-01 09:45:29,439: Waited 0 seconds (max 120)
+INFO      MainThread                     control.controller            : finalize_submit_components 2021-03-01 09:45:29,439: <Check for promotions>
+READY stage3.Cat in stage 0
+READY stage0.GenerateInput in stage 0
+<\Check for promotions>
+...
+INFO      MainThread                     control.controller            : run                  2021-03-01 09:45:39,513: Stage 0 complete. Total components 1
+INFO_MED  MainThread                     output.outputmonitor          : kill                 2021-03-01 09:45:39,514: Received kill
+INFO_MED  MainThread                     output.outputmonitor          : kill                 2021-03-01 09:45:39,514: Setting cancel copy event: <threading.Event object at 0x7fc55c4adb80>
+INFO      MainThread                     root                          : Run                  2021-03-01 09:45:39,515: Stage 0 complete
+INFO      MainThread                     root                          : Run                  2021-03-01 09:45:39,516: Running Stage 1 (stage1) with 6 jobs. Data located at SumNumbers-2021-03-01T094529.183587.instance/stages/stage1
+INFO      MainThread                     control.controller            : initialise           2021-03-01 09:45:39,526: Initial dependency analysis:<Component(s) report>
+  stage0.GenerateInput[finished] inputs: []
+  stage1.ExtractRow1[pending] inputs: []
+  stage1.PartialSum1[pending] inputs: [stage1.ExtractRow1]
+  stage1.ExtractRow2[pending] inputs: []
+  stage1.PartialSum2[pending] inputs: [stage1.ExtractRow2]
+  stage1.ExtractRow0[pending] inputs: []
+  stage1.PartialSum0[pending] inputs: [stage1.ExtractRow0]
+  stage2.Sum[pending] inputs: [stage1.PartialSum0, stage1.PartialSum1, stage1.PartialSum2]
+  stage3.Cat[finished] inputs: []
+<\Component(s) report, (*) indicates Subject->Observer dependency, P: a placeholder, C: the latest condition of a DoWhile>
+INFO      MainThread                     output.outputmonitor          : run                  2021-03-01 09:45:39,527: No output to monitor in stage 1
+INFO      MainThread                     control.controller            : run                  2021-03-01 09:45:39,532: Report for stage 1
+<Component(s) report>
+  stage1.PartialSum2[pending] inputs: [stage1.ExtractRow2]
+  stage1.ExtractRow0[pending] inputs: []
+  stage1.ExtractRow2[pending] inputs: []
+  stage1.PartialSum0[pending] inputs: [stage1.ExtractRow0]
+  stage1.PartialSum1[pending] inputs: [stage1.ExtractRow1]
+  stage1.ExtractRow1[pending] inputs: []
+<\Component(s) report, (*) indicates Subject->Observer dependency, P: a placeholder, C: the latest condition of a DoWhile>
+INFO      MainThread                     control.controller            : WaitOnStability      2021-03-01 09:45:39,544: System appears stable - no new exceptions in last 30 secs
+WARNING   MainThread                     control.controller            : WaitOnStability      2021-03-01 09:45:39,545: Waited 0 seconds (max 120)
+INFO      MainThread                     control.controller            : finalize_submit_components 2021-03-01 09:45:39,547: <Check for promotions>
+READY stage1.ExtractRow0 in stage 1
+READY stage1.ExtractRow2 in stage 1
+READY stage1.ExtractRow1 in stage 1
+<\Check for promotions>
+INFO      MainThread                     control.controller            : finalize_submit_components 2021-03-01 09:45:39,547: Staging in component stage1.ExtractRow0
+INFO      MainThread                     control.controller            : finalize_submit_components 2021-03-01 09:45:39,566: Staging in component stage1.ExtractRow2
+INFO      MainThread                     control.controller            : finalize_submit_components 2021-03-01 09:45:39,574: Staging in component stage1.ExtractRow1
+INFO      MainThread                     control.controller            : finalize_submit_components 2021-03-01 09:45:39,586: Submitting component stage1.ExtractRow0
+INFO      MainThread                     control.controller            : finalize_submit_components 2021-03-01 09:45:39,588: Submitting component stage1.ExtractRow2
+INFO      MainThread                     control.controller            : finalize_submit_components 2021-03-01 09:45:39,590: Submitting component stage1.ExtractRow1
+...
+INFO      StatusMonitor                  output.statusmonitor          : CheckStatus          2021-03-01 09:46:09,811: <Component(s) report>
+  stage0.GenerateInput[finished] inputs: []
+  stage1.ExtractRow1[finished] inputs: []
+  stage1.PartialSum1[finished] inputs: []
+  stage1.ExtractRow2[finished] inputs: []
+  stage1.PartialSum2[finished] inputs: []
+  stage1.ExtractRow0[finished] inputs: []
+  stage1.PartialSum0[finished] inputs: []
+  stage2.Sum[finished] inputs: []
+  stage3.Cat[finished] inputs: []
+<\Component(s) report, (*) indicates Subject->Observer dependency, P: a placeholder, C: the latest condition of a DoWhile>
+INFO      MainThread                     root                          : <module>             2021-03-01 09:46:09,811: 	Thread-4
+INFO      StatusMonitor                  output.statusmonitor          : CheckStatus          2021-03-01 09:46:09,811: Status of stage3: 1.0000 1.0000 finished (active-stages: {3:1.00})
+...
+INFO      MainThread                     root                          : <module>             2021-03-01 09:46:44,868: Clean-up - Final status was
+cost=0
+current-stage=stage3
+exit-status=Success
+experiment-state=finished
+stage-progress=1.0
+stage-state=finished
+stages=['stage0', 'stage1', 'stage2', 'stage3']
+total-progress=1.0
+updated=2021-03-01 09:46:44.866733
+...
+INFO      MainThread                     root                          : <module>             2021-03-01 09:46:44,877: Experiment complete
+INFO      ThreadPoolExecutor-13_0        db.status                     : _closeConnection     2021-03-01 09:46:44,885: Connection closed
+```
+
+If you switch to the `$INSTANCE_DIR/stages` directory and run `ls -lR` you should see the below structure:
+
+```
+$ ls -lR
+.:
+total 16
+drwxrwxr-x. 3 username username 4096 Mar  1 09:45 stage0
+drwxrwxr-x. 8 username username 4096 Mar  1 09:45 stage1
+drwxrwxr-x. 3 username username 4096 Mar  1 09:45 stage2
+drwxrwxr-x. 3 username username 4096 Mar  1 09:45 stage3
+
+./stage0:
+total 4
+drwxrwxr-x. 2 username username 4096 Mar  1 09:45 GenerateInput
+
+./stage0/GenerateInput:
+total 12
+-rw-rw-r--. 1 username username 309 Mar  1 09:45 component_performance.csv
+-rw-rw-r--. 1 username username  13 Mar  1 09:45 output.csv
+-rw-rw-r--. 1 username username   0 Mar  1 09:45 out.stderr
+-rw-rw-r--. 1 username username  17 Mar  1 09:45 out.stdout
+
+./stage1:
+total 24
+drwxrwxr-x. 2 username username 4096 Mar  1 09:45 ExtractRow0
+drwxrwxr-x. 2 username username 4096 Mar  1 09:45 ExtractRow1
+drwxrwxr-x. 2 username username 4096 Mar  1 09:45 ExtractRow2
+drwxrwxr-x. 2 username username 4096 Mar  1 09:45 PartialSum0
+drwxrwxr-x. 2 username username 4096 Mar  1 09:45 PartialSum1
+drwxrwxr-x. 2 username username 4096 Mar  1 09:45 PartialSum2
+
+./stage1/ExtractRow0:
+total 8
+-rw-rw-r--. 1 username username 309 Mar  1 09:45 component_performance.csv
+-rw-rw-r--. 1 username username   0 Mar  1 09:45 out.stderr
+-rw-rw-r--. 1 username username   4 Mar  1 09:45 out.stdout
+
+./stage1/ExtractRow1:
+total 8
+-rw-rw-r--. 1 username username 308 Mar  1 09:45 component_performance.csv
+-rw-rw-r--. 1 username username   0 Mar  1 09:45 out.stderr
+-rw-rw-r--. 1 username username   4 Mar  1 09:45 out.stdout
+
+./stage1/ExtractRow2:
+total 8
+-rw-rw-r--. 1 username username 308 Mar  1 09:45 component_performance.csv
+-rw-rw-r--. 1 username username   0 Mar  1 09:45 out.stderr
+-rw-rw-r--. 1 username username   5 Mar  1 09:45 out.stdout
+
+./stage1/PartialSum0:
+total 8
+-rw-rw-r--. 1 username username 309 Mar  1 09:45 component_performance.csv
+-rw-rw-r--. 1 username username   0 Mar  1 09:45 out.stderr
+-rw-rw-r--. 1 username username   2 Mar  1 09:45 out.stdout
+
+./stage1/PartialSum1:
+total 8
+-rw-rw-r--. 1 username username 309 Mar  1 09:45 component_performance.csv
+-rw-rw-r--. 1 username username   0 Mar  1 09:45 out.stderr
+-rw-rw-r--. 1 username username   3 Mar  1 09:45 out.stdout
+
+./stage1/PartialSum2:
+total 8
+-rw-rw-r--. 1 username username 309 Mar  1 09:45 component_performance.csv
+-rw-rw-r--. 1 username username   0 Mar  1 09:45 out.stderr
+-rw-rw-r--. 1 username username   3 Mar  1 09:45 out.stdout
+
+./stage2:
+total 4
+drwxrwxr-x. 2 username username 4096 Mar  1 09:46 Sum
+
+./stage2/Sum:
+total 8
+-rw-rw-r--. 1 username username 309 Mar  1 09:46 component_performance.csv
+-rw-rw-r--. 1 username username   0 Mar  1 09:46 out.stderr
+-rw-rw-r--. 1 username username   3 Mar  1 09:46 out.stdout
+
+./stage3:
+total 4
+drwxrwxr-x. 2 username username 4096 Mar  1 09:45 Cat
+
+./stage3/Cat:
+total 12
+-rw-rw-r--. 1 username username  34 Mar  1 09:45 cat_me.txt
+-rw-rw-r--. 1 username username 309 Mar  1 09:45 component_performance.csv
+-rw-rw-r--. 1 username username   0 Mar  1 09:45 out.stderr
+-rw-rw-r--. 1 username username  34 Mar  1 09:45 out.stdout
+```

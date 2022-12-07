@@ -1,0 +1,164 @@
+---
+title: Virtual Experiment Best Practices
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<PageDescription>
+
+Use this page to learn the best practices for developing virtual experiments.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Strong versioning</AnchorLink>
+  <AnchorLink>Coding style and guidelines</AnchorLink>
+  <AnchorLink>CI/CD and testing</AnchorLink>
+  <AnchorLink>Developer metadata</AnchorLink>
+</AnchorLinks>
+
+This page collects a set of best practices for developing virtual experiments that are driven by our experience in this field.
+While choosing whether to follow them or not is up to the developer, the Registry UI will test and display a status report for 
+some of the most important ones.
+
+<InlineNotification>
+
+Each of the guidelines will explicitly state whether it is tested by the Registry 
+or it is just a convention that should be followed, with the emojis having the following
+meanings:
+
+- ✅ tested by the registry now.
+
+- ☑️ will be tested by the registry in the future.
+
+- ⚠️ convention: not testable, but recommend to follow.
+
+</InlineNotification>
+
+## Strong versioning
+
+For an experiment to be repeatable we need to ensure that the underlying pieces that make up the experiment will not change over time.
+This translates to the following set of requirements:
+
+<Accordion>
+<AccordionItem title="✅ Use tagged container images">
+
+Container images should not use the `latest` tag (explicitly or implicitly),
+as it is more likely to be updated.
+
+</AccordionItem>
+<AccordionItem title="✅ Use strong identifiers for base packages">
+
+[Base package sources](/creating-a-parameterised-package/#sources) 
+should be hosted on a platform that supports versioning (e.g., git) 
+and reference an identifier that will not change over time (e.g., a commit ID).
+  
+</AccordionItem>
+</Accordion>
+
+## Coding style and guidelines
+
+The following guidelines ensure your virtual experiment leverage ST4SD functionalities as best they can
+while also providing reusability.
+
+<Accordion>
+<AccordionItem title="✅ Include a virtual experiment interface">
+
+Experiments should always include an [interface](/writing-a-virtual-experiment-interface) to simplify information
+retrieval and external integrations.
+
+</AccordionItem>
+<AccordionItem title="✅ List workflow inputs in the inputs section">
+
+User-supplied data should be listed in the `inputs` section.
+No default value for the `inputs` that sits in `data` should be set. 
+
+</AccordionItem>
+<AccordionItem title="⚠️ Give components appropriate names">
+
+The name of the components should reflect at all times what they do,
+even if we are modifying an experiment that we fork.
+
+</AccordionItem>
+<AccordionItem title="⚠️ Use platforms for non-functional information">
+
+Platforms should be primarily used to encode non-functional information,
+such as resource limits. Read up more about platforms 
+[here](/workflow-specification/#platforms). 
+
+</AccordionItem>
+<AccordionItem title="⚠️ List component input files explicitly">
+
+Unless a component consumes a large amount of inputs, the experiment should
+list them one by one, instead of just the directory they are in. 
+
+</AccordionItem>
+<AccordionItem title="☑️ Ensure the default platform works">
+
+The experiment should have defaults set for all options that are not `inputs`.
+This implies that the 
+[default platform](/workflow-specification/#default-platform)
+should be runnable.
+
+</AccordionItem>
+</Accordion>
+
+## CI/CD and testing
+
+To make sure the experiment is valid and works as expected, we suggest the use of the following
+tools and their inclusion in CI pipelines.
+
+<Accordion>
+
+<AccordionItem title="⚠️ Test the experiment in your CI">
+
+Run 
+[etest](/packaging-workflows/#testing-projects)
+at each commit for all platforms
+
+</AccordionItem>
+
+<AccordionItem title="☑️ Run enhanced tests">
+
+Adopt [testify](https://github.com/Yelp/Testify) to run more extensive tests.
+
+</AccordionItem>
+</Accordion>
+
+## Developer metadata
+
+Adding metadata to a parameterised package can greatly help other users understand what it does, 
+what license it comes with, and is also useful for filtering purposes in the global virtual experiments registry. 
+As such, it is important for all the following fields to be populated.
+
+<Accordion>
+<AccordionItem title="⚠️ Set a description">
+
+The parameterised package should provide a description of what it does, 
+in order to help other users.
+
+</AccordionItem>
+<AccordionItem title="✅ Include maintainer information">
+
+Parameterised packages should specify who the maintainer is, so that 
+users can get in touch with someone in case of need.
+
+</AccordionItem>
+<AccordionItem title="✅ Include a license">
+
+Parameterised packages should specify what license they are provided with, 
+as this can set requirements for re-use and modifications.
+
+</AccordionItem>
+<AccordionItem title="✅ Specify a tag for the parameterised package">
+
+[Parameterised packages in the registry](/creating-a-parameterised-package/#adding-a-parameterised-package-to-a-registry)
+should have a meaningful tag and not rely on `latest`.
+
+</AccordionItem>
+</Accordion>

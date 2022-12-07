@@ -1,0 +1,462 @@
+---
+title: Writing a Virtual Experiment Interface
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<PageDescription>
+
+Use this page to learn how to write a virtual experiment interface.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Interface Definition</AnchorLink>
+  <AnchorLink>Input Extraction Methods</AnchorLink>
+  <AnchorLink>Property Extraction Methods</AnchorLink>
+  <AnchorLink>Example</AnchorLink>
+</AnchorLinks>
+
+A core-concept in ST4SD is a virtual experiment. This is a computational workflow that takes as input one or more systems of a given type, and produces as output values of `properties` of those systems.
+
+This document descries how ST4SD developers can describe this information in their virtual experiments via an `interface`
+
+The `interface` of a virtual experiment defines:
+
+- The specification used to describe `input` systems it processes e.g. SMILEs for small molecules
+- Instructions to extract the `input` systems from input data
+- Instructions to extract the values of `properties` that the virtual experiment computes
+
+Once a virtual experiment has an `interface`  ST4SD can return a `pandas.DataFrame`  containing the properties calculated by instances of the virtual experiment, as well as the ids of the `input` systems that an instance processed. This functionality is provided via the `st4sd-datastore` API and the `st4sd-runtime-service` API. See [using a virtual experiment interface](/using-a-virtual-experiment-interface) for further information. 
+
+## Interface Definition
+
+An `interface` is an optional top-level `FlowIR` key which describes what `input` and `properties` of a virtual experiment, as well as how to extract their values. 
+
+<InlineNotification>
+
+See the [tutorial](/tutorial) for a refresher on virtual experiment definitions and FlowIR.
+
+</InlineNotification>
+
+The general scheme of an `interface` is  
+
+```yaml
+interface:
+  description: #A description of the virtual experiment. Optional
+  inputSpec:
+    namingScheme: #The scheme/specification used to define your inputs e.g. SMILES
+    inputExtractionMethod: 
+      $INPUT_EXTRACTION_METHOD_NAME: #The name of an input extraction method - see "Input Extraction Method" section for possibilities
+        source:  #Optional source method used to provide input to the extraction method.. See the "Source Methods" section for potential values.
+          ...
+        args: #Optional arguments for the extraction method
+          ...
+  propertiesSpec: # A list of properties to extract
+  - name: #The name of the property
+    propertyExtractionMethod:
+      $PROPERTY_EXTRACTION_METHOD_NAME: #The name of a property extraction method - see the "Property Extraction Method" section for possibilities
+        source:  #Optional source method used to provide input to the extraction method. See the "Source Methods" section for potential values.
+          ...
+        args: #Optional arguments for the extraction method
+          ...
+```
+
+
+
+The 2 main fields are:
+
+- `interface.inputSpec`: A dictionary that describes the inputs of the virtual experiment and how to extract them
+- `interface.propertiesSpec`: An array of dictionaries (one per `property`) that describes how to extract the values of the `property`
+
+Within both fields the developer defines  extraction methods which tell ST4SD how to extract values that the virtual experiment reads (`input` ids) and writes (`property` values). 
+
+- See [input extraction methods](#input-extraction-methods) for details on choices for that field
+- See [property extraction methods](#property-extraction-methods) for details on choices for that field
+
+Both input extraction methods and property extraction methods can have 2 sub-fields, `source` and `args` which may be optional.  If the `source` method is present it must be one of the options outlined in [source methods](#source-methods)
+
+
+## Input Extraction Methods
+
+Input extraction methods are used by to retrieve a list of the input system ids
+
+### csvColumn
+
+Use the `csvColumn` extraction method if the input ids of your experiment are defined in a column of an input CSV file **which has column headers**.
+
+#### Options
+
+```yaml
+source:
+  path: #The path SOURCE-METHOD. See source-methods for more
+args:
+  column: #The name of the column in the CSV file containing the ids (the column header)
+```
+
+#### Example
+
+```YAML
+interface:
+  inputSpec:
+    namingScheme: 'SMILES'
+    inputExtractionMethod: 
+      csvColumn:
+        source:
+          path: 'input/input_smiles.csv'
+        args:
+          column: "SMILES"
+```
+
+
+
+
+
+### hookGetInputIds
+
+Use `hookGetInputIds` when you want to provide your own python function for getting the input ids.
+
+<InlineNotification>
+
+To use this method the developer must provide an implementation of the following python function and place it in a file called `interface.py` in the `hooks` directory of their virtual experiment. Note: this file can contain other functions also.
+
+</InlineNotification>
+
+```python
+def get_input_ids(input_id_file: str, variables: Dict[str, str]) -> List[str]:
+   '''
+       Params: 
+            input_id_file (str): The path to the location of the file that contains input ids of the inputs systems. This comes from the `source.path` option in the interface YAML.
+            variables (dict): A dictionary of the global and user variables passed to the virtual experiment instance
+            
+       Returns: 
+            A list of strings each of which is the id of an input system
+   '''
+     pass
+```
+
+#### Options
+
+
+
+```yaml
+source:
+  path: #A path relative to the root directory of the virtual experiment instance. It points to the CSV file that contains the `input-ids`.
+```
+
+#### Example
+
+
+
+```yaml
+interface:
+  inputSpec:
+    namingScheme: 'SMILES'
+    inputExtractionMethod: 
+      hookGetInputIds:
+        source:
+          path: 'input/input_smiles.csv'
+```
+
+<InlineNotification>
+
+The [band-gap-gamess](https://github.com/st4sd/band-gap-gamess) virtual experiment uses `hookGetInputIds` to describe the extraction of input ids.
+
+</InlineNotification>
+
+## Property Extraction Methods
+
+Property extraction methods conceptually produce a properties table which contains at least 2 columns: `(input-id, $propertyName)`where $propertyName is the name of the property in the `propertiesSpec` element using the extraction method. Note: in practice `propertyName` will be transformed to lowercase.
+
+### csvDataFrame
+
+Use this method if 
+
+* there is a single CSV file to extract the values of a particular property from for all input
+* The properties are stored in a column of this CSV file
+* The input ids are stored in a column of this CSV file
+
+**Note:**
+
+The table created by this method must have column headers `input-id` and $PROPERTYNAME.  The `csvDataFrame` property extractor can change the column names to these correct values using the `renameColumns` option (see Example)
+
+#### Options
+
+
+
+```yaml
+source:
+   $SOURCE_METHOD_NAME # Name of the source methods and its options. See below. 
+args:
+   renameColumns: #Optional: Dictionary whose keys are column names in the CSV file and values are the names to rename the associated key columns. Output column names are implicitly converted to `lowercase`
+   `${name}: ${value}`: #(Optional) Arguments to the `pandas.read_csv()` method. The default arguments are `engine="python"` and `sep=None`.
+```
+
+#### Example
+
+
+
+```yaml
+propertiesSpec:
+- name: 'band-gap'
+  propertyExtractionMethod:
+    csvDataFrame:
+      source:
+        keyOutput: 'FinalEnergies'
+      args:
+        renameColumns:
+          SMILE: "input-id"
+        usecols:
+        - "SMILE"
+        - "band-gap"
+```
+
+
+
+### hookGetProperties
+
+Use`hookGetProperties` when you want to provide your own python function for getting the property values. 
+
+<InlineNotification>
+
+To use this method the developer must provide an implementation of the following python function and place it in a file called `interface.py` in the `hooks` directory of their virtual experiment. Note: this file can contain other functions also.
+
+</InlineNotification>
+
+```python
+def get_properties(property_name:str, property_output_file: str, input_id_file: str, variables: Dict[str, str]) -> pandas.DataFrame
+   '''
+       Params: 
+            property_name (str): The name of the property the function should return the values of.  
+            property_output_file (str): The path to the file containing the properties 
+            input_id_file (str): The path to the file containing the input_ids
+            variables (dict): A dictionary of the global and user variables passed to the virtual experiment instance
+            
+       Returns: 
+            A `pandas.DataFrame` that contains at least 2 columns: `input-id`, `${propertyName}`. 
+   '''
+     pass
+```
+
+If `hookGetProperties` is defined as the propertyExtractionMethod for property `idx` the values passed to the parameters of this function are determined as follows
+
+* `property_name` : The value of `interface.propertiesSpec[idx].name`
+* `property_output_file`: The value returned by the`interface.propertiesSpec[idx].propertyExtractionMethod.hookGetProperties.source` method
+* `input_id_file`:  The value of `interface.inputSpec.inputExtractionMethod.$METHOD.source`
+
+Note: The column headers in the returned pandas DataFrame will be converted to lowercase by ST4SD. 
+
+#### Options
+
+
+
+```yaml
+hookGetInputIds:
+  source: #A source method - see below for details
+```
+
+#### Example
+
+
+```yaml
+propertiesSpec:
+- name: 'band-gap'
+  propertyExtractionMethod:
+    hookGetProperties:
+      source:
+        keyOutput: 'FinalEnergies'
+```
+
+<InlineNotification>
+
+The [band-gap-gamess](https://github.com/st4sd/band-gap-gamess) virtual experiment uses `hookGetProperties` to describe the extraction of properties.
+
+</InlineNotification>
+
+## Source methods
+
+Source methods define different ways of defining a source file-path that is used by input or property extraction methods
+
+### path
+
+Use this method if you know the full path of the source file. 
+
+#### Options
+
+
+
+```YAML
+path: $PATH #A path relative to the root directory of the virtual experiment instance. It points to the CSV file that contains the `input-ids`.
+```
+
+#### Example
+
+
+
+```YAML
+propertyExtractionMethod:
+  hookGetProperties:
+    source:
+      path: "stages/stage1/EnergiesExtraction/energies.csv"
+```
+
+
+
+### keyOutput
+
+Use this method if the properties are in a key-output of the experiment. This method avoids having to know the path to the file (which could change if storage methods change)
+
+#### Options
+
+
+
+```YAML
+# The name of a key-output in the experiment.
+# These are keys of the top-level FlowIR field `output`.
+keyOutput: $KEYOUTPUT
+```
+
+#### Example
+
+
+
+```YAML
+propertyExtractionMethod:
+  hookGetProperties:
+    source:
+      keyOutput: "FinalEnergies"
+```
+
+
+
+## Example
+
+In this example we have a simple virtual experiment that counts vowels and letters in strings. Here is the FlowIR definition:
+
+```yaml
+output:
+  vowels:
+    data-in: stage0.count-vowels/vowels.csv:ref
+  letters:
+    data-in: stage0.count-letters/letters.csv:ref
+
+components:
+- name: count-vowels
+  references:
+  - input/words.csv:ref
+  command:
+    executable: bin/count_vowels.py
+    arguments: input/words.csv:ref
+
+- name: count-letters
+  references:
+  - input/words.csv:ref
+  command:
+    executable: bin/count_letters.py
+    arguments: input/words.csv:ref
+```
+
+Here is an input `words.csv` file:
+
+```
+word;
+hello;
+awesome;
+world;
+```
+
+When we process the above `input` file with this workflow we get 2 outputs:
+
+The output `vowels` contains the CSV file:
+
+```
+a;e;i;o;u;word;vowels
+0;1;0;1;0;hello;2
+1;2;0;1;0;awesome;4
+0;0;0;1;0;world;1
+```
+
+The output `letters` contains the CSV file:
+
+```
+word;letters
+hello;5
+awesome;7
+world;5
+```
+
+### Interface
+
+An interface to this experiment is shown below. This interface used `csvColumn` input extraction method and the `csvDataFrame` property extraction method. These methods mean the developer does not have to write any other code. 
+
+
+```yaml
+interface:
+  description: Counts vowels in words
+  inputSpec:
+    namingScheme: words
+    inputExtractionMethod:
+      csvColumn:
+        source:
+          path: input/words.csv
+        args:
+          column: word
+  propertiesSpec:
+  - name: Vowels
+    propertyExtractionMethod:
+      csvDataFrame:
+        source:
+          keyOutput: vowels
+        args:
+          renameColumns:
+            word: input-id
+          usecols:
+          - word
+          - vowels
+  - name: Letters
+    propertyExtractionMethod:
+      csvDataFrame:
+        source:
+          keyOutput: letters
+        args:
+          renameColumns:
+            word: input-id
+          usecols:
+          - word
+          - letters
+```
+
+
+
+### Run Details
+
+Adding the `interface` definition will cause instances of the virtual experiment to generate 2 new files:
+
+ - `${INSTANCE_DIR}/output/properties.csv`: This is a `;` delimited `CSV` file that contains the `properties` columns produced by each property defined in `propertySpec`.
+ - `${INSTANCE_DIR}/outputs/input-ids.json`: A JSON file that contains an array of strings. Each string is the id of an input system.
+
+For the above example we would get the following in  `${INSTANCE_DIR}/output/properties.csv`:
+
+```
+input-id;vowels;letters
+hello;2;5
+awesome;4;7
+world;1;5
+```
+
+The input ids file (`${INSTANCE_DIR}/outputs/input-ids.json`) looks like this:
+
+```json
+[
+    "hello",
+    "awesome",
+    "world"
+]
+```
+
+

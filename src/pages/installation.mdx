@@ -1,0 +1,184 @@
+---
+title: Installation
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<PageDescription>
+
+Learn how to install ST4SD on a variety of platforms
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Set Up Local Client</AnchorLink>
+  <AnchorLink>Install on OpenShift Local</AnchorLink>
+  <AnchorLink>Install on Kubernetes and OpenShift</AnchorLink>
+  <AnchorLink>Install on Classic HPC</AnchorLink>
+</AnchorLinks>
+
+
+
+<InlineNotification kind="warning">
+
+If you are not an administrator then, depending on your [user environment](/user-environments), you may not have to install anything. Its recommended you check [first steps](/#first-steps) to determine if you need to do so.
+
+</InlineNotification>
+
+## Set Up Local Client
+
+<InlineNotification>
+
+- **For**: Researchers & Developers
+- **Use When:**
+  - You want to run workflows on a Kubernetes/OpenShift instance of the workflow stack **from your laptop** via e.g. a jupyter-notebook
+  - You want to develop workflows 
+  - You want to test writing/running some simple workflows that can run on your laptop/desktop
+
+</InlineNotification>
+
+The local client install only requires `st4sd-runtime-core`. You can install `st4sd-runtime-core` directly on your laptop using `pip`. 
+
+### Requirements
+
+- `python3` 
+   - We recommend that you use python 3.9 although versions 3.7 through 3.10 should work.
+
+### Installing
+
+A simple pip install suffices:
+
+```
+pip install "st4sd-runtime-core[deploy]"
+```
+
+## Install on OpenShift Local
+
+<InlineNotification>
+
+- **For**: Developers
+- **Use When**
+  - You want to test, develop and run small-scale virtual experiments on your laptop.
+  - You want to develop or examine the ST4SD micro-services on your laptop
+
+</InlineNotification>
+
+### Requirements
+
+<InlineNotification kind="warning">
+
+- **Currently we only support x86 platforms** (not ARM or POWER).
+- OpenShift Local **is only officially supported** on:
+  - RedHat Enterprise Linux 7+
+  - CentOS 7+
+  - The two latest stable Fedora releases
+  - Windows 10
+  - macOS 11.0 Big Sur or later
+- Ubuntu 18.04 LTS or later and Debian 10 or later **are not officially supported** and may require manual setup.
+
+</InlineNotification>
+
+- Install the `oc` v4.11.12+ command line utility (Optional step : OpenShift Local will also install `oc` for you)
+  
+  - Full setup instructions are available on the [OpenShift website](https://docs.openshift.com/container-platform/4.11/cli_reference/openshift_cli/getting-started-cli.html)
+- Download and install **OpenShift Local** for free from <a href="https://console.redhat.com/openshift/create/local" target="_blank" rel="noopener noreferrer">Red Hat OpenShift Local</a>
+  - You can find the setup instructions on the OpenShift Local <a href="https://access.redhat.com/documentation/en-us/red_hat_openshift_local" target="_blank" rel="noopener noreferrer">website</a>.
+  - The default installation of OpenShift Local produces a local OpenShift cluster with:
+     - 4 virtual CPU cores,
+     - 9 GB of RAM, and
+     - 31 GB of storage space
+  - We recommend increasing the defaults with the following:
+
+      ```bash
+      # crc setup is a one-time command, it will take a couple of minute
+      # depending on your download speed
+      crc setup
+      # if OpenShift Local is already running, execute "crc stop" first
+      crc config set cpus 8
+      crc config set memory 14336
+      crc config set disk-size 50
+      # Starting the cluster VM will take a few minutes
+      crc start
+      ```
+
+  - When your cluster has finished starting, follow the instructions on your terminal.
+    - For example, you may need to run:
+
+        ```bash
+        # Use the `oc` command line interface
+        eval $(cr oc-env)
+        ```
+
+  - You may now login on the OpenShift web-ui by running `crc console`
+     
+     - You can see your credentials by running `crc console --credentials` on your terminal.
+
+### Installing
+
+1. After your OpenShift Local is up and running (i.e. `crc start` has finished). Follow the instructions on your terminal
+   to login in as an administrator into OpenShift.
+   1. Run `crc console --credentials` to see the `oc login` commands you can type in your terminal.
+2. Create the project `st4sd-local`: `oc new-project st4sd-local`.
+3. Deploy the minimal version of ST4SD: `oc apply -f https://raw.githubusercontent.com/st4sd/st4sd-deployment/main/manifests/openshift-local-minimal-release.yaml`.
+4. The url to your local instance of ST4SD is https://local.apps-crc.testing
+   - You can access your local ST4SD registry-ui at https://local.apps-crc.testing/registry-ui/
+   - The very first time you login, OpenShift will inform you that ST4SD wishes to know that you are an authorized user of the system. Accept the OpenShift prompt on your browser.
+   - Both default OpenShift accounts (`developer` and `kubeadmin` will have access to your ST4SD microservices).
+      - By default, the `developer` account has the password `developer`.
+      - You can print the administrator credentials using `crc console --credentials`.
+
+<InlineNotification kind="info">
+
+You can see the credentials of the default accounts that OpenShift Local creates for you by running `crc console --credentials` in your terminal.
+
+</InlineNotification>
+
+
+## Install on Kubernetes and OpenShift
+
+<InlineNotification>
+
+- **For**: Administrators
+- **Use When**
+  - You want to install an instance of the workflow stack on a k8s/OpenShift cluster 
+
+</InlineNotification>
+
+
+For installing ST4SD on **OpenShift** see https://github.com/st4sd/st4sd-deployment. This gives comprehensive details  on deploying ST4SD on OpenShift via Helm.
+
+## Install on Classic HPC
+
+
+<InlineNotification>
+
+- **For**: Administrators
+- **Use When:**
+  - You want to run workflows on a classic HPC infrastructure that uses the LSF scheduler
+
+</InlineNotification>
+
+### Requirements
+
+The following installation instructions assume you have
+
+1. **Internet access**
+2. **swig is in your $PATH**
+     - *swig* is a program for creating scripting language wrappers. Required for building the LSF wrappers
+3. **python3 (3.7 to 3.10) is in your $PATH**
+4. **The command `tox` is available** 
+    - Check by typing `tox` and pressing return
+
+### Installing
+
+1. Clone the ST4SD runtime core repository 
+    - run  `git clone https://github.com/st4sd/st4sd-runtime-core.git`
+2. `cd` into the cloned repository
+3. run  `DEPLOY_VENV=$MYVENV tox -e py37-deploy-lsf --site-packages` where
+    - `$MYVENV` is where you want the virtual environment to be created
+
