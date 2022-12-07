@@ -1,0 +1,112 @@
+---
+title: Using runtime policies
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<PageDescription>
+
+Use this page to learn how to use the ST4SD runtime policies, for example to execute parameterised packages that contain surrogate models.
+
+</PageDescription>
+
+
+<AnchorLinks>
+  <AnchorLink>What is a runtime policy?</AnchorLink>
+  <AnchorLink>How to use a runtime policy?</AnchorLink>
+  <AnchorLink>Policy: prefer-surrogate</AnchorLink>
+  <AnchorLink>Policy: random-canary-surrogate</AnchorLink>
+</AnchorLinks>
+
+
+## What is a runtime policy?
+
+Runtime policies are algorithms which modify the default behaviour of ST4SD when its asked to run a parameterised package.
+
+
+## How to use a runtime policy?
+
+You can use a runtime policy by configuring the `runtimePolicy` field of the `api_experiment_start()` [payload](/running-workflows-on-openshift#running-a-virtual-experiment).
+
+### Example
+
+```python
+from __future__ import typing
+import json
+def experiment_start(api: experiment.service.db.ExperimentRestAPI) -> str:
+    """Start an experiment that uses the prefer-surrogate runtime policy
+
+    Arguments:
+      api: An instance of ExperimentRestAPI that has connected to your
+           private ST4SD registry
+
+    Notes:
+
+      The method expects that you have already created the homo-lumo-dft-gamess-us
+      parameterised package on your ST4SD registry and have synthesized (or imported)
+      a surrogate parameterised package that can substitute homo-lumo-dft-gamess-us.
+
+    Returns:
+        The UID of the resulting instance
+    """
+
+    payload = {
+        "inputs": [
+            {"filename": "input_smiles.csv", "content": "label,smiles\nmy_molecule,CCC"}
+        ],
+        "runtimePolicy": {
+          "name": "prefer-surrogate"
+        }
+    }
+
+    return api.api_experiment_start(
+        # the identifier of the parameterised virtual experiment package
+        "homo-lumo-dft-gamess-us",
+        payload)
+```
+
+## Policy: prefer-surrogate
+
+The algorithm of the policy is:
+
+1. Find a suitable surrogate package of the requested parameterised package in the `api_experiment_start()` payload
+   1. Find parameterised packages that are the result of synthesizing a [transformation relationship](/using-graph-relationships#automatically-synthesize-new-parameterised-packages), AND
+   2. The [outputGraph](/using-graph-relationships#structure-of-a-relationship) of the associated `transformation relationship` matches a subGraph of the requested parameterised package.
+1. If there is a suitable surrogate parameterised package then start it and return the UID of the resulting run.
+1. Otherwise, start and return the UID of the requested parameterised packages.
+
+The schema of the `runtimePolicy` field in the `api_experiment_start()` payload (in `YAML` format) is:
+
+```yaml
+runtimePolicy:
+  name: prefer-surrogate
+```
+
+## Policy: random-canary-surrogate
+
+In a future version the runtime system will automatically invoke this runtime-policy. However, users can also switch it on manually for their virtual experiment runs.
+
+The algorithm of the policy is:
+
+1. Toss a weighted coin which shows heads with probability `probabilitySurrogate`. If the coin shows heads when it lands then attempt to start 2 virtual experiment instances. The requested one AND a surrogate of the requested one (if available).
+   1. If coin shows `heads`: then attempt to start 2 virtual experiment instances. An instance using the requested parameterised package from the `api_experiment_start()` payload and a second one of a suitable surrogate parameterised package (if present). If there is no suitable surrogate parameterised package then start just one run of the requested parameterised package.
+   1. Use the same logic as the "prefer-surrogate" to identify one surrogate parameterised package.
+2. If the coin shows `tails` then start just the requested parameterised package
+3. Return the UID of the instance for the parameterised package.
+
+
+The schema of the `runtimePolicy` field in the `api_experiment_start()` payload (in `YAML` format) is:
+
+
+```yaml
+runtimePolicy:
+  name: random-canary-surrogate
+  config: # optional
+    probabilitySurrogate: float from 0.0 to 1.0 (optional, default is 0.5)
+```
+

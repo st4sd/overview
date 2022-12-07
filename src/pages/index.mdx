@@ -1,0 +1,188 @@
+---
+title: Simulation Toolkit For Scientific Discovery (ST4SD)
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<Row>
+<Column colMd={5} colLg={8}>
+<Video src="../assets/videos/ST4SD-overview.mp4" poster="../assets/images/index/st4sd-intro.png"></Video>
+</Column >
+</Row>
+
+<Row>
+<Column colMd={5} colLg={8}>
+
+Just as the explosion of computational power, driven by Moore's Law, has enabled us to ask bigger and more meaningful questions, the complexity of the methodologies required to derive the answers has similarly spiked.  This has inevitably resulted in the ability to correctly deploy computational methods to derive value to become siloed into a relatively small number of individuals. 
+
+The Simulation Toolkit for Scientific Discovery (ST4SD) simplifies the development, execution and dissemination of **virtual experiments** by providing powerful querying capabilities, robust and multi-environment execution support, AI acceleration capabilities, and a global showcase.
+
+</Column>
+
+<Column colMd={2} colLg={3} offsetMd={1} offsetLg={1}>  
+<Aside>
+
+A **virtual experiment** is an application workflow which measures one or more characteristics of one or more input systems.
+It is the computational analog of a lab experiment.
+
+</Aside>
+</Column >
+</Row>
+
+
+ We aim to enhance your simulation experience by providing:
+
+- Enhanced **reproducibility** through, for example, the use of workflow and component registries
+- Enhanced **productivity** through, for example, memoization of workflow sub-graphs
+- Enhanced simulation **efficiency** through, for example, the enablement of hybrid surrogate-simulation workflows
+
+
+The primary execution environment for ST4SD is OpenShift/Kubernetes, although executing on classic HPC e.g. LSF is also possible.
+
+You can use the following links to start learning about ST4SD and its features:
+
+<CardGroup>
+  <MiniCard
+    title="Learn ST4SD concepts and terminology"
+    href="/concepts"
+    actionIcon="arrowRight"
+  />
+  <MiniCard
+    title="Discover ST4SD's unique features"
+    href="/key-features"
+    actionIcon="arrowRight"
+  />
+  <MiniCard
+    title="See what people have built with ST4SD"
+    href="https://registry.st4sd.res.ibm.com/"
+  />
+</CardGroup>
+
+## First Steps
+
+To start choose the persona that matches your own
+
+<Row>
+
+<Column colMd={4} colLg={4} noGutterMdLeft>
+<ArticleCard
+  title="Researcher"
+  subTitle="Use the platform to run virtual experiments"
+  href="#researchers"
+  actionIcon="arrowRight"
+>
+
+![Dark article layout mockup](../assets/images/personas/science.jpg)
+
+</ArticleCard>
+</Column>
+
+<Column colMd={4} colLg={4} noGutterMdLeft>
+<ArticleCard
+  subTitle="Use the platform to write virtual experiments"
+  title="Developer"
+  href="#developers"
+  actionIcon="arrowRight"
+>
+
+![Dark article layout mockup](../assets/images/personas/develop.jpg)
+
+</ArticleCard>
+
+</Column>
+
+<Column colMd={4} colLg={4} noGutterMdLeft>
+<ArticleCard
+  subTitle="Install and administer the stack for other users"
+  title="Administrator"
+  href="#administrators"
+  actionIcon="arrowRight"
+>
+
+![Dark article layout mockup](../assets/images/personas/admin.jpg)
+
+</ArticleCard>
+</Column>
+
+</Row>
+
+### Researchers
+
+Researchers use ST4SD to run virtual experiments that have been made available to them.
+
+<InlineNotification  kind="info">
+
+Running a virtual experiment requires access to an instance of ST4SD. This means you need an URL to an ST4SD instance's REST API.
+
+</InlineNotification>
+
+<InlineNotification  kind="warning">
+
+If you have do not have an URL contact the person responsible for the ST4SD instance or install and admin the stack yourself by going to [Administrator.](#administrators)
+
+</InlineNotification>
+
+<Tabs>
+
+<Tab label="I have a URL and remote JupyterLab access">
+
+- You're ready to go. Check [Remote JupyterLab or JupyterServer with OpenShift ST4SD Instance](/user-environments#remote-jupyterlab-or-jupyterserver-with-openshift-st4sd-instance) for some initial information.
+- Then check [running workflows on OpenShift](/running-workflows-on-openshift)
+- To access the same stack from Jupyter Notebook on your laptop see [Local JupyterServer with OpenShift ST4SD Instance](/user-environments#local-jupyterserver-with-openshift-st4sd-instance)
+
+</Tab>
+
+<Tab label="I only have a URL">
+
+- You need to first [set up a local client](/installation#set-up-local-client)
+- Once this is done check [Local JupyterServer with OpenShift ST4SD Instance](/user-environments#local-jupyterserver-with-openshift-st4sd-instance) for some initial information.
+
+</Tab>
+
+<Tab label="I also have an OpenShift cluster account">
+
+- You can also [run workflows from your laptop terminal](/running-ve-via-terminal/)
+
+</Tab>
+
+</Tabs>
+
+If you just want to get a taste of the ST4SD functionalities via toy examples go to [quick taste](#quick-taste).
+
+### Developers
+
+Developers are researchers that also write virtual experiments. 
+
+First, ensure you have access to ST4SD as described [here](#researchers). Then check [Orientation](/orientation) for a list of recommended initial developer docs. 
+
+### Administrators
+
+Adminstrators are responsible for spinning up an instance of ST4SD on OpenShift.
+In most cases researchers and developers will not need to be administrators.
+If you are considering installing ST4SD we recommend first checking that no existing instance is available for you to use.
+
+If you need to install and administer your own OpenShift instance see the instructions [here](/installation#install-on-kubernetes-and-openshift).
+This page also describes installing on classic LSF HPC cluster environment.
+
+## Quick Taste
+
+If you have `python3` with `virtualenv` installed (python 3.7 to 3.10 tested) you can quickly install everything you need to use run some example workflows locally. This will also enable you to use cloud-instances of ST4SD and to develop workflows locally later.
+
+The following snippet will install `st4sd-runtime-core` and run a toy-workflow on your laptop
+
+```bash
+virtualenv -p python3 $HOME/st4sd-runtime-test
+source $HOME/st4sd-runtime-test/bin/activate
+pip install st4sd-runtime-core[deploy]
+git clone https://github.com/st4sd/sum-numbers.git
+elaunch.py --nostamp -l40 sum-numbers
+```
+
+This will create a new virtualenv called `st4sd-runtime-test` at `$HOME/st4sd-runtime-test` and install `st4sd-runtime-core` into it. It will also clone a repository into a directory called `sum-numbers` in whatever directory you run the above commands in. It will then run a toy-workflow that takes a couple of minutes to run. The toy workflow output will be in a directory called `sum-numbers.instance`
+
+You can learn more about the toy-workflow, and workflow specification [here](/tutorial).

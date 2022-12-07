@@ -1,0 +1,78 @@
+---
+title: Accessing and Contributing Applications
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<PageDescription>
+
+Use this page to learn how to access and contribute applications to the ST4SD repositories.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>ST4SD community applications</AnchorLink>
+  <AnchorLink>ST4SD contributed applications</AnchorLink>
+  <AnchorLink>ST4SD official applications</AnchorLink>
+  <AnchorLink>How can I contribute my application image to the ST4SD registries?</AnchorLink>
+</AnchorLinks>
+
+ST4SD virtual experiment developers can use application images to provide functionality for steps in their workflows.
+
+Images provided by the ST4SD team are hosted on quay.io at the following address: https://quay.io/organization/st4sd.
+These images focus on simulation applications and include quantum chemistry simulation codes, molecular dynamics codes, and containerized versions of useful scientific packages. 
+
+Depending on their prefixes, the images on quay.io will fall into one of the three following categories:
+- `community-applications`: ST4SD **community** applications
+- `contributed-applications`: ST4SD **contributed** applications
+- `official-base`: ST4SD **official** applications
+
+## ST4SD community applications
+
+These images are made available by the ST4SD community.
+
+- **Criteria**: These application images can be provided _as is_.
+                The only requirement for them is to follow a naming convention (e.g. `${application}-${maintainer id}:${version}`).
+- **Push access**: Permission to push images to the community registry is available to anyone who wants to contribute.
+                   See [How can I contribute my application image to the ST4SD registries?](#how-can-i-contribute-my-application-image-to-the-st4sd-registries) for details.
+- **Maintainers**: The contributors of these application images are expected to be the image maintainers.
+
+## ST4SD contributed applications
+
+These images are donated by the ST4SD community and follow a more rigorous set of standards.
+
+- **Criteria**: As a minimum, of contributed applications should conform to the following requirements:
+    - Follow a naming convention (e.g. `${application}-${maintainer id}:${version}`).
+    - Be stable
+    - Use unique tags with version information
+    - Run as non-root and follow [OpenShift best practices for building containers](https://docs.openshift.com/container-platform/4.10/openshift_images/create-images.html)
+- **Push Access**: Permission to push images that conform to "most" requirements is available to anyone who wants to contribute.
+                   See [How can I contribute my application image to the ST4SD registries?](#how-can-i-contribute-my-application-image-to-the-st4sd-registries) for details.
+- **Maintainers**: The contributors of these application images are expected to be the image maintainers.
+
+## ST4SD official applications
+
+These images are maintained directly by the ST4SD development team.
+
+- **Criteria**: The application images should:
+    - Follow a naming convention (e.g. `${application}-${maintainer id}:${version}`).
+    - Be stable
+    - Be size optimised
+    - Use unique tags with version information
+    - Run as non-root and follow [OpenShift best practices for building containers](https://docs.openshift.com/container-platform/4.10/openshift_images/create-images.html)
+    - Be multi-architecture (recommended)
+- **Push Access**: ST4SD development team.
+- **Maintainers**: ST4SD development team.
+
+## How can I contribute my application image to the ST4SD registries?
+
+ST4SD  welcomes contributions. To proceed: 
+
+1. Make a request for including your application images to the _community_ or _contributed_ applications by following the instructions in [Contribute](/contribute). 
+2. The ST4SD maintainers will help you finding the most suitable category for your application image. If it is named correctly it can always be added to the _community_ applications.
+3. After this you will receive push permissions to the appropriate repository where you will be able to maintain and update your image.

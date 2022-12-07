@@ -1,0 +1,560 @@
+---
+title: Creating Parameterised Experiment Packages
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<PageDescription>
+
+Use this page to learn what parameterised packages are and how to create them.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>What is a parameterised virtual experiment package?</AnchorLink>
+  <AnchorLink>Structure of a parameterised virtual experiment package</AnchorLink>
+  <AnchorLink>The Base section</AnchorLink>
+  <AnchorLink>The Parameterisation section</AnchorLink>
+  <AnchorLink>The Metadata section</AnchorLink>
+  <AnchorLink>Adding a parameterised package to a registry</AnchorLink>
+  <AnchorLink>Example</AnchorLink>
+</AnchorLinks>
+
+A `parameterised virtual experiment`defines how to run a virtual experiment in a particular way.
+
+ST4SD provides a registry for parameterised virtual experiments.
+The registry allows researchers to browse and use these packages.
+Each ST4SD deployment has a registry and we also maintain [a publicly available registry](https://registry.st4sd.res.ibm.com/).
+
+This document explains how developers can write  parameterised virtual experiment package.
+For how these packages can be used by others see [using the virtual experiment registry](/using-the-virtual-experiments-registry-ui).
+
+
+
+## What is a parameterised virtual experiment package?
+
+A parameterised virtual experiment package is a python dictionary (or YAML or JSON structure) that describes:
+
+- How to access a virtual experiment
+- What options to allow users to change
+- What options have preset values
+- Metadata about the package.
+
+It is **parameterised** as the package can set the values of options in the base experiment to give certain behaviours e.g. setting a quantum method known to be fast, that can't be overridden by the user.
+The package can also specify a restricted set of values for an option.
+In this way the same base virtual experiment can be configured in many ways and provide different parameterised packages for different tasks.
+
+
+
+## Structure of a parameterised virtual experiment package
+
+A parameterised package has three main sections:
+
+1. The base packages (i.e. workflow definitions) that the virtual experiment consists of.
+   - Where they are located, what version to get, and how to get them. Often there will be just one.
+2. The parameterisation information:
+   - Presets: options that  users cannot change.
+   - Execution options: options that users can change potential with some restrictions.
+3. Metadata:
+   - Various other information about the package e.g. description, license, maintainer and keywords.
+
+Each of these is a top-level key in the package description.
+The following snippet shows this top-level structure:
+
+```python
+definition = {
+    "base": {
+        # Required: Base package information ...
+    }
+    "metadata": {
+    		# Required: Various info about the package  ...
+    },
+    "parameterisation": {
+      # Optional: What values are set and what can be changed ..
+    }
+}
+```
+
+
+
+The rest of this document explains each section, outlining what information is required and optional.
+
+<InlineNotification>
+
+In the following we use YAML to describe the section structure, for ease of explanation. This would have to be converted to a python dictionary to upload to the registry. An example of doing this is given in the [pushing a package](#pushing-the-package) section.
+
+</InlineNotification>
+
+## The Base section
+
+<AnchorLinks small>
+  <AnchorLink>Sources</AnchorLink>
+  <AnchorLink>Specifying image registry dependencies</AnchorLink>
+</AnchorLinks>
+
+The `base` section describes where the base virtual experiment is and how to access it.
+
+A virtual experiment can contain multiple base packages although for handwritten packages this will usually be one.
+
+```yaml
+base
+ - name: #OPTIONAL - defaults to "main", is required for multi-package experiments
+   source:
+      $PACKAGE_SOURCETYPE: $PACKAGE_SOURCE_STRUCTURE #REQUIRED: ONE package source type. See below for options
+   dependencies:
+     imageRegistries:
+       - $IMAGE-REGISTRY_STRUCTURE #OPTIONAL: list of image registry structures defining how to access the images required by the experiment. See below for options.
+   config: #How to read the experiment from the given source e.g. manifest etc. REQUIRED IF the base virtual experiment uses standard packaging (is a workflow conf + manifest)
+     path: #relative (to the "root" of `${BASE_PACKAGE}.source`) path to the virtual experiment (flowir) configuration file
+     manifestPath: #relative (to "root" of `${BASE_PACKAGE}.source`) path to the virtual experiments manifest file
+```
+
+### Sources
+
+Select the source that matches where your virtual experiment is stored
+
+#### Git source
+
+
+
+```Yaml
+git:
+  location:
+    url: the http url of the repo
+    # Must specify exactly ONE of branch, tag, and commit
+    branch: name of branch
+    tag: name of tag
+    commit: git commit hash
+  security:
+    oauth:
+      # You must use exactly ONE of `value` or `valueFrom`.
+      # "value" if automatically converted to "valueFrom.secretKeyRef` when you push the package
+      valueFrom:
+        secretKeyRef:
+          name: name of secret containing oauthSecret key
+          key: name of key holding the token, defaults to "oauth-token"
+      value: an oauth api key for authenticating to git with HTTPS basic auth
+```
+
+<InlineNotification kind="info">
+
+ST4SD will use the oauth-token you provide to `git clone https://${oauth-token}@server.com/your-org/your-repo.git`.
+
+If you are using [Github](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) to host your git repository you can generate a Personal Access Token with just read-access to your git repository.
+
+If you are using [Gitlab](https://docs.gitlab.com/ee/user/project/deploy_tokens/#create-a-deploy-token), you can generate a Deploy Token with read acces to your project.
+
+</InlineNotification>
+
+<InlineNotification kind="warning">
+
+For [Github](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token#using-a-token-on-the-command-line) and [Gitlab](https://docs.gitlab.com/ee/user/project/deploy_tokens/#clone-a-repository) you should prefix the Personal Access Token with your username like so: `${Username}:${PersonalAccessToken}`.
+
+</InlineNotification>
+
+#### Datashim source
+
+
+
+If you have installed [Datashim](https://github.com/datashim-io/datashim) on your cluster, you can use a Datashim `dataset` as the location of your virtual experiment base package.
+
+```yaml
+dataset:
+  # No need for a security field because Datashim removes this requirement.
+  location:
+    dataset: the name of the dataset object
+```
+
+
+
+
+#### S3 source
+
+
+
+```yaml
+s3:
+  location:
+    region: region (optional)
+    endpoint: S3 endpoint url
+    bucket: bucket name
+  security:
+    valueFrom:
+        # Must choose exactly ONE of secretS3KeyRef and valuseS3
+        # "valuesS3" is automatically converted to "secretS3KeyRef" when you push the package
+      secretS3KeyRef:
+        name: name of existing kubernetes Secret object containing access information
+          # keyAccessKeyId has default value "accessKeyId"
+        keyAccessKeyId: key in Secret object that holds accessKeyId
+          # secretAccessKey has default value "secretAccessKey"
+        keySecretAccessKey: key in Secret object that holds secretAccessKey
+      s3Ref:
+        accessKeyId: Value of accessKeyId
+        secretAccessKey: Value of accessKeyId
+```
+
+
+
+
+### Specifying image registry dependencies
+
+Virtual experiments often use images which may be stored in private registries. This structure allows the developer to provide ST4SD with information on how to access these registries.
+
+```yaml
+dependencies:
+  #An Optional dictionary of dependency types
+  imageRegistries: # An optional list of image registries struct
+  - serverUrl: the url to the image registry
+    security:
+      valueFrom:
+        # Must select exactly 1 of secretKeyRef and usernamePassword
+        # "usernamePassword" is automatically converted to a "secretKeyRef" when the package is pushed
+        secretKeyRef:
+          name: name of an existing "docker-registry" kubernetes secret object containing the access information
+          key: Name of key containing the auth information (default is .dockerconfigjson)
+        usernamePassword:
+          # here expect fields we would use for `kubectl create secret docker-registry`
+          username: ...
+          password: ...
+
+```
+
+## The Parameterisation section
+
+<AnchorLinks small>
+  <AnchorLink>Parameterisation rules</AnchorLink>
+  <AnchorLink>Presets</AnchorLink>
+  <AnchorLink>Execution options</AnchorLink>
+</AnchorLinks>
+
+ST4SD supports 2 levels of parameterisation:`presets` which are options that virtual experiment developers decide and users cannot change; and `executionOptions`  that virtual experiment developers allow users to override potentially with some limit.
+
+```yaml
+parameterisation:
+  presets: ...
+  executionOptions: ...
+```
+
+### Parameterisation rules
+
+The parameter types that can be specified in each section are:
+
+- variables (`variables`): Values for variables used in the experiment
+- data-files (`data`) : Values for data files used by the experiment
+- platform (`platform`): Value for the platform (named set of variables) to use
+- runtime arguments (`runtime`) : `elaunch.py` command line arguments
+
+Both `presets` and `executionOptions` can be specified in same package.
+
+It is an error to specify the same parameter (variable, data file, runtime option) in both sections. In addition `platform` can only be specified in one of the two sections.
+
+If a virtual experiment has a parameter that is not specified in either section it is `preset` with its default value and cannot be changed.
+
+<InlineNotification kind="warning">
+
+If a developer wants a user to be able to provide a value for a parameter they **must** specify it in `executionOptions`
+
+</InlineNotification>
+
+For `executionOptions` the value of the `parameter` is resolved as follows:
+
+1. The value provided by the user
+2. The default value provided by the developer in the parameterised package if there is one
+3. The first value in the array of options provided by the developer in the parameterised package if there is one
+4. If none of the above exist the default value of the parameter in the `base-package` is used
+
+### Presets
+
+Use presets to define set values for parameters
+
+
+```yaml
+parameterisation:
+  presets:  # optional
+    # Fields defined here *cannot* be overridden by `executionOptions`.
+    # All fields are optional
+    variables: #A list of preset values for variables in the virtual experiment
+    - name: $name of variable
+      value: $variableValue
+    data:
+      - name: name of a file in the "data" directory
+        value: contents of file - utf8 string (not suitable for binary files)
+    runtime:
+      args:
+      - array of `elaunch.py` command line strings
+    platform:  #Value for the experiment platform.
+
+
+
+```
+
+
+
+### Execution options
+
+Use execution options to allow user to choose values for parameters if they want
+
+```yaml
+  executionOptions: # optional
+    # users may override values within constraints that workflow developers set
+    variables:
+    # Variables that the developer allows the user to override.
+    # These CANNOT appear in presets.variables
+    - name: $variable name
+      valueFrom: #Optional: An array of possible values for the variable
+      # If a user does set a value for the variable the 1st entry is used
+      # If valueFrom is not given then user can set any value for the variable.
+      # if they do not set any value then the variable
+      # receives the value that the workflow definition contains in
+      # the platform definition
+      - value: value of variable
+    data: #A list of data files whose contents the user can set.
+    - name: filename under `data` directory, the file must already exist
+    runtime: # Arguments to pass to `elaunch.py`
+             # (cannot include -i -a -d --instanceName)
+      args:
+      - array of elaunch.py command line strings
+    platform: #Default for experiment platform or choice.
+              # Cannot be specified here if in `presets`
+    - an array of platform names. # If the user does not specifying one on start
+                                  # then the 1st entry is used. If no platform
+                                  # is specified the `default` platform is used
+
+
+```
+
+
+
+## The Metadata section
+
+The `metadata` section is used to provide various other information about the parameterised virtual experiment.
+
+
+```yaml
+metadata:
+  package: #All the maintainer metadata. Can decide exact structure at implementation time.
+    name: the package name
+    tags: # Optional
+    - latest # On Push, auto insert latest if missing
+    maintainer: email (optional)
+    license: some string (optional)
+    keywords: # optional
+    - keyword 1
+    - keyword 2
+
+```
+
+
+
+## Adding a parameterised package to a registry
+
+<AnchorLinks small>
+  <AnchorLink>Pushing the package</AnchorLink>
+  <AnchorLink>Parameterised Package Identifier</AnchorLink>
+  <AnchorLink>Package Tags</AnchorLink>
+  <AnchorLink>Registry metadata</AnchorLink>
+</AnchorLinks>
+
+### Pushing the package
+
+#### From a python dictionary
+
+The parameterised package is stored as a dictionary in a python module `mypackage.py` (can be any name). The dictionary is assigned to a variable (can be any name) e.g.
+
+```python
+d = {
+  "base": ...
+}
+```
+
+Then
+
+```python
+import mypackage
+api.api_experiment_push(mypackage.d)
+```
+
+
+
+#### From YAML
+
+The parameterised package is stored as YAML in a  file `mypackage.yaml` (can be any name).
+
+```python
+import yaml
+with open('mypackage.yaml') as f:
+	api.api_experiment_push(yaml.load(f))
+```
+
+
+
+#### From JSON
+
+The parameterised package is stored as  JSON in a file `mypackage.json` (can be any name).
+
+```python
+import json
+with open('mypackage.json') as f:
+	api.api_experiment_push(json.load(f))
+```
+
+
+
+#### Registry actions when a package is pushed
+
+On pushing a parameterised virtual experiment package, the registry:
+
+* Generates a unique Id for the entry  see [Parameterised Packaged Identifier](#parameterised-package-identifier)
+* Applies and updates tags - see [Package Tags](#package-tags)
+* Stores any credentials as Kubernetes secrets and converts the relevant fields in the parameterised package to `secretKeyRef` and `secretS3KeyRef` types.
+* Adds additional data to the parameterised package - see [registry metadata](#registry-metadata)
+
+
+### Parameterised Package Identifier
+
+When  a parameterised package is pushed to the virtual experiment registry it is assigned a  `digest` which is unique between all packages with the same package name (the value of `metadata.package.name`).
+
+The unique identifier of the package is then `$packageName@$digest`. For example ``my-experiment@sha256x16092ca4bb13955b1397bf38cfba45ef11c9933bf796454a81de4f86``
+
+By convention the registry assumes  parameterised packages with the same package name represent different versions of that package. These are collected together in the registry-ui with the details of the most recent (last uploaded) package shown and links to all previous versions of the package
+
+### Package Tags
+
+Parameterized packages can have  *tags*  applied to them. A tag is a shorthand for referencing the package. For example by adding the tag `1.0` to the package `my-experiment@sha256x16092ca4bb13955b1397bf38cfba45ef11c9933bf796454a81de4f86` you can reference it as `my-experiment:1.0` in various operations.
+
+Developers can specify tags when pushing a package using the  `metadata.package.tags` field of the package payload. Tagging a parameterised package with a tag removes the tag from any other parameterised package with the same name. This guarantees that if `$packageName:$tag` exists, it points to exactly one `$packageName@$digest`. The API call `api_experiment_update_tags(packageIdentifier, tags)` can also be used add or remove a tag to a package at any time. Note, this call requires `tags` to include **all** tags you want associated with the package. If an existing tag is not in this list then it will be removed.
+
+The current tags associated with a package can be found by inspecting the `metadata.package.tags` element of the package definition in the registry.
+
+<InlineNotification>
+
+When a package is pushed it is automatically tagged `latest` by the registry.
+If only a package-name is passed to an API call require a package identifier then the tag `latest` is assumed.
+
+</InlineNotification>
+
+<InlineNotification kind="warning">
+
+`latest` can be moved to another digest with the same-package name if desired using `api_experiment_update_tags`. However `latest` cannot be removed. That is you will receive an error if you omit it from the `tag` list in `api_experiment_update_tags` for a digest that is tagged with `:latest`. You can only remove the `:latest` tag from a digest if you tag a different digest with the same name `package-name` with the tag  `:latest`.
+
+</InlineNotification>
+
+
+#### Example
+
+A parameterised package with name `my-experiment` is pushed to the registry. It is given the digest `sha256x16092ca4bb13955b1397bf38cfba45ef11c9933bf796454a81de4f86`.
+
+All 3 identifiers below point to the same digest:
+
+- `my-experiment`
+- `my-experiment:latest`
+- `my-experiment@sha256x16092ca4bb13955b1397bf38cfba45ef11c9933bf796454a81de4f8`
+
+Any of these 3 identifiers can be used to refer to the new parameterised package in API call e.g. to start an instance of this parameterised virtual experiment all the following will work:
+
+```python
+api.api_experiment_start("my-experiment", payload={})
+api.api_experiment_start("my-experiment:latest", payload={})
+api.api_experiment_start("my-experiment@sha256x16092ca4bb13955b1397bf38cfba45ef11c9933bf796454a81de4f86", payload={})
+```
+
+
+
+#### Package tag update rules
+
+If a tag is requested for a digest and that tag is already associated with another digest with the same package-name,  then the registry updates `$packageName:$tag` to point to the new package. This ensures that `$packageName:$tag` points to a unique digest even if the workflow developers pushed the `$tag` in the past.
+
+In general this operation involves updating the `metadata.registry.tags` fields of all parameterised packages with the same `package-name`.
+
+### Registry metadata
+
+The registry adds various information it discovers to the `metadata` section of the package under the `registry` key. This includes the id of the package
+
+```yaml
+registry: #All data added by runtime - developers cannot set anything under registry
+    digest: $a string up to 63 characters #The identifier
+    createdOn: UTC time that this digest was created, format is %Y-%m-%dT%H%M%S.%f%z
+    timesExecuted: int - automatically increased every time a user launches this virtual experiment entry in the ST4SD deployment the registry is attached to
+    tags: #A list of tags which point to this digest.
+    - $TAG # This is a SUBSET of metadata.package.tags. It can be EMPTY if no tag points to this digest anymore
+    interface: {} # ST4SD injects the Virtual experiment interface if it exists
+    data: #The list of filenames under the `data` directory (just top-level files, NO directories)
+    - name: $DATA_FILE_NAME
+    inputs: #The list of files under the `input` directory. These are files that users must provide when launching this virtual experiment
+    - name: $INPUT_FILE_NAME
+    containerImages: #A list of the names of the container images that could be used by this virtual experiment. If
+    - name: the name of a container image (e.g. a URL)
+```
+
+
+
+## Example
+
+
+Here is an example parameterised package for the [sum-numbers toy virtual experiment](/tutorial) which lives on `git` that demonstrates many of the features discussed above.
+
+
+```python
+definition = {
+    "base": {
+        # We define the one or more base-packages (here just one)
+        "packages": [{
+            "source": {
+                "git": {
+                    "location": {
+                        # This one lives on Git, under the "main" branch, we can also use
+                        # "tag" and "commit"
+                        "url": "https://github.com/st4sd/sum-numbers.git",
+                        "branch": "main"
+                    }
+                }
+            },
+            "config": {  # Optional - not required for this example
+                "path": ".", # use when package is not at the root of the source location
+                "manifestPath": None,  # relative path to manifest YAML (not used in this example)
+            }
+        }]
+    },
+    "metadata": {
+        "package": {
+            "name": "sum-numbers", # Required
+            "tags": ["latest"],  # Optional - *always* includes "latest"
+            "maintainer": "vassilis.vassiliadis@ibm.com", # Optional but recommended
+            "description": "Toy virtual experiment", # Optional but recommended
+            "keywords": [ # Optional but recommended
+                "openshift", "hello-world"
+            ]
+        }
+    },
+    "parameterisation": {  # Optional but recommended
+        "presets": {  # Options that users CANNOT override
+            "runtime": {
+                "args": [
+                    # *Always* register the workflow to the ST4SD datastore (aka Centralized Database)
+                    "--registerWorkflow=yes"
+                ]
+            }
+        },
+        "executionOptions": { # Options that users *MAY* override and *MUST* adhere to rules below
+            "variables": [
+                # Configures the number of replicas, can be any positive integer, or 1 if unspecified
+                {"name": "numberOfPoints", "value": "1"}
+            ],
+            "data": [
+                # Users *may* provide a `cat_me.txt` file
+                {"name": "cat_me.txt"}
+            ],
+            # Users can *only* execute the `openshift` and `default` platforms - even if the virtual experiment
+            # comes with more platform definitions
+            "platform": ["openshift", "default"]
+        }
+    }
+}
+
+api.api_experiment_push(definition)
+```

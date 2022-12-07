@@ -1,0 +1,144 @@
+---
+title: ST4SD Runtime Service API
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+The ST4SD runtime service ([swagger available here](/api-docs/openapi/st4sd-runtime-service/st4sd-runtime-service.openapi.html)) supports adding virtual experiment entries to a catalog and interacting with them, including:
+
+1. launching virtual experiment instances
+2. monitoring virtual experiment instances
+3. downloading outputs and measured properties of virtual experiment instances
+
+ST4SD provides a python client for the ST4SD runtime service REST-API. The python client is currently part of `st4sd-runtime-core`. You can find instructions for installing the `local client` [here](/installation#set-up-local-client).
+
+The FAQ below assumes:
+1. you have already installed a local client.
+
+## How do I connect to the ST4SD runtime service?
+
+First, you need to get the URL to the ST4SD runtime service endpoint. Ask the administrator of the ST4SD instance to provide this URL to you. They will also need to create an account for you on their ST4SD instance and configure RBAC so that your account can read `Service` objects in the namespace that ST4SD is installed in.
+
+If the ST4SD instance is on IBM Cloud you will need to login to the OpenShift Web Console once so that IBM Cloud completes the setup of your account.
+
+First you need to obtain an `auth-token`. the python code below will open a URL in your browser. The web-page will ask you to login to ST4SD typically by delegating the authentication to the OpenShift server hosting ST4SD. If this is the very first time you login to this ST4SD URL you may be asked for your permission to allow ST4SD to know that you are logging in.
+
+After you log in you will be presented with a page that contains your `auth-token`, copy it and return to this document. By default, this token expires every 168 hours (1 week).
+
+```python
+import webbrowser
+# enter the https:// ST4SD url below
+url="https://st4sd-prod.ve-5446-9ca4d14d48413d18ce61b80811ba4308-0000.us-south.containers.appdomain.cloud"
+
+if url.endswith("/"):
+    url = url[:-1]
+
+url = '/'.join([url, "authorisation/token"])
+
+webbrowser.open(url)
+```
+
+You should now have an `auth-token`. Use it below to login to ST4SD.
+
+```python
+import experiment.service.db
+
+# enter the https:// ST4SD url below
+url="https://st4sd-prod.ve-5446-9ca4d14d48413d18ce61b80811ba4308-0000.us-south.containers.appdomain.cloud"
+
+# enter your auth-token below
+auth_token="put your authentication/token - do not share it with anyone"
+
+api=experiment.service.db.ExperimentRestAPI(url, cc_auth_token=auth_token)
+```
+
+The `ExperimentRestAPI` initializer validates the authentication token you provided and will raise an exception if it is invalid. If you do not get an Exception that means you can use `api` to interact with the `st4sd-runtime-service` and `st4sd-datastore` REST-APIs.
+
+<InlineNotification>
+ST4SD may print warnings to your python terminal e.g. `Unable to import pythonlsf - limited LSF functionality will be available`. These are not problems. They are just informing you that select features are not supported on the machine you are using. You can ignore them.
+</InlineNotification>
+
+
+## How do I get the status of a virtual experiment instance?
+
+First, instantiate `experiment.service.db.ExperimentRestAPI` before you continue ay further. See [How do I connect to the ST4SD runtime service?](#how-do-i-connect-to-the-st4sd-runtime-service) for instructions.
+
+
+All virtual experiment instances have a unique REST-API identifier. We use the term `rest_uid` to refer such identifiers.
+
+```python
+# put here the rest_uid of the virtual experiment instance
+rest_uid = "toxicity-predictions-trol7a"
+
+status = api.api_rest_uid_status(rest_uid)
+```
+
+The variable `status` contains a plethora of information including metadata about the status of the virtual experiment instance and its outputs. Here, we will focus on the status.
+
+Let's try printing this information to get a better look:
+
+```python
+import json
+print(json.dumps(status['status'], indent=2))
+```
+
+Here is an example:
+
+```json
+{
+  "experiment-state": "finished",
+  "total-progress": 1.0,
+  "exit-status": "Success",
+  "stages": [
+    "Toxicity-prediction"
+  ],
+  "current-stage": "Toxicity-prediction",
+  "stage-state": "finished",
+  "stage-progress": 1.0,
+  "error-description": "",
+  "meta": { ... omitted ... }
+}
+```
+
+The virtual experiment instance above reports that:
+
+1. The orchestrator observed that the virtual experiment instance terminated (`experiment-state` = `finished`)
+2. The virtual experiment instance has produced all its outputs (`total-progress` = `1.0`)
+3. The virtual experiment instance completed successfully (`exit-status` = `Success`)
+4. The experiment had 1 stage (`stages` = `["Toxicity-prediction"]`)
+5. `Toxicity-prediction` was the most recently executed stage with the lowest stage index (`current-stage` = `Toxicity-prediction`).
+   1. All its tasks terminated and they were all successful (`stage-state` = `finished`)
+   2. It reached its max progress (`stage-progress` = `1.0`)
+6. The virtual experiment instance did not raise any errors (`error-description` = `""`)
+
+<details><summary>Click to show the full specification of the status dictionary</summary>
+
+
+- `exit-status`: The status of the completed experiment. This receives its final value *after* `experiment-state` transitions to either `finished` or `failed`. Value is one of `["Success", "Failed", "Stopped", ""]`. Value may be empty while Kubernetes initializes objects.
+- `experiment-state`: Indicates the state of the orchestrator that is executing the experiment tasks. **Not** to be confused with status of experiment (`exit-status`). For example, an experiment status can have `experiment-state=finished` with `exit-status=failed`. This means that the experiment completed with a failure. The value of `experiment-state` is one of `["unscheduled", "running", "finished", "failed", "unschedulable", ""]`. Value may be empty while Kubernetes initializes objects.
+- `stage-state`: Indicates the state of the active stage in the experiment with the lowest stage index. Value is one of `["Initializing", "finished", "waiting_on_resource","running", "component_shutdown", "failed"]`
+- `error-description`: A string, which when printed is a human readable description that explains why `exit-status` is `Failed`.
+- `total-progress`: A number in [0.0, 1.0] indicating the progress of the experiment. Note that workflow developers may decide to control this value.
+- `stage-progress`: A number in [0.0, 1.0] indicating the progress of the active stage with the lowest stage index. Note that workflow developers may decide to control this value.
+- `stages`: A list of human-readable stage names
+- `current-stage`: UID of stage (e.g. `stage0`)
+- `meta`: This is a nested dictionary
+  - `arguments`: The command-line of the orchestrator
+  - `data`: The list of files that override data files
+  - `input`: The list of input files
+  - `pid`: The process ID of the st4sd orchestrator
+  - `platform`: The name of the platform that the virtual experiment instance executes
+  - `userVariables`: User provided variables, the schema is  `{'global':{name:value}, 'stages':{index:{name:value}}}`
+  - `variables`: Global and stage variables active in the `platform`-scope that the virtual experiment executes. The schema is `{'global':{name:value}, 'stages':{index:{name:value}}}`
+  - `hybridPlatform`: Name of hybrid-platform for communicating with LSF (can be None),
+  - `userMetadata`: A dictionary with `key(str): Any` value pairs that users can provide
+  - `instanceName`: The name of the directory containing the virtual experiment instance.
+  - `version`: The version of the st4sd orchestrator
+
+
+</details>
