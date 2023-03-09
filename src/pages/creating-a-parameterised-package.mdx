@@ -99,19 +99,34 @@ In the following we use YAML to describe the section structure, for ease of expl
 
 The `base` section describes where the base virtual experiment is and how to access it.
 
+```yaml
+base:
+  packages:
+  - $PACKAGE_DEFINITION
+```
+
 A virtual experiment can contain multiple base packages although for handwritten packages this will usually be one.
 
 ```yaml
-base
- - name: #OPTIONAL - defaults to "main", is required for multi-package experiments
-   source:
-      $PACKAGE_SOURCETYPE: $PACKAGE_SOURCE_STRUCTURE #REQUIRED: ONE package source type. See below for options
-   dependencies:
-     imageRegistries:
-       - $IMAGE-REGISTRY_STRUCTURE #OPTIONAL: list of image registry structures defining how to access the images required by the experiment. See below for options.
-   config: #How to read the experiment from the given source e.g. manifest etc. REQUIRED IF the base virtual experiment uses standard packaging (is a workflow conf + manifest)
-     path: #relative (to the "root" of `${BASE_PACKAGE}.source`) path to the virtual experiment (flowir) configuration file
-     manifestPath: #relative (to "root" of `${BASE_PACKAGE}.source`) path to the virtual experiments manifest file
+packages:
+- name: # OPTIONAL - defaults to "main", is required
+        # for multi-package experiments
+  source:
+     #REQUIRED: ONE package source type. See below for options
+     $PACKAGE_SOURCETYPE: $PACKAGE_SOURCE_STRUCTURE
+  config:
+    # How to read the experiment from the given source e.g. manifest etc.
+    # config is REQUIRED IF the base virtual experiment uses standard
+    # packaging (is a workflow conf + manifest)
+    path: # relative (to the "root" of `${BASE_PACKAGE}.source`)
+          # path to the virtual experiment (flowir) configuration file
+    manifestPath: # path to the virtual experiments manifest file
+                  # relative to "root" of `${BASE_PACKAGE}.source`
+  dependencies:
+    imageRegistries:
+      #OPTIONAL: list of image registry structures defining how to access
+      # the images required by the experiment. See below for options.
+      - $IMAGE_REGISTRY_STRUCTURE
 ```
 
 ### Sources
@@ -306,20 +321,20 @@ Use execution options to allow user to choose values for parameters if they want
     # Variables that the developer allows the user to override.
     # These CANNOT appear in presets.variables
     - name: $variable name
-      valueFrom: #Optional: An array of possible values for the variable
-      # If a user does set a value for the variable the 1st entry is used
-      # If valueFrom is not given then user can set any value for the variable.
-      # if they do not set any value then the variable
-      # receives the value that the workflow definition contains in
-      # the platform definition
-      - value: value of variable
+      # .value and .valueFrom are both optional and mutually exclusive
+      # if neither fields exist then users can set variable to any value.
+      #   at start, if users do not provide a value, the variable receives the
+      #   default value that the selected platform defines for this variable
+      value: an optional default value that users can override
+      valueFrom: # An optional array of available choices (1st is default)
+      - value: value of variable (a choice, 1st choice is also the default)
     data: #A list of data files whose contents the user can set.
     - name: filename under `data` directory, the file must already exist
     runtime: # Arguments to pass to `elaunch.py`
              # (cannot include -i -a -d --instanceName)
       args:
       - array of elaunch.py command line strings
-    platform: #Default for experiment platform or choice.
+    platform: # Choices for platform selection.
               # Cannot be specified here if in `presets`
     - an array of platform names. # If the user does not specifying one on start
                                   # then the 1st entry is used. If no platform
@@ -327,7 +342,6 @@ Use execution options to allow user to choose values for parameters if they want
 
 
 ```
-
 
 
 ## The Metadata section

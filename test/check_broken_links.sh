@@ -17,4 +17,4 @@ tar -xzf linkcheck-2.0.23-linux-x64.tar.gz
 sleep 10s
 
 # Check for broken links and anchors
-./linkcheck/linkcheck localhost:9000/st4sd/overview/
+./linkcheck/linkcheck localhost:9000/overview/
