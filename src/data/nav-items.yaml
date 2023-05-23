@@ -8,33 +8,13 @@
     path: /contribute   
   - title: Roadmap
     path: /roadmap
-- title: Getting Started
-  pages:
   - title: Concepts
     path: /concepts
-  - title: Installation
-    path: /installation
   - title: User Environments
     path: /user-environments
-  - title: Virtual Experiment Registry
-    path: /using-the-virtual-experiments-registry-ui
-  - title: Python Client API
-    path: /running-workflows-on-openshift
-  - title: Virtual Experiment Interfaces
-    path: /using-a-virtual-experiment-interface
-  - title: Cloud Object Store
-    path: /UsingCloudObjectStore
-  - title: Memoization
-    path: /memoization
-  - title: OpenShift CLI
-    path: /running-ve-via-terminal/
-  - title: Using Graph Relationships
-    path: /using-graph-relationships
-  - title: Using Runtime Policies
-    path: /using-runtime-policies
-- title: Developers
+- title: ST4SD Core
   pages:
-  - title: Orientation
+  - title: Getting Started
     path: /orientation
   - title: Tutorial
     path: /tutorial
@@ -50,5 +30,29 @@
     path: /restart
   - title: Virtual Experiment Interfaces
     path: /writing-a-virtual-experiment-interface
+- title: ST4SD Cloud
+  pages:
+  - title: Installation
+    path: /installation
+- title: ST4SD Services
+  pages:
+  - title: Python Client API
+    path: /running-workflows-on-openshift
+  - title: Virtual Experiment Interfaces
+    path: /using-a-virtual-experiment-interface
+  - title: Cloud Object Store
+    path: /UsingCloudObjectStore
+  - title: Memoization
+    path: /memoization
+  - title: OpenShift CLI
+    path: /running-ve-via-terminal/
+  - title: Using Graph Relationships
+    path: /using-graph-relationships
+  - title: Using Runtime Policies
+    path: /using-runtime-policies
+- title: ST4SD Registry
+  pages:
+  - title: Virtual Experiment Registry
+    path: /using-the-virtual-experiments-registry-ui
   - title: Parameterized Packages
     path: /creating-a-parameterised-package
