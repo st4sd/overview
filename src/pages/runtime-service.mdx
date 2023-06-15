@@ -80,7 +80,7 @@ Generate an API-key using an OpenShift ServiceAccount:
           This is an OpenShift token that you can use to impersonate the ServiceAccount and log on the OpenShift cluster.
         - `<SERVICE_ACCOUNT_NAME>.dockercfg` or `<SERVICE_ACCOUNT_NAME>.dockerconfigjson`:
         
-          That contains docker registry credentials and is used for pulling images from the private container registry of your OpenShift cluster.
+          That contains docker registry credentials and is used for pulling images from the private container registry of your OpenShift cluster - Openshift Image Registry.
 
   3.  Bind the ServiceAccount `<SERVICE_ACCOUNT_NAME>` to the namespaced role `st4sd-authenticate-microservice` - we have configured oauth-proxy to authorize OpenShift users that can get services in the same namespace as the st4sd deployment. For that you can use the following snippet in a new `role_binding.yaml` file:
         ```yaml 
