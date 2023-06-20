@@ -26,14 +26,16 @@ First, you need to get the URL to the ST4SD runtime service endpoint. Ask the ad
 
 If the ST4SD instance is on IBM Cloud you will need to login to the OpenShift Web Console once so that IBM Cloud completes the setup of your account.
 
-First you need to obtain an `auth-token`. the python code below will open a URL in your browser. The web-page will ask you to login to ST4SD typically by delegating the authentication to the OpenShift server hosting ST4SD. If this is the very first time you login to this ST4SD URL you may be asked for your permission to allow ST4SD to know that you are logging in.
+### Connect to the ST4SD runtime service using an oauth-token
+
+You need to obtain an `auth-token`. the python code below will open a URL in your browser. The web-page will ask you to login to ST4SD typically by delegating the authentication to the OpenShift server hosting ST4SD. If this is the very first time you login to this ST4SD URL you may be asked for your permission to allow ST4SD to know that you are logging in.
 
 After you log in you will be presented with a page that contains your `auth-token`, copy it and return to this document. By default, this token expires every 168 hours (1 week).
 
 ```python
 import webbrowser
 # enter the https:// ST4SD url below
-url="https://st4sd-prod.ve-5446-9ca4d14d48413d18ce61b80811ba4308-0000.us-south.containers.appdomain.cloud"
+url="https://${your ST4SD url}"
 
 if url.endswith("/"):
     url = url[:-1]
@@ -49,7 +51,7 @@ You should now have an `auth-token`. Use it below to login to ST4SD.
 import experiment.service.db
 
 # enter the https:// ST4SD url below
-url="https://st4sd-prod.ve-5446-9ca4d14d48413d18ce61b80811ba4308-0000.us-south.containers.appdomain.cloud"
+url="https://${your ST4SD url}"
 
 # enter your auth-token below
 auth_token="put your authentication/token - do not share it with anyone"
@@ -58,6 +60,73 @@ api=experiment.service.db.ExperimentRestAPI(url, cc_auth_token=auth_token)
 ```
 
 The `ExperimentRestAPI` initializer validates the authentication token you provided and will raise an exception if it is invalid. If you do not get an Exception that means you can use `api` to interact with the `st4sd-runtime-service` and `st4sd-datastore` REST-APIs.
+
+### Connect to the ST4SD runtime service using an api-token
+
+You can use the token that OpenShift associates with ServiceAccounts in the same namespace as your ST4SD to access the ST4SD microservices. You may want to use a API-key over an authorisation token if you need a way to authenticate to ST4SD that does not have an expiration date. For example if you build a MicroService that accesses the ST4SD microservices.
+
+Generate an API-key using an OpenShift ServiceAccount:
+
+  1.  Create a new ServiceAccount on the same namespace as your ST4SD instance:
+        - ``` 
+          oc project <NAMESPACE_THAT_HOSTS_ST4SD>
+        - ```
+          oc create serviceaccount <SERVICE_ACCOUNT_NAME> (e.g. oc create serviceaccount sa-auth-st4sd)
+          ```
+
+  2.  OpenShift creates 2 Secret objects for the ServiceAccount
+        - `<SERVICE_ACCOUNT_NAME>-token-<random-alphanumeric>`:
+
+          This is an OpenShift token that you can use to impersonate the ServiceAccount and log on the OpenShift cluster.
+        - `<SERVICE_ACCOUNT_NAME>.dockercfg` or `<SERVICE_ACCOUNT_NAME>.dockerconfigjson`:
+        
+          That contains docker registry credentials and is used for pulling images from the private container registry of your OpenShift cluster - Openshift Image Registry.
+
+  3.  Bind the ServiceAccount `<SERVICE_ACCOUNT_NAME>` to the namespaced role `st4sd-authenticate-microservice` - we have configured oauth-proxy to authorize OpenShift users that can get services in the same namespace as the st4sd deployment. For that you can use the following snippet in a new `role_binding.yaml` file:
+        ```yaml 
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: RoleBinding
+        metadata:
+          name: st4sd-custom-authenticated
+          namespace: <NAMESPACE_THAT_HOSTS_ST4SD>
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: Role
+          name: st4sd-authenticate-microservices
+        subjects:
+        - kind: ServiceAccount
+          name: <SERVICE_ACCOUNT_NAME>
+          namespace: <NAMESPACE_THAT_HOSTS_ST4SD>
+        ```
+      Create the new RoleBinding object:
+        ```
+        oc create -f role_binding.yaml
+        ```
+
+  4.  Extract the token of of the `<SERVICE_ACCOUNT_NAME>-token-<random-alphanumeric>` Secret. The secret may include the `ca.crt` and `service-ca.crt` fields that contain the CA certificate used for validating the OpenShift API server's TLS certificate. However the token we want to extract is under the `token` field. The token in the Secret is base64 encoded meaning that you need to decode to its raw value after you extract it.
+      - ```
+        oc get secret <SERVICE_ACCOUNT_NAME>-token-<random-alphanumeric> -o jsonpath='{.data.token}' | base64 --decode | sed 's/$/\n/'
+        ```
+      - Save the raw value of the token in a bearer_key variable in your python code.
+
+  5.  Use your API-key to access ST4SD:
+      ```python 
+        import experiment.service.db
+
+        # enter the https:// ST4SD url below
+        url="https://${your ST4SD url}"
+
+        bearer_key="<THE_SERVICEACCOUNT_KEY_YOU_EXTRACTED_ABOVE>"
+        api=experiment.service.db.ExperimentRestAPI(url, cc_bearer_key=bearer_key)
+        ```
+
+
+Best practices:
+  - Store the API-key in a secure way, immediately revoke it if it leaks.
+    - You can revoke a API-key by deleting the Secret associated with that ServiceAccount and Openshift will auto-generate a new Secret to replace it.
+  - Use each API-key in just one place.
+    - For example, if you build 2 microservices and wish for both of them to have access to the ST4SD microservices you should repeat the above steps twice, once for each microservice.
+
 
 <InlineNotification>
 ST4SD may print warnings to your python terminal e.g. `Unable to import pythonlsf - limited LSF functionality will be available`. These are not problems. They are just informing you that select features are not supported on the machine you are using. You can ignore them.
