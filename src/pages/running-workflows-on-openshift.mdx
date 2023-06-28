@@ -57,7 +57,7 @@ In addition, we provide a python API to our `st4sd-datastore` which allows deepe
 
 ### Requirements
 
-The basic requirements are access to an OpenShift instance with ST4SD installed (see [first steps](/#first-steps) for more information).
+The basic requirements are access to an OpenShift instance with ST4SD installed (see [first steps](/) for more information).
 
 #### Getting data into and out-of virtual experiments: Cloud Object Store
 
@@ -83,21 +83,35 @@ After reading this page have a browse around the `st4sd-examples` repository to 
 
 ## Connecting to ST4SD
 
-To connect to an ST4SD instance you need to obtain an `auth-token`. If you don't have one, refer to [How do I connect to the ST4SD runtime service?](/runtime-service#how-do-i-connect-to-the-st4sd-runtime-service).
+To connect to an ST4SD instance you need to obtain an `auth-token` or use an `api-key`. Please refer to [How do I connect to the ST4SD runtime service?](/runtime-service#how-do-i-connect-to-the-st4sd-runtime-service).
 
-The following code block shows how to connect to an ST4SD instance
+The following code blocks show how to connect to an ST4SD instance.
 
+- Connect using an `auth-token`:
 ```python
-import experiment.service.db
+  import experiment.service.db
 
-# enter the https:// ST4SD url below
-url="https://st4sd-prod.ve-5446-9ca4d14d48413d18ce61b80811ba4308-0000.us-south.containers.appdomain.cloud"
+  # enter the https:// ST4SD url below
+  url="https://${your ST4SD url}"
 
-# enter your auth-token below
-auth_token="put your authentication/token - do not share it with anyone"
+  # enter your auth-token below
+  auth_token="put your authentication/token - do not share it with anyone"
 
-api=experiment.service.db.ExperimentRestAPI(url, cc_auth_token=auth_token)
+  api=experiment.service.db.ExperimentRestAPI(url, cc_auth_token=auth_token)
 ```
+- Connect using an `api-key`:
+```python
+  import experiment.service.db
+
+  # enter the https:// ST4SD url below
+  url="https://${your ST4SD url}"
+
+  # enter your auth-token below
+  bearer_key="put your api-key - do not share it with anyone"
+
+  api=experiment.service.db.ExperimentRestAPI(url, cc_bearer_key=bearer_key)
+```
+
 
 The `ExperimentRestAPI` initializer validates the authentication token you provided and will raise an exception if it is invalid. 
 If you do not get an Exception that means you can use `api` to interact with the `st4sd-runtime-service` and `st4sd-datastore` REST-APIs.
