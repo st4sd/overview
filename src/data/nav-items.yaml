@@ -32,8 +32,14 @@
     path: /writing-a-virtual-experiment-interface
 - title: ST4SD Cloud
   pages:
+  - title: Getting Started
+    path: /cloud-orientation
   - title: Installation
     path: /installation
+  - title: Manage users
+    path: /cloud-manage-users
+  - title: Architecture
+    path: /cloud-architecture
 - title: ST4SD Services
   pages:
   - title: Python Client API

@@ -113,6 +113,12 @@ The following code blocks show how to connect to an ST4SD instance.
 ```
 
 
+<InlineNotification>
+ST4SD may print warnings to your python terminal e.g. `Unable to import tinydb module - tinydb interface not available`. These are not problems. They are just informing you that select features are not supported on the machine you are using. You can ignore them.
+</InlineNotification>
+
+
+
 The `ExperimentRestAPI` initializer validates the authentication token you provided and will raise an exception if it is invalid. 
 If you do not get an Exception that means you can use `api` to interact with the `st4sd-runtime-service` and `st4sd-datastore` REST-APIs.
 

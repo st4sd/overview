@@ -1,0 +1,136 @@
+---
+title: Manage ST4SD users
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<PageDescription>
+
+Manage the access rights of users in your ST4SD deployment on OpenShift.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Give a group of users full access to the ST4SD namespace</AnchorLink>
+  <AnchorLink>Give a group of users access to just the ST4SD microservices</AnchorLink>
+  <AnchorLink>Role objects that ST4SD creates in its namespace</AnchorLink>
+</AnchorLinks>
+
+
+We recommend grouping your users based on their intended access level to your ST4SD deployment and then using a RoleBinding to configure the Role Based Access Control (RBAC) settings of the Group object.
+
+
+## Give a group of users full access to the ST4SD namespace
+
+For example, if you wish to configure the RBAC of the users `A` and `B` so that they have full access to the ST4SD microservices and the objects in the same namespace. Put the following in a file called `group-full-access.yaml`:
+
+
+```yaml
+kind: Group
+apiVersion: user.openshift.io/v1
+metadata:
+  name: st4sd-full-access-<namespace-you-deployed-st4sd-in>
+users:
+  - Account name of user A
+  - Account name of user B
+```
+
+Then create the following file `rolebinding-full-access.yaml`:
+
+```yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: st4sd-full-access
+  namespace: <namespace-you-deployed-st4sd-in>
+subjects:
+  - kind: Group
+    apiGroup: rbac.authorization.k8s.io
+    name: st4sd-full-access-<namespace-you-deployed-st4sd-in>
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: workflow-user
+```
+
+Now, make sure that you:
+
+1. have replaced `<namespace-you-deployed-st4sd-in>` in the 2 files with the namespace that you deployed ST4SD in.
+2. have written down the correct account name of your users.
+    1. Login to your OpenShift Web Console as an Administrator.
+    2. On the left pane expand the `User Management` menu
+    3. Click on the `Users` entry
+    4. Locate the users `A` and `B` in the list and copy the values that you find for them under the `Name` column
+
+Run `oc create -f group-full-access.yaml && oc create -f rolebinding-full-access.yaml`. The users `A` and `B` may now access your ST4SD instance.
+
+## Give a group of users access to just the ST4SD microservices
+
+You may want to enable two users `A` and `B` to use the ST4SD microservices but be unable to interact with OpenShift in any meaningful way. In this case, put the following in a file called `microservices-only.yaml`:
+
+
+```yaml
+kind: Group
+apiVersion: user.openshift.io/v1
+metadata:
+  name: st4sd-microservices-only-<namespace-you-deployed-st4sd-in>
+users:
+  - Account name of user A
+  - Account name of user B
+```
+
+Then create the following file `rolebinding-microservices-only.yaml`:
+
+```yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: st4sd-microservices-only
+  namespace: <namespace-you-deployed-st4sd-in>
+subjects:
+  - kind: Group
+    apiGroup: rbac.authorization.k8s.io
+    name: st4sd-microservices-only-<namespace-you-deployed-st4sd-in>
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: st4sd-authenticate-microservices
+```
+
+Now, make sure that you:
+
+1. have replaced `<namespace-you-deployed-st4sd-in>` in the 2 files with the namespace that you deployed ST4SD in.
+2. have written down the correct account name of your users.
+    1. Login to your OpenShift Web Console as an Administrator.
+    2. On the left pane expand the `User Management` menu
+    3. Click on the `Users` entry
+    4. Locate the users `A` and `B` in the list and copy the values that you find for them under the `Name` column
+
+Run `oc create -f microservices-only.yaml && oc create -f rolebinding-microservices-only.yaml`. The users `A` and `B` may now access your ST4SD instance.
+
+
+## Role objects that ST4SD creates in its namespace
+
+Deployments of ST4SD on OpenShift contain:
+
+- Several ST4SD Microservices (st4sd-runtime-service, st4sd-registry-ui, st4sd-datastore)
+- The ST4SD Workflow Operator (st4sd-runtime-k8s)
+- A Database backend (mongodb)
+
+As a cluster administrator, you can install ST4SD multiple times on your cluster. Each ST4SD deployment is contained to a single namespace. Users of one ST4DS deployment do not necessarily have access to other deployments. The cluster administrator, configures the Role Based Access Control (RBAC) of users to configure which user can access which ST4SD instance.
+
+Installing ST4D in a namespace creates the following 2 Role objects in the same namespace:
+
+1. `st4sd-authenticate-microservices`: Assigning this role to a user enables them to `get` Service objects in the same namespace as ST4SD. This is the minimum RBAC that a user requires to be able to authenticate to the ST4SD microservices. However, they do not get enough permissions to interact directly with the ST4SD Workflow Operator or other namespaced objects in the same OpenShift project.
+2. `workflow-user`: Assigning this role to a user enables them to authenticate against the ST4SD microservices. Additionally, it gives them Create Read Update Delete (CRUD) permissions to interact with namespaced objects in the same namespace. This includes the namespaced objects that the ST4SD workflow operator interacts with.
+
+
+<InlineNotification kind="info">
+The 2 roles above do not enable users to modify the "simulationtoolkit" CustomResource objects that st4sd-olm monitors to control the deployment of the ST4SD instance in the namespace.
+</InlineNotification>
+
