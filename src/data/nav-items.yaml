@@ -15,7 +15,7 @@
 - title: ST4SD Core
   pages:
   - title: Getting Started
-    path: /orientation
+    path: /st4sd-core-getting-started
   - title: Tutorial
     path: /tutorial
   - title: Project Structure
