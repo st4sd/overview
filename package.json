@@ -12,6 +12,7 @@
     "clean": "gatsby clean"
   },
   "dependencies": {
+    "@carbon/pictograms-react": "^11.44.0",
     "gatsby": "^4.24.8",
     "gatsby-remark-images": "^6.24.0",
     "gatsby-source-filesystem": "^4.24.0",

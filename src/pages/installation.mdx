@@ -72,7 +72,6 @@ pip install "st4sd-runtime-core[deploy]"
 
 <InlineNotification kind="warning">
 
-- **Currently we only support x86 platforms** (not ARM or POWER).
 - OpenShift Local **is only officially supported** on:
   - RedHat Enterprise Linux 7+
   - CentOS 7+
@@ -81,46 +80,170 @@ pip install "st4sd-runtime-core[deploy]"
   - macOS 11.0 Big Sur or later
 - Ubuntu 18.04 LTS or later and Debian 10 or later **are not officially supported** and may require manual setup.
 
+We recommend using a x86 device.
+</InlineNotification>
+You can deploy a small scale version of <a href="/cloud-orientation">ST4SD Cloud</a> on your personal device using <a href="https://developers.redhat.com/products/openshift-local/overview" target="_blank">Red Hat OpenShift Local (formerly Red Hat CodeReady Containers)</a>. To get started with Red Hat OpenShift Local, download the "OpenShift Local" binary (crc) from the <a href="https://console.redhat.com/openshift/create/local" target="_blank">Red Hat Console</a> website.
+
+ <InlineNotification kind="info">
+You need a Red Hat account to use OpenShift Local. If you do not have one, you can get one for free on the <a href="https://developers.redhat.com/register?intcmp=701f20000012ngPAAQ" target="_blank">Red Hat Developer</a> website.
 </InlineNotification>
 
-- Install the `oc` v4.11.12+ command line utility (Optional step : OpenShift Local will also install `oc` for you)
-  
-  - Full setup instructions are available on the [OpenShift website](https://docs.openshift.com/container-platform/4.11/cli_reference/openshift_cli/getting-started-cli.html)
-- Download and install **OpenShift Local** for free from <a href="https://console.redhat.com/openshift/create/local" target="_blank" rel="noopener noreferrer">Red Hat OpenShift Local</a>
-  - You can find the setup instructions on the OpenShift Local <a href="https://access.redhat.com/documentation/en-us/red_hat_openshift_local" target="_blank" rel="noopener noreferrer">website</a>.
-  - The default installation of OpenShift Local produces a local OpenShift cluster with:
-     - 4 virtual CPU cores,
-     - 9 GB of RAM, and
-     - 31 GB of storage space
-  - We recommend increasing the defaults with the following:
 
-      ```bash
-      # crc setup is a one-time command, it will take a couple of minute
-      # depending on your download speed
-      crc setup
-      # if OpenShift Local is already running, execute "crc stop" first
-      crc config set cpus 8
-      crc config set memory 14336
-      crc config set disk-size 50
-      # Starting the cluster VM will take a few minutes
-      crc start
-      ```
+### One time Setup
 
-  - When your cluster has finished starting, follow the instructions on your terminal.
-    - For example, you may need to run:
+After you install OpenShift Local you will get access to the `crc` binary.
+Ensure the `crc` binary is in your `${PATH}` for example when you run `crc version` in your terminal you get similar output to:
 
-        ```bash
-        # Use the `oc` command line interface
-        eval $(cr oc-env)
-        ```
+```
+CRC version: 2.22.1+e8068b4
+OpenShift version: 4.13.3
+Podman version: 4.4.4
+```
 
-  - You may now login on the OpenShift web-ui by running `crc console`
-     
-     - You can see your credentials by running `crc console --credentials` on your terminal.
+Below we use `crc` in a script to:
+
+1. create and configure the Virtual Machine that will host OpenShift Local
+2. Set the password of the <b>kubeadmin</b> account to `fun` - do not use insecure passwords in production.
+3. Deploy ST4SD Cloud on the `st4sd-local` namespace
+4. Wait for the ST4SD microservices to go online
+5. Open a browser to visit your instance of the Registry UI!
+   1. Login as the user `developer` with the password `developer` - this is the default non-admin user that `crc` creates for you.
+
+Copy the text below and execute it in your terminal:
+
+```
+cat <<'EOF'>one_time_setup.sh
+set -e
+crc config set consent-telemetry no
+crc setup
+# Increase default resource limits for the Virtual Machine
+crc config set cpus 8
+crc config set memory 14336
+crc config set disk-size 50
+# Set the password to "fun" - do not use insecure passwords in production
+crc start
+eval $(crc oc-env)
+echo "Login details for your OpenShift Local installation"
+crc console --credentials
+oc login -u kubeadmin -p fun https://api.crc.testing:6443
+oc new-project st4sd-local
+echo "Installing ST4SD Cloud"
+oc apply -f https://raw.githubusercontent.com/st4sd/st4sd-deployment/main/manifests/openshift-local-minimal-release.yaml
+echo "Waiting for the ST4SD services to go online - this will take a couple of minutes"
+
+wait_pod_running() {
+    echo -n "Waiting for pod ${1} "
+    until oc get pod -n st4sd-local -l deploymentconfig=${1} | grep Running > /dev/null
+    do
+	echo -n "."
+        sleep 5
+    done
+    echo "Running"
+}
+
+wait_pod_running st4sd-authentication
+wait_pod_running st4sd-registry-backend
+wait_pod_running st4sd-registry-ui
+wait_pod_running st4sd-runtime-service
+wait_pod_running st4sd-runtime-k8s
+wait_pod_running st4sd-datastore-mongodb
+wait_pod_running st4sd-datastore-nexus
+wait_pod_running st4sd-datastore-cloud-instance
+
+echo "Your ST4SD root URL is https://local.apps-crc.testing"
+echo "Access your Registry UI at https://local.apps-crc.testing/registry-ui/"
+echo "  You will be asked to login with your OpenShift account."
+echo "  Use the developer account."
+echo "   username: developer"
+echo "   password: developer"
+echo "Opening the website now"
+open https://local.apps-crc.testing/registry-ui/
+EOF
+chmod +x one_time_setup.sh
+
+./one_time_setup.sh
+```
+
+The script will take 5-15 minutes to complete. While it is building your local ST4SD Cloud deployment, consider exploring the <a href="/running-workflows-on-openshift">ST4SD Services</a> and <a href="/st4sd-registry-getting-started" target="_blank">ST4SD Registry</a> webpages. You can use the information in there to populate your catalog of experiments and more!
+
+Continue reading if you would like to get more information about the individual steps above.
+
+### Setting up your Virtual Machine for OpenShift Local
+
+Red Hat OpenShift Local runs as a Virtual Machine on your device.
+There is a one-time setup that you need to do using the `crc` command-line utility that you downloaded in the above step.
+The default installation of OpenShift Local produces a local OpenShift cluster with:
+ - 4 virtual CPU cores,
+ - 9 GB of RAM, and
+ - 31 GB of storage space
+
+We recommend increasing the defaults with the following:
+
+  ```
+  # one time command
+  crc setup
+  # if OpenShift Local is already running, execute "crc stop" first
+  crc config set cpus 8
+  crc config set memory 14336
+  crc config set disk-size 50
+  ```
+
+Below we also change the default password for the <b>kubeadmin</b> so that the instructions are easier to follow.
+
+```
+# Set the password to "fun" - do not use insecure passwords in production
+crc config kubeadmin-password fun
+```
+
+If you ever want to view the credentials for accessing your OpenShift Local instance, you can run
+
+```
+crc console --credentials
+```
+
+### Starting and Stopping the OpenShift Local Virtual Machine
+
+Recall that OpenShift Local runs as a small scale Virtual Machine on your personal device.
+We recommend starting it before you experiment with ST4SD and stopping it when you are done running experiments to release the compute resources that the Virtual Machine is taking up.
+
+To start the virtual machine type:
+
+```
+crc start
+# Use the `oc` command line interface
+eval $(cr oc-env)
+# Open a browser to login to OpenShift Web Console
+crc console
+```
+
+<InlineNotification kind="info">
+The command <b>crc start</b> prints useful information on the terminal including how to access the OpenShift Web Console as well as the credentials for the <b>kubeadmin</b> and <b>developer</b> users. In our instructions below we login using the <b>kubeadmin</b> user.
+</InlineNotification>
+
+To stop the virtual machine type:
+```
+crc stop
+```
+
+### Installing ST4SD Cloud
+
+When `crc start` finishes printing information on the terminal, your OpenShift Local cluster has started running.
+You may now connect using the <b>kubeadmin</b> account:
+
+```bash
+# Use the `oc` command line interface
+eval $(crc oc-env)
+# Ask crc to print the `oc login` commands for you
+crc console --credentials
+# Now login as the kubeadmin, recall that we set the password to "fun"
+oc login -u kubeadmin -p fun https://api.crc.testing:6443
+# Open a browser to login to OpenShift Web Console
+crc console
+```
 
 ### Installing
 
-1. After your OpenShift Local is up and running (i.e. `crc start` has finished). Follow the instructions on your terminal
+After your OpenShift Local is up and running (i.e. `crc start` has finished). Follow the instructions on your terminal
    to login in as an administrator into OpenShift.
    1. Run `crc console --credentials` to see the `oc login` commands you can type in your terminal.
 2. Create the project `st4sd-local`: `oc new-project st4sd-local`.
@@ -131,6 +254,7 @@ pip install "st4sd-runtime-core[deploy]"
    - Both default OpenShift accounts (`developer` and `kubeadmin` will have access to your ST4SD microservices).
       - By default, the `developer` account has the password `developer`.
       - You can print the administrator credentials using `crc console --credentials`.
+
 
 <InlineNotification kind="info">
 
@@ -150,12 +274,13 @@ You can see the credentials of the default accounts that OpenShift Local creates
 </InlineNotification>
 
 
-For installing ST4SD on **OpenShift** see <https://github.com/st4sd/st4sd-olm>.
-This gives details to setup st4sd-olm and how to use the Operator Lifecycle Manager (OLM) framework to install
-ST4SD on your cluster.
+First, add ST4SD Cloud to the Operator Catalog of your OpenShift cluster:
 
-For customizing ST4SD post installation see <https://github.com/st4sd/st4sd-deployment>.
-This gives comprehensive details on customizing ST4SD deployments using `helm`.
+```
+oc apply -f https://raw.githubusercontent.com/st4sd/st4sd-olm/main/examples/deploy.yaml
+```
+
+Then check <a href="https://github.com/st4sd/st4sd-olm" target="_blank">instructions</a> on how to configure and install. For comprehensive details on customizing ST4SD deployments using `helm` post-installation see <https://github.com/st4sd/st4sd-deployment>.
 
 ## Install on Classic HPC
 

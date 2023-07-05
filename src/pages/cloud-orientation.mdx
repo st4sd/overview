@@ -2,6 +2,24 @@
 title: ST4SD on the Cloud
 ---
 
+import { Connect } from '@carbon/pictograms-react';
+import { Transform_02 } from '@carbon/pictograms-react';
+import { Analyze } from '@carbon/pictograms-react';
+import { CarbonForIbmDotcom } from '@carbon/pictograms-react';
+import { Kubernetes } from '@carbon/pictograms-react';
+import { CodeSyntax } from '@carbon/pictograms-react';
+import { NetworkServices } from '@carbon/pictograms-react';
+import { Process } from '@carbon/pictograms-react';
+import { AccessManagement } from '@carbon/pictograms-react';
+import { KnowsDarkData } from '@carbon/pictograms-react';
+import { Security_02 } from '@carbon/pictograms-react';
+import { Renew } from '@carbon/pictograms-react';
+
+<!--
+VV: This is the OpenShift logo, but it's too tiny to use
+import { LogoOpenshift } from '@carbon/icons-react';
+-->
+
 <!--
 
   Copyright IBM Inc. All Rights Reserved.
@@ -9,24 +27,208 @@ title: ST4SD on the Cloud
 
 -->
 
-When ST4SD is deployed on the cloud (e.g. OpenShift) it comes with a number of microservices that users can access via Jupyter notebooks and the `stp` command line interface.
+ST4SD Cloud is built on cutting edge technologies for deploying and managing complex applications on OpenShift. 
+It enables administrators to easily install ST4SD technologies, upgrade them and manage user access in OpenShift compliant manner.
 
-Install ST4SD on the cloud to unlock a number of features, such as:
+<Title>Why ST4SD Cloud ?</Title>
 
-- a Web UI interface to view, parameterise, and generate virtual experiments in your registry
-- replacing sub-graphs of your virtual experiments with other sub-graphs (e.g. surrogate models)
-- a Datastore to retrieve metadata about your virtual experiments and logs and files that experiments produce
+Deploy ST4SD on the cloud to unlock powerful features of the toolkit, such as:
+
+
+<div className="expressive-content-list-group">
+  <ExpressiveList
+    title="Integration with Operator Lifecycle Manager"
+    background="true"
+    pictogram={<Renew />}
+    >
+
+  Install and receive automatic updates to your ST4SD deployment using the <a href="https://olm.operatorframework.io/">Operator Lifecycle Manager (OLM)</a>.
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Authentication and Authorization"
+    background="true"
+    pictogram={<AccessManagement />}
+    >
+  The toolkit uses the <a href="https://github.com/openshift/oauth-proxy/">OpenShift oauth-proxy</a> side-car container to delegate authentication and authorization to standard OpenShift mechanisms. Administrators configure the permissions of users using standard <a href="/cloud-manage-users">Role Based Access Control</a> configuration.
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Least Privileged Permissions"
+    background="true"
+    pictogram={<Security_02 />}
+    >
+  The roles and permissions of all technologies installed with ST4SD Cloud have been carefully engineered and meet stringent criteria for security.
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Workflow Operator"
+    background="true"
+    pictogram={<Kubernetes />}
+    >
+  A Kubernetes Operator enables power to interact with virtual experiments using Kubernetes CustomResource objects.
+  </ExpressiveList>
+</div>
+
 
 and many more!
 
-## Getting started
 
-- [Installation instructions](/installation#install-on-kubernetes-and-openshift): Install ST4SD on the cloud (OpenShift)
-- [Manage users](/cloud-manage-users): Configure access permissions of the users in your ST4SD instance on the cloud
-- [Architecture](/cloud-architecture): A brief overview of what you get when you install ST4D on the cloud
+<Title>Try it yourself</Title>
 
-## Topics to explore
+<!-- VV: This will have to do till we write a better `quickstart` for ST4SD Cloud -->
 
-- [ST4SD Core](/orientation): Writing your own experiments
-- [ST4SD Services](/running-workflows-on-openshift): Execute virtual experiments on the cloud
-- [ST4SD Registry](/using-the-virtual-experiments-registry-ui): Learn how to use the registry web UI
+You can deploy a small scale version of <a href="/cloud-orientation">ST4SD Cloud</a> on your personal device using <a href="https://developers.redhat.com/products/openshift-local/overview" target="_blank">Red Hat OpenShift Local (formerly Red Hat CodeReady Containers)</a>. To get started with Red Hat OpenShift Local, download the "OpenShift Local" binary (crc) from the <a href="https://console.redhat.com/openshift/create/local" target="_blank">Red Hat Console</a> website.
+
+ <InlineNotification kind="info">
+You need a Red Hat account to use OpenShift Local. If you do not have one, you can get one for free on the <a href="https://developers.redhat.com/register?intcmp=701f20000012ngPAAQ" target="_blank">Red Hat Developer</a> website.
+</InlineNotification>
+
+
+After you install OpenShift Local you will get access to the `crc` binary.
+Ensure the `crc` binary is in your `${PATH}` for example when you run `crc version` in your terminal you get similar output to:
+
+```
+CRC version: 2.22.1+e8068b4
+OpenShift version: 4.13.3
+Podman version: 4.4.4
+```
+
+Below we use `crc` in a script to:
+
+1. create and configure the Virtual Machine that will host OpenShift Local
+2. Set the password of the <b>kubeadmin</b> account to `fun` - do not use insecure passwords in production.
+3. Deploy ST4SD Cloud on the `st4sd-local` namespace
+4. Wait for the ST4SD microservices to go online
+5. Open a browser to visit your instance of the Registry UI!
+   1. Login as the user `developer` with the password `developer` - this is the default non-admin user that `crc` creates for you.
+
+Copy the text below and execute it in your terminal:
+
+```
+cat <<'EOF'>one_time_setup.sh
+set -e
+crc config set consent-telemetry no
+crc setup
+# Increase default resource limits for the Virtual Machine
+crc config set cpus 8
+crc config set memory 14336
+crc config set disk-size 50
+# Set the password to "fun" - do not use insecure passwords in production
+crc start
+eval $(crc oc-env)
+echo "Login details for your OpenShift Local installation"
+crc console --credentials
+oc login -u kubeadmin -p fun https://api.crc.testing:6443
+oc new-project st4sd-local
+echo "Installing ST4SD Cloud"
+oc apply -f https://raw.githubusercontent.com/st4sd/st4sd-deployment/main/manifests/openshift-local-minimal-release.yaml
+echo "Waiting for the ST4SD services to go online - this will take a couple of minutes"
+
+wait_pod_running() {
+    echo -n "Waiting for pod ${1} "
+    until oc get pod -n st4sd-local -l deploymentconfig=${1} | grep Running > /dev/null
+    do
+	echo -n "."
+        sleep 5
+    done
+    echo "Running"
+}
+
+wait_pod_running st4sd-authentication
+wait_pod_running st4sd-registry-backend
+wait_pod_running st4sd-registry-ui
+wait_pod_running st4sd-runtime-service
+wait_pod_running st4sd-runtime-k8s
+wait_pod_running st4sd-datastore-mongodb
+wait_pod_running st4sd-datastore-nexus
+wait_pod_running st4sd-datastore-cloud-instance
+
+echo "Your ST4SD root URL is https://local.apps-crc.testing"
+echo "Access your Registry UI at https://local.apps-crc.testing/registry-ui/"
+echo "  You will be asked to login with your OpenShift account."
+echo "  Use the developer account."
+echo "   username: developer"
+echo "   password: developer"
+echo "Opening the website now"
+open https://local.apps-crc.testing/registry-ui/
+EOF
+chmod +x one_time_setup.sh
+
+./one_time_setup.sh
+```
+
+The script will take 5-15 minutes to complete. While it is building your local ST4SD Cloud deployment, consider exploring the <a href="/running-workflows-on-openshift">ST4SD Services</a> and <a href="/st4sd-registry-getting-started" target="_blank">ST4SD Registry</a> webpages. You can use the information in there to populate your catalog of experiments and more!
+
+Find more information about setting up OpenShift Local and using it to deploy ST4SD Cloud in our <a href="/installation#install-on-openshift-local">installation instructions web-page</a>.
+
+
+<Title>Learn More</Title>
+
+<div className="expressive-content-list-group">
+  <ExpressiveList
+    title="Install on OpenShift using OLM"
+    background="true"
+    pictogram={<Kubernetes />}
+    >
+
+First, add ST4SD Cloud to the Operator Catalog of your OpenShift cluster:
+
+```
+oc apply -f https://raw.githubusercontent.com/st4sd/st4sd-olm/main/examples/deploy.yaml
+```
+
+
+Then check <a href="https://github.com/st4sd/st4sd-olm" target="_blank">instructions</a> on how to configure and install.
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="User management"
+    background="true"
+    pictogram={<AccessManagement />}
+    >
+  <a href="/cloud-manage-users">Configure the access permissions of users in your ST4SD instance on the cloud.</a>
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Cloud Architecture"
+    background="true"
+    pictogram={<Connect />}
+    >
+  <a href="/cloud-architecture">A brief overview of the ST4SD Cloud architecture</a>.
+  </ExpressiveList>
+
+</div>
+
+<Title>Accelerate your simulation research with ST4SD</Title>
+
+<div className="expressive-content-list-group">
+  <ExpressiveList
+    title="ST4SD Core"
+    background="true"
+    pictogram={<CodeSyntax />}
+    >
+  <a href="/orientation">Write your own workflows. Learn how to implement workflows, extract their measured properties,
+  and execute them on your laptop (e.g. using docker or regular processes), or even a HPC cluster (e.g. using LSF).</a>
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="ST4SD Services"
+    background="true"
+    pictogram={<NetworkServices />}
+    >
+  <a href="/running-workflows-on-openshift">Create, execute, and manage Virtual Experiments. Also learn how to use
+  powerful features such as memoization and runtime support for surrogate models.</a>
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="ST4SD Registry"
+    background="true"
+    pictogram={<CarbonForIbmDotcom />}
+    >
+  <a href="/st4sd-registry-getting-started">Browse the catalog of virtual experiments in your ST4SD deployment.
+  Learn how to search through your virtual experiments, see logs and outputs of past runs, and parameterise/synthesize
+  virtual experiments.</a>
+  </ExpressiveList>
+
+</div>
