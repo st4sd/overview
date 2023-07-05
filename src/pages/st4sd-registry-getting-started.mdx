@@ -1,0 +1,104 @@
+---
+title: ST4SD Registry Getting Started
+---
+
+ST4SD Registry is a web-based UI and associated command-line tool for working
+with virtual-experiments. The UI allows researchers to search and inspect
+virtual-experiment packages along with logs and results from when they were
+executed. The command line tool makes it simple to create, modify and share
+virtual-experiment packages with colleagues or the wider ST4SD community.
+
+## Why ST4SD Registry?
+
+<div className="expressive-content-list-group">
+
+  <ExpressiveList 
+    title="Easy to use web interface"
+    background="true">
+
+The ST4SD Registry provides a powerful yet easy to use UI that enables both
+novice and expert users to explore available virtual experiments, track their
+runs, and inspect their outputs. Visit the
+[ST4SD Global Registry](https://registry.st4sd.res.ibm.com/) for a first look.
+
+  </ExpressiveList>
+
+  <ExpressiveList 
+    title="Powerful command line tool"
+    background="true">
+
+The `stp` command line tool provides a conversational-style interface that makes
+it trivial for developers to create, update, push, and import virtual experiment
+packages.
+
+  </ExpressiveList>
+
+  <ExpressiveList 
+    title="Rich history support"
+    background="true">
+
+ST4SD Registry provides strong versioning capabilities by rigorously tracking
+changes to virtual experiment packages. This enhances reproducibility which is
+critical in scientific research.
+
+  </ExpressiveList>
+
+</div>
+
+## Try it yourself
+
+Install ST4SD Runtime Core and download a package from the
+[ST4SD Global Registry](https://registry.st4sd.res.ibm.com/) via `stp:
+
+```bash
+pip install st4sd-runtime-core
+stp package download https://registry.st4sd.res.ibm.com/registry-ui/experiment/nanopore-geometry-experiment
+```
+
+If you have an OpenShift cluster with ST4SD installed, you can also log in via
+`stp` and push the package to your local Registry:
+
+```bash
+ST4SD_AUTHENTICATION_ROUTE=$(oc get route st4sd-authentication -o=jsonpath={.spec.host})
+stp login $ST4SD_AUTHENTICATION_ROUTE
+stp package push nanopore-geometry-experiment.json
+```
+
+## Learn more
+
+<div className="expressive-content-list-group">
+
+  <ExpressiveList 
+    title="Exploring the Registry UI"
+    background="true">
+
+Learn about all the features of the ST4SD Registry UI with a guided tour.
+
+  </ExpressiveList>
+
+  <ExpressiveList 
+    title="Mastering stp"
+    background="true">
+
+Learn all that `stp` has to offer and how it can help you when using ST4SD.
+
+  </ExpressiveList>
+
+  <ExpressiveList 
+    title="Best Practices"
+    background="true">
+
+We've distilled many years of experience in creating virtual-experiments into a
+set of developer best-practices.
+
+  </ExpressiveList>
+
+</div>
+
+## Explore other ST4SD technologies
+
+<CardGroup>
+  <MiniCard title="ST4SD Core" href="/orientation" actionIcon="arrowRight" />
+  <MiniCard title="ST4SD Cloud" href="/cloud-orientation" actionIcon="arrowRight" />
+  <MiniCard title="ST4SD Services" href="/todo" actionIcon="arrowRight" />
+</CardGroup>
