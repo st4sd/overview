@@ -6,7 +6,8 @@ ST4SD Registry is a web-based UI and associated command-line tool for working
 with virtual-experiments. The UI allows researchers to search and inspect
 virtual-experiment packages along with logs and results from when they were
 executed. The command line tool makes it simple to create, modify and share
-virtual-experiment packages with colleagues or the wider ST4SD community.
+virtual-experiment packages with colleagues or the wider ST4SD community. Anyone
+can use ST4SD Registry.
 
 ## Why ST4SD Registry?
 
@@ -47,22 +48,25 @@ critical in scientific research.
 
 ## Try it yourself
 
-Install ST4SD Runtime Core and download a package from the
-[ST4SD Global Registry](https://registry.st4sd.res.ibm.com/) via `stp:
+Download a package from the
+[ST4SD Global Registry](https://registry.st4sd.res.ibm.com/) via `stp`:
 
 ```bash
 pip install st4sd-runtime-core
 stp package download https://registry.st4sd.res.ibm.com/registry-ui/experiment/nanopore-geometry-experiment
 ```
 
-If you have an OpenShift cluster with ST4SD installed, you can also log in via
-`stp` and push the package to your local Registry:
+If you have ST4SD Cloud, you can also log in via `stp` and push the package to
+your local Registry:
 
 ```bash
 ST4SD_AUTHENTICATION_ROUTE=$(oc get route st4sd-authentication -o=jsonpath={.spec.host})
 stp login $ST4SD_AUTHENTICATION_ROUTE
 stp package push nanopore-geometry-experiment.json
 ```
+
+Then visit the URL `stp` outputs to see the experiment in your ST4SD Registry
+UI.
 
 ## Learn more
 
@@ -99,6 +103,10 @@ set of developer best-practices.
 
 <CardGroup>
   <MiniCard title="ST4SD Core" href="/orientation" actionIcon="arrowRight" />
-  <MiniCard title="ST4SD Cloud" href="/cloud-orientation" actionIcon="arrowRight" />
+  <MiniCard
+    title="ST4SD Cloud"
+    href="/cloud-orientation"
+    actionIcon="arrowRight"
+  />
   <MiniCard title="ST4SD Services" href="/todo" actionIcon="arrowRight" />
 </CardGroup>
