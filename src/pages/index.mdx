@@ -9,6 +9,11 @@ title: Simulation Toolkit For Scientific Discovery (ST4SD)
 
 -->
 
+import { CodeSyntax } from '@carbon/pictograms-react';
+import { NetworkServices } from '@carbon/pictograms-react';
+import { CarbonForIbmDotcom } from '@carbon/pictograms-react';
+import { Kubernetes } from '@carbon/pictograms-react';
+
 <Row>
 <Column colMd={5} colLg={8}>
 
@@ -28,37 +33,40 @@ It is the computational analog of a lab experiment.
 
 
 <div className="expressive-content-list-group">
-  <ExpressiveList 
-    title="Multi-platform virtual-experiments"
-    background="true">
+  <ExpressiveList
+    title="Multi-platform virtual experiments"
+    background="true"
+    pictogram={<CodeSyntax />}>
 
-  ST4SD Core provides tools for writing virtual-experiments that can run on your laptop, on HPC machines, or on cloud. [Get Started](/st4sd-core-getting-started)
+  **ST4SD Core** provides tools for writing virtual experiments that can run on your laptop, on HPC machines, or on cloud. [Get Started](/st4sd-core-getting-started)
 
   </ExpressiveList>
 
-  <ExpressiveList 
-    title="Ease-of-use"
-    background="true">
+   <ExpressiveList
+    title="Robust, scalable deployment"
+    background="true"
+    pictogram={<Kubernetes />}>
 
-  ST4SD Services allows scientists to run virtual experiments and query their data via Jupyter notebooks.
-   It includes a high-performance metadata-store that enables memoization. [Get Started](/runtime-service)
+  Get secure, scalable and robust performance by deploying ST4SD on an OpenShift cluster using **ST4SD Cloud**. [Get Started](/st4sd-cloud-getting-started)
 
   </ExpressiveList>
 
   <ExpressiveList 
     title="Virtual experiment registry"
-    background="true">
+    background="true"
+    pictogram={<CarbonForIbmDotcom />}>
 
-   ST4SD Registry provides a UI for sharing and browsing virtual-experiments. [Get Started](/using-the-virtual-experiments-registry-ui)
+   **ST4SD Registry** provides a UI for sharing and browsing virtual experiments. [Get Started](/st4sd-registry-getting-started)
 
   </ExpressiveList>
 
+  <ExpressiveList
+    title="Ease-of-use"
+    background="true"
+    pictogram={<NetworkServices />}>
 
-   <ExpressiveList
-    title="Robust, scalable deployment"
-    background="true">
-
-  Get secure, scalable and robust performance by deploying ST4SD on an OpenShift cluster using ST4SD Cloud. [Get Started](/installation)
+  **ST4SD Services** allows scientists to run virtual experiments and query their data via Jupyter notebooks.
+   It includes a high-performance metadata-store that enables memoization. [Get Started](/st4sd-services-getting-started)
 
   </ExpressiveList>
 
@@ -94,4 +102,4 @@ elaunch.py --nostamp -l40 sum-numbers
 
 This will create a new virtualenv called `st4sd-runtime-test` at `$HOME/st4sd-runtime-test` and install `st4sd-runtime-core` into it. It will also clone a repository into a directory called `sum-numbers` in whatever directory you run the above commands in. It will then run a toy-workflow that takes a couple of minutes to run. The toy workflow output will be in a directory called `sum-numbers.instance`
 
-You can learn more see [st4sd-runtime-core](/orientation).
+To learn more see [**ST4SD Core**](/st4sd-core-getting-started).

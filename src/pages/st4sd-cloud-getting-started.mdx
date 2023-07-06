@@ -1,0 +1,155 @@
+---
+title: ST4SD Cloud
+---
+
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+
+import { CodeSyntax } from '@carbon/pictograms-react';
+import { NetworkServices } from '@carbon/pictograms-react';
+import { CarbonForIbmDotcom } from '@carbon/pictograms-react';
+import { Kubernetes } from '@carbon/pictograms-react';
+
+import { Connect } from '@carbon/pictograms-react';
+import { Transform_02 } from '@carbon/pictograms-react';
+import { Analyze } from '@carbon/pictograms-react';
+
+import { Process } from '@carbon/pictograms-react';
+import { AccessManagement } from '@carbon/pictograms-react';
+import { KnowsDarkData } from '@carbon/pictograms-react';
+import { Security_02 } from '@carbon/pictograms-react';
+import { Renew } from '@carbon/pictograms-react';
+
+<!--
+VV: This is the OpenShift logo, but it's too tiny to use
+import { LogoOpenshift } from '@carbon/icons-react';
+-->
+
+
+**ST4SD Cloud** is built on cutting edge technologies for deploying and managing complex applications on OpenShift.
+It relies on standard Kubernetes and OpenShift principles to deploy and upgrade ST4SD technologies running on OpenShift.
+Any Kubernetes/OpenShift administrator or power-user can deploy ST4SD on the Cloud.
+
+## Why ST4SD Cloud ?
+
+<div className="expressive-content-list-group">
+  <ExpressiveList
+    title="Automatic updates"
+    background="true"
+    pictogram={<Renew />}
+    >
+
+Install ST4SD technologies on OpenShift and automatically keep them up-to-date using the <a href="https://olm.operatorframework.io/">Operator Lifecycle Manager (OLM)</a> framework.
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Authentication and Authorization"
+    background="true"
+    pictogram={<AccessManagement />}
+    >
+The toolkit delegate authentication and authorization to standard OpenShift mechanisms.
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Least Privileged Permissions"
+    background="true"
+    pictogram={<Security_02 />}
+    >
+The roles and permissions of all technologies installed with ST4SD Cloud have been carefully engineered and meet stringent criteria for security.
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Workflow Operator"
+    background="true"
+    pictogram={<Kubernetes />}
+    >
+The Workflow Operator enables management of virtual experiments as first class Kubernetes objects.
+  </ExpressiveList>
+</div>
+
+
+## Try it yourself
+
+<!-- VV: This will have to do till we write a better `quickstart` for ST4SD Cloud -->
+
+First, add the **Simulation Toolkit for Scientific Discovery (ST4SD)** operator to the Operator Catalog of your OpenShift cluster:
+
+```
+oc apply -f https://raw.githubusercontent.com/st4sd/st4sd-olm/main/examples/deploy.yaml
+```
+
+Then follow our <a href="https://github.com/st4sd/st4sd-olm" target="_blank">instructions</a> to configure and install ST4SD on OpenShift.
+Next, get started with the [ST4SD Registry](/st4sd-registry-getting-started) and [ST4SD Services](/st4sd-services-getting-started).
+
+## Learn More
+
+<div className="expressive-content-list-group">
+  <ExpressiveList
+    title="Installation"
+    background="true"
+    pictogram={<Kubernetes />}
+    >
+
+If you have access to an OpenShift cluster, follow our <a href="/installation#install-on-kubernetes-and-openshift" target="_blank">instructions</a> to install ST4SD Cloud using the Operator Lifecycle Manger (OLM).
+You may also <a href="/installation#install-on-openshift-local" target="_blank">install</a> a scaled down version of ST4SD Cloud on <a href="https://developers.redhat.com/products/openshift-local/overview" target="_blank">Red Hat OpenShift Local</a>.
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="User management"
+    background="true"
+    pictogram={<AccessManagement />}
+    >
+<a href="/cloud-manage-users">Manage</a> the access permissions of users in your ST4SD Cloud instance using standard Kubernetes mechanisms.
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Cloud Architecture"
+    background="true"
+    pictogram={<Connect />}
+    >
+A brief overview of the ST4SD Cloud <a href="/cloud-architecture">architecture</a>.
+  </ExpressiveList>
+
+</div>
+
+## Accelerate your simulation research with ST4SD
+
+Check out these other ST4SD technologies. All are designed to work together to provide a powerful platform for simulation.
+
+<div className="expressive-content-list-group">
+  <ExpressiveList
+    title="Multi-platform virtual experiments"
+    background="true"
+    pictogram={<CodeSyntax />}>
+
+  **ST4SD Core** provides tools for writing virtual experiments that can run on your laptop, on HPC machines, or on cloud. [Get Started](/st4sd-core-getting-started)
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Virtual experiment registry"
+    background="true"
+    pictogram={<CarbonForIbmDotcom />}>
+
+   **ST4SD Registry** provides a UI for sharing and browsing virtual experiments. [Get Started](/st4sd-registry-getting-started)
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Ease-of-use"
+    background="true"
+    pictogram={<NetworkServices />}>
+
+  **ST4SD Services** allows scientists to run virtual experiments and query their data via Jupyter notebooks.
+   It includes a high-performance metadata-store that enables memoization. [Get Started](/st4sd-services-getting-started)
+
+  </ExpressiveList>
+
+</div>

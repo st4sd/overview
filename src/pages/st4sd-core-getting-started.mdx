@@ -9,6 +9,19 @@ title: ST4SD Core
 
 -->
 
+import { CodeSyntax } from '@carbon/pictograms-react';
+import { NetworkServices } from '@carbon/pictograms-react';
+import { CarbonForIbmDotcom } from '@carbon/pictograms-react';
+import { Kubernetes } from '@carbon/pictograms-react';
+
+import { Build } from '@carbon/pictograms-react';
+import { Insights } from '@carbon/pictograms-react';
+import { Documentation } from '@carbon/pictograms-react';
+import { Reliability } from '@carbon/pictograms-react';
+
+import { CloudTutorials } from '@carbon/pictograms-react';
+import { Reset } from '@carbon/pictograms-react';
+import { Containers } from '@carbon/pictograms-react';
 
 **ST4SD Core** is a python framework for automating computational science workflows.
 It enables researchers to create robust and reusable virtual experiments that can be deployed on HPC and cloud environments, or on their laptops.
@@ -21,15 +34,17 @@ Any researcher comfortable with programming can start using ST4SD Core.
 
   <ExpressiveList 
     title="Multi-platform deployment"
-    background="true">
+    background="true"
+    pictogram={<Build />}>
 
-ST4SD Core provides features for writing virtual-experiments that can run on your laptop, on HPC machines, or on cloud.
+ST4SD Core provides features for writing virtual experiments that can run on your laptop, on HPC machines, or on cloud.
 
   </ExpressiveList>
 
   <ExpressiveList 
     title="Analytics co-processing"
-    background="true">
+    background="true"
+    pictogram={<Insights />}>
 
 Run expensive analytics in parallel with simulations, ensuring they complete shortly after simulations themselves.
 This also enables "on-the-fly" triggers based on the simulation behaviour, for example stopping criteria.
@@ -38,17 +53,19 @@ This also enables "on-the-fly" triggers based on the simulation behaviour, for e
 
   <ExpressiveList 
     title="Simple specification"
-    background="true">
+    background="true"
+    pictogram={<Documentation />}>
 
 We adopt a pattern of simple-specification, smart-runtime. 
 Many execution details, for example data-transfer or restarting behaviour, are handled by ST4SD Core
-eliminating complexity and enabling researchers to focus on the compuational process.
+eliminating complexity and enabling researchers to focus on the computational process.
 
   </ExpressiveList>
 
   <ExpressiveList 
     title="Robust execution"
-    background="true">
+    background="true"
+    pictogram={<Reliability />}>
 
 Features including image checking, image pinning, unstable filesystem identification and enhanced exit-code handling,
 increase the chances that complex long-running workflow will complete successfully. 
@@ -75,26 +92,30 @@ elaunch.py --nostamp -l40 sum-numbers
 
   <ExpressiveList 
     title="Tutorial"
-    background="true">
+    background="true"
+    pictogram={<CloudTutorials />}>
 
-Start with our [tutorial](/tutorial) to get an introduction to writing virtual-experiments with ST4SD Core
+Start with our [tutorial](/tutorial) to get an introduction to writing virtual experiments with ST4SD Core
 
   </ExpressiveList>
 
   <ExpressiveList 
     title="Getting application images"
-    background="true">
+    background="true"
+    pictogram={<Containers />}>
 
-Learn about the [repositories of application images](application-images) maintained by ST4SD developers and community to quickly get started building experiments.
+Learn about the repositories of application images](/application-images/) maintained by ST4SD developers and community to quickly get started building experiments.
 
   </ExpressiveList>
 
   <ExpressiveList 
     title="Restarting"
-    background="true">
+    background="true"
+    pictogram={<Reset />}
+    >
 
 Restarting long simulations due to hitting queue wall-times is very common in computational science.
-The [restart documentation](restart) describes ST4SD Core features for handling this.
+The [restart documentation](/restart) describes ST4SD Core features for handling this.
 
   </ExpressiveList>
 
@@ -107,31 +128,32 @@ Check out these other ST4SD technologies. All are designed to work together to p
 
 <div className="expressive-content-list-group">
 
-  <ExpressiveList 
-    title="Ease-of-use"
-    background="true">
-
-   **ST4SD Services** allows scientists to run virtual experiments and query their data via Jupyter notebooks.
-   It includes a high-performance metadata-store that enables memoization. [Get Started](/runtime-service)
-
-  </ExpressiveList>
-
-  <ExpressiveList 
-    title="Virtual experiment registry"
-    background="true">
-
-   The **ST4SD Registry** provides a UI for sharing and browsing virtual-experiments. [Get Started](/using-the-virtual-experiments-registry-ui)
-
-  </ExpressiveList>
-
-
    <ExpressiveList
     title="Robust, scalable deployment"
-    background="true">
+    background="true"
+    pictogram={<Kubernetes />}>
 
-  Get secure, scalable and robust performance by deploying ST4SD on an OpenShift cluster using **ST4SD Cloud**. [Get Started](/installation)
+  Get secure, scalable and robust performance by deploying ST4SD on an OpenShift cluster using **ST4SD Cloud**. [Get Started](/st4sd-cloud-getting-started)
 
   </ExpressiveList>
 
+  <ExpressiveList
+    title="Virtual experiment registry"
+    background="true"
+    pictogram={<CarbonForIbmDotcom />}>
+
+   **ST4SD Registry** provides a UI for sharing and browsing virtual experiments. [Get Started](/st4sd-registry-getting-started)
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Ease-of-use"
+    background="true"
+    pictogram={<NetworkServices />}>
+
+  **ST4SD Services** allows scientists to run virtual experiments and query their data via Jupyter notebooks.
+   It includes a high-performance metadata-store that enables memoization. [Get Started](/st4sd-services-getting-started)
+
+  </ExpressiveList>
 
 </div>

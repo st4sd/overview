@@ -82,7 +82,8 @@ pip install "st4sd-runtime-core[deploy]"
 
 We recommend using a x86 device.
 </InlineNotification>
-You can deploy a small scale version of <a href="/cloud-orientation">ST4SD Cloud</a> on your personal device using <a href="https://developers.redhat.com/products/openshift-local/overview" target="_blank">Red Hat OpenShift Local (formerly Red Hat CodeReady Containers)</a>. To get started with Red Hat OpenShift Local, download the "OpenShift Local" binary (crc) from the <a href="https://console.redhat.com/openshift/create/local" target="_blank">Red Hat Console</a> website.
+
+You can deploy a small scale version of <a href="/st4sd-cloud-getting-started">ST4SD Cloud</a> on your personal device using <a href="https://developers.redhat.com/products/openshift-local/overview" target="_blank">Red Hat OpenShift Local</a>. To get started with Red Hat OpenShift Local, download the "OpenShift Local" binary (crc) from the <a href="https://console.redhat.com/openshift/create/local" target="_blank">Red Hat Console</a> website.
 
  <InlineNotification kind="info">
 You need a Red Hat account to use OpenShift Local. If you do not have one, you can get one for free on the <a href="https://developers.redhat.com/register?intcmp=701f20000012ngPAAQ" target="_blank">Red Hat Developer</a> website.
@@ -274,13 +275,13 @@ You can see the credentials of the default accounts that OpenShift Local creates
 </InlineNotification>
 
 
-First, add ST4SD Cloud to the Operator Catalog of your OpenShift cluster:
+First, add the **Simulation Toolkit for Scientific Discovery (ST4SD)** operator to the Operator Catalog of your OpenShift cluster:
 
 ```
 oc apply -f https://raw.githubusercontent.com/st4sd/st4sd-olm/main/examples/deploy.yaml
 ```
 
-Then check <a href="https://github.com/st4sd/st4sd-olm" target="_blank">instructions</a> on how to configure and install. For comprehensive details on customizing ST4SD deployments using `helm` post-installation see <https://github.com/st4sd/st4sd-deployment>.
+Then follow our <a href="https://github.com/st4sd/st4sd-olm" target="_blank">instructions</a> to configure and install. For comprehensive details on customizing ST4SD deployments using `helm` post-installation see <https://github.com/st4sd/st4sd-deployment>.
 
 ## Install on Classic HPC
 

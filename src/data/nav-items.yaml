@@ -33,7 +33,7 @@
 - title: ST4SD Cloud
   pages:
   - title: Getting Started
-    path: /cloud-orientation
+    path: /st4sd-cloud-getting-started
   - title: Installation
     path: /installation
   - title: Manage users
@@ -50,6 +50,8 @@
     path: /creating-a-parameterised-package
 - title: ST4SD Services
   pages:
+  - title: Getting Started
+    path: /st4sd-services-getting-started
   - title: Python Client API
     path: /running-workflows-on-openshift
   - title: Virtual Experiment Interfaces
