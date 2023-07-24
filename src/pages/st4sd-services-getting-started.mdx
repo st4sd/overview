@@ -16,24 +16,107 @@ import { NetworkServices } from '@carbon/pictograms-react';
 import { CarbonForIbmDotcom } from '@carbon/pictograms-react';
 import { Kubernetes } from '@carbon/pictograms-react';
 
+import { AppDeveloper } from '@carbon/pictograms-react';
+import { AcceleratedComputing } from '@carbon/pictograms-react';
+import { Construct } from '@carbon/pictograms-react';
+import { ServerOperatingSystems } from '@carbon/pictograms-react';
+import { NaturalLanguageUnderstanding } from '@carbon/pictograms-react';
 
-**ST4SD Services** contains microservices that power the ST4SD technologies.
-The microservices feature APIs which enable users to interact with the ST4SD technologies.
+
+<!---
+VV: Some interesting looking pictograms that could represent "data"
+<NaturalLanguageUnderstanding />
+<Assets />
+<Receipt />
+<FileBackup />
+-->
+
+**ST4SD Services** is a collection of microservices that power the ST4SD technologies.
+The APIs of these microservices act as a bridge between users and ST4SD technologies.
 Any researcher comfortable with programming can start using ST4SD Services.
 
 ## Why ST4SD Services ?
 
 <div className="expressive-content-list-group">
+  <ExpressiveList
+    title="APIs to interact with ST4SD technologies"
+    background="true"
+    pictogram={<AppDeveloper />}>
 
+Use the APIs to create, parameterise, run, and monitor the progress of experiments.
+
+  </ExpressiveList>
+
+
+  <ExpressiveList
+    title="Metadata database"
+    background="true"
+    pictogram={<Construct />}>
+
+Executing an experiment generates metadata, intermediate files, and outputs.
+ST4SD automatically maintains a record of this information in its Datastore.
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Memoization"
+    background="true"
+    pictogram={<AcceleratedComputing />}>
+
+Use memoization to reuse results of previous calculations rather than executing them again.
+This can significantly improve the execution time of your experiments.
+
+  </ExpressiveList>
 </div>
 
 
 ## Try it yourself
 
+Use [**ST4SD Cloud**](/st4sd-cloud-getting-started#try-it-yourself) to deploy the services on OpenShift.
+Next, install the [**ST4SD Core**](/st4sd-core-getting-started#try-it-yourself) python client code.
+
+```
+pip install st4sd-runtime-core
+```
+
+Finally, use the python client code to try out some of our example Jupyter [notebooks](https://github.com/st4sd/st4sd-examples/tree/main/notebooks):
+
+- [Create, run, and monitor experiments](https://github.com/st4sd/st4sd-examples/blob/main/notebooks/ST4SD%20Runtime%20API%20Example.ipynb)
+- [Query the Datastore for metadata, files, and logs that experiments generate](https://github.com/st4sd/st4sd-examples/blob/main/notebooks/ST4SD%20Datastore%20-%20Common%20Query%20Examples.ipynb)
 
 ## Learn More
 
 <div className="expressive-content-list-group">
+
+  <ExpressiveList
+    title="Use the APIs"
+    background="true"
+    pictogram={<ServerOperatingSystems />}>
+
+[Learn](/running-workflows-on-openshift) how to use the ST4SD python client API to run, query, and interact with virtual experiments.
+The APIs also offer access to a trove of experiment metadata and files such as logs and outputs.
+You can find more examples in our Jupyter Notebooks [example repository](https://github.ibm.com/st4sd/st4sd-examples).
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Get outputs using experiment interfaces"
+    background="true"
+    pictogram={<NaturalLanguageUnderstanding />}>
+
+Virtual Experiments may optionally implement an [interface](/writing-a-virtual-experiment-interface) to record the measurements that the experiment generates for the inputs it processes.
+Learn how to use virtual experiment interfaces [here](/using-a-virtual-experiment-interface).
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Speedup your experiments through memoization"
+    background="true"
+    pictogram={<AcceleratedComputing />}>
+
+Switching on the [memoization feature](/memoization) configures your experiments to automatically reuse results of previous calculations rather than executing them again.
+
+  </ExpressiveList>
 
 </div>
 
@@ -47,7 +130,7 @@ Check out these other ST4SD technologies. All are designed to work together to p
     background="true"
     pictogram={<CodeSyntax />}>
 
-  **ST4SD Core** provides tools for writing virtual experiments that can run on your laptop, on HPC machines, or on cloud. [Get Started](/st4sd-core-getting-started)
+**ST4SD Core** provides tools for writing virtual experiments that can run on your laptop, on HPC machines, or on cloud. [Get Started](/st4sd-core-getting-started)
 
   </ExpressiveList>
 
@@ -56,7 +139,7 @@ Check out these other ST4SD technologies. All are designed to work together to p
     background="true"
     pictogram={<Kubernetes />}>
 
-  Get secure, scalable and robust performance by deploying ST4SD on an OpenShift cluster using **ST4SD Cloud**. [Get Started](/st4sd-cloud-getting-started)
+Get secure, scalable and robust performance by deploying ST4SD on an OpenShift cluster using **ST4SD Cloud**. [Get Started](/st4sd-cloud-getting-started)
 
   </ExpressiveList>
 
@@ -65,7 +148,7 @@ Check out these other ST4SD technologies. All are designed to work together to p
     background="true"
     pictogram={<CarbonForIbmDotcom />}>
 
-   **ST4SD Registry** provides a UI for sharing and browsing virtual experiments. [Get Started](/st4sd-registry-getting-started)
+**ST4SD Registry** provides a UI for sharing and browsing virtual experiments. [Get Started](/st4sd-registry-getting-started)
 
   </ExpressiveList>
 
