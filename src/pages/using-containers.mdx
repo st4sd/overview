@@ -1,0 +1,125 @@
+---
+title: Using containers
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<PageDescription>
+
+This page will teach you how to write and run a workflow that uses application containers via a toy-example.
+We advise users becoming familiar with the [component specification](/workflow-specification#component) before continuing.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Using containers locally</AnchorLink>
+  <AnchorLink>Using containers on Kubernetes</AnchorLink>
+  <AnchorLink>Using containers in multi-platform workflows</AnchorLink>
+</AnchorLinks>
+
+
+[**ST4SD core**](/st4sd-core-getting-started) supports using application containers to execute component tasks.
+Application containers enable developers to have reproducible experiments that they can share with their community.
+
+
+## Using containers locally
+
+Workflows can use `docker`-like runtimes (e.g. [docker](https://www.docker.com/), [podman](https://podman.io/))
+for components which execute containerized applications.
+
+Here is a minimal example:
+
+```yaml
+components:
+- name: hello
+  command:
+    executable: python3
+    arguments: -c "print('Hello world!')"
+    expandArguments: none
+  resourceManager:
+    config:
+      backend: docker
+    docker:
+      image: quay.io/fedora/python-311
+```
+
+Check out the [component specification](/workflow-specification#component) for the full schema of component definition.
+By default, ST4SD will use `docker` to execute components whose `resourceManager.config.backend` is set to `docker`.
+Use the `elaunch.py` parameter `--dockerExecutableOverride` to use a different `docker`-like backend.
+For example, if the `$PATH` environment variable on your terminal is configured such that you can run the `podman`
+executable you can use it for your `docker` components by setting `--dockerExecutableOverride=podman`.
+If the executable is not in `$PATH` you can still use it, you just need to use the full path to it when you set
+the value of the `--dockerExecutableOverride` parameter.
+
+## Using containers on Kubernetes
+
+Workflows which are running on a Kubernetes environment (e.g. [**ST4SD Cloud**](/st4sd-cloud-getting-started) on OpenShift)  can use the `kubernetes` backend to run containers.
+
+Here is a minimal example:
+
+```yaml
+components:
+- name: hello
+  command:
+    executable: python3
+    arguments: -c "print('Hello world')"
+    expandArguments: none
+  resourceManager:
+    config:
+      backend: kubernetes
+    kubernetes:
+      image: quay.io/fedora/python-311
+```
+
+To run this, deploy [**ST4SD Cloud**](/st4sd-cloud-getting-started) then use the [Python client API](/running-workflows-on-openshift/) to execute the experiment.
+
+## Using containers in multi-platform workflows
+
+Often, workflows have support for multiple execution environments such as Cloud (e.g. Kubernetes/OpenShift), HPC, or even personal devices like laptops.
+ST4SD uses the concept of [platforms](/workflow-specification#platforms) to help workflow developers define how their workflows should execute under different execution environments.
+Typically developers use a [variable](/workflow-specification#variables) as the value of the field `resourceManager.config.backend`.
+At execution time, a user configures the workflow to run using one of the available `platforms` by specifying the
+`--platform` parameter to `elaunch.py`.
+The components then use the appropriate backend for the desired `platform`.
+
+For example, here is a single workflow that uses a backend based on the platform that the user decides at execution time:
+
+ ```yaml
+variables:
+  # The "default" platform configures the component to use the "docker" backend
+  default:
+    global:
+      backend: docker
+      # All platforms inherit variables of "default" and may override their value
+      image: quay.io/fedora/python-311
+  # The k8s platform has the component use the "kubernetes" backend
+  k8s:
+    global:
+      backend: kubernetes
+
+components:
+- name: hello
+  command:
+    executable: python3
+    arguments: -c "print('Hello world')"
+    expandArguments: none
+  resourceManager:
+    config:
+      backend: "%(backend)s"
+    docker:
+      image: "%(image-python)s"
+    kubernetes:
+      image: "%(image-python)s"
+```
+
+To run this on a laptop, place the above in a file called `workflow.yaml` and then execute:
+
+```
+pip install "st4sd-runtime-core[deploy]"
+elaunch.py -l40 --platform default workflow.yaml
+```

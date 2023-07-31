@@ -50,14 +50,19 @@ resourceRequest:
   ranksPerNode: (int, str containing %(variable-reference)s or array access)
   threadsPerCore: (int, str containing %(variable-reference)s or array access)
   memory: (int (size in bytes), str containing %(variable-reference)s or array access or Mib/Kib bytes )
+  gpus: (int, str containing %(variable-reference)s or array access)
 resourceManager:
   config:
-    backend: (name of backend e.g "local", "kubernetes", "lsf", etc:str)
+    backend: (name of backend e.g "local", "kubernetes", "lsf", "docker", etc:str)
+    walltime: (in minutes, valid for "kubernetes" and "lsf" backends, float)
+  docker:
+    image: str
+    imagePullPolicy: one of Always, Never, IfNotPresent (optiona, default is Always)
   kubernetes:
     image: str
-    image-pull-secret: (null, str)
-    namespace: (null, str)
-    host: (null, str)
+  lsf:
+    queue: str
+    dockerImage: str (optional)
 variables:
   s<variable name:str>: <value: str, int, bool, float>
 ```
@@ -98,6 +103,7 @@ In this case on platform `bigmem` this component would still ask for 16 cores bu
   - executable: path to executable. It can be absolute, relative to the instance directory by prefixing the path with `bin/` or `<application>/`. It can also be just the name of a binary. If the path is not absolute the `st4sd-runtime` will look for the executable in the folders specified under `$PATH`.
   - arguments: arguments to binary
   - environment: Name of the `environment` to use. The definition will be searched in the top level `environments` field of FlowIR.
+  - expandArguments: one of ["double-quote", "none"] (default is "double-quote"). When set to "double-quote" ST4SD envelops commandline in double-quotes and perform bash expansion by feeding the resulting string to `echo` before using them to submit the task to the backned.
 - references: Each string in this list is a string representation of a [DataReference](#datareference) to either a reference to a file, a folder, or a component. References to components and files produced by a component (i.e. under the working directory of a component) indicate a data dependency which the `st4sd-runtime` respects when scheduling the tasks for components. There are several `reference methods`, but these are the most commonly used:
   - `:output`: the `st4sd-runtime` will replace `<component name>:output` references with the `stdout` output of the referenced component
   - `:ref`: the `st4sd-runtime` will replace `<component name or file>:ref` references with the absolute path to the component or file on the filesystem.
@@ -111,22 +117,37 @@ In this case on platform `bigmem` this component would still ask for 16 cores bu
   - ranksPerNode
   - threadsPerCore
   - memory: In Bytes or as Mi/Gi (e.g. 128Mi, 16Gi)
-  - gpus: Only used by tasks that execute on the Kubernetes backend
+  - gpus: Only used by tasks that execute on the Kubernetes or LSF backend
 - resourceManager:
   - config:
     - backend: Which backend to use. Valid options are:
       - local (default option)
       - kubernetes
+      - docker (also supports other docker-line runtimes like podman)
       - lsf
     - walltime: Maximum execution time of a single task for this component (in minutes). This option is only valid for `kubernetes` and `lsf` backends. The defaults is `60` (one hour).
   - kubernetes: Options to use when the `kubernetes` backend is selected for this component
     - image: which image to use
     - gracePeriod: Kubernetes waits `gracePeriod` seconds between asking a container to terminate and forcing it to terminate. This applies to tasks that use the Kubernetes backend and their execution time exceeds `resourceManager.config.walltime` minutes.
     - qos: One of "guaranteed" (default), "burstable", "besteffort". See Kubernetes [documentation](https://kubernetes.io/docs/tasks/configure-pod-container/quality-service-pod/) for the definition of Quality Of Service (QoS) classes.
-  - lsf:
+  - docker: Options to use when the `docker` backend is selected for this component. Supports other `docker`-like runtimes via the elaunch.py parameter `--dockerExecutableOverride`
+    - image: which image to use
+    - imagePullPolicy: one of ["Always", "Never", "IfNotPresent"], default is "Always"
+  - lsf: Options to use when the `lsf` backend is selected for this component
     - queue: Name of queue to submit jobs to.
     - resourceString: A LSF request string e.g. `"rusage[ngpus_physical=4.00] select[(v100&&infiniband)]"`
 - variables: A `key: value` collection of variables; can either override those defined in platform or introduce new ones. In both cases the value specified here is visible to *this* component only. See [FlowIR options/variable inheritance sequence](#flowir-optionsvariable-inheritance-sequence) for details on how scope layering/inheritance functions in FlowIR.
+
+<InlineNotification kind="info">
+
+By default, ST4SD will use `docker` to execute components whose `resourceManager.config.backend` is set to `docker`.
+Use the `elaunch.py` parameter `--dockerExecutableOverride` to use a different `docker`-like backend.
+For example, if the `$PATH` environment variable on your terminal is configured such that you can run the `podman`
+executable you can use it for your `docker` components by setting `--dockerExecutableOverride=podman`.
+If the executable is not in `$PATH` you can still use it, you just need to use the full path to it when you set
+the value of the `--dockerExecutableOverride` parameter.
+
+</InlineNotification>
 
 #### Defining components
 
