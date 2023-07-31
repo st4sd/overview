@@ -1,0 +1,188 @@
+---
+title: Directly running workflows
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<PageDescription>
+
+This page will teach you how to run a workflow directly using the `elaunch.py` command line utility.
+Users comfortable with installing python modules and the [FlowIR](/workflow-specification) should be able to follow this content.
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Prepare a virtual environment</AnchorLink>
+  <AnchorLink>Execute a workflow</AnchorLink>
+  <AnchorLink>Provide input files and override data files</AnchorLink>
+  <AnchorLink>Store outputs to S3</AnchorLink>
+</AnchorLinks>
+
+
+## Prepare a virtual environment
+
+We recommend using a virtual environment with a modern version of python 3 (3.7+) to install [**ST4SD Core**](/st4sd-core-getting-started) like so:
+
+
+```bash
+python3 -m venv --copies st4sd
+. ./st4sd/bin/activate
+pip install "st4sd-runtime-core"
+```
+
+If you are installing ST4SD on a machine that can submit tasks to [IBM Spectrum LSF](https://www.ibm.com/products/hpc-workload-management)
+then you should also install the official [`lsf-python-api`](https://github.com/IBMSpectrumComputing/lsf-python-api) python module.
+
+```
+. /path/to/profile.lsf
+git clone https://github.com/IBMSpectrumComputing/lsf-python-api.git
+cd lsf-python-api
+python3 setup.py build
+python3 setup.py install
+```
+
+Check the homepage of [`lsf-python-api`](https://github.com/IBMSpectrumComputing/lsf-python-api) for more information.
+
+After installing the `lsf-python-api` python module you can launch workflows which contain components that use the [`lsf`](/workflow-specification#description-of-basic-flowir-component-fields) backend.
+
+## Execute a workflow
+
+Use the `elaunch.py` command-line utility that is included by installing `st4sd-runtime-core` to run your workflows.
+For example, you can run the toy workflow [`sum-numbers`](https://github.com/st4sd/sum-numbers) like so:
+
+```bash
+git clone https://github.com/st4sd/sum-numbers.git
+elaunch.py --nostamp -l40 sum-numbers
+```
+
+## Provide input files and override data files
+
+ST4SD workflows support 3 flavours of inputs:
+
+1. Input files - files user must provide when they execute the workflow
+2. Data files - configuration files that optionally can be overridden
+3. User variables - user provided values for workflow variables
+
+The [tutorial](/tutorial#providing-inputs-to-workflows) contains more information about inputs.
+
+### Example
+
+Here's an example of a workflow that uses an `input` file, a `data` file, and a variable.
+
+First, prepare the workflow definition files by running the following on your terminal:
+
+```bash
+cat <<EOF >workflow.yaml
+variables:
+  default:
+    global:
+      var: hello
+
+components:
+- name: hello
+  command:
+    executable: sh
+    arguments: |
+      <<EOF
+      echo variable contains "%(var)s"
+      echo input contents are "input/foo.txt:output"
+      echo data contents are "data/bar.txt:output"
+      EOF
+    expandArguments: none
+  references:
+  - input/foo.txt:output
+  - data/bar.txt:output
+EOF
+
+cat <<EOF >manifest.yaml
+data: data
+EOF
+
+mkdir -p shared_data
+cat <<EOF >shared_data/bar.txt
+data-file-contents
+EOF
+
+cat <<EOF >foo.txt
+input-file-contents
+EOF
+
+cat <<EOF >my_vars.yaml
+global:
+  var: hi
+EOF
+```
+
+The above script creates the following file structure:
+
+```
+workflow.yaml  # the workflow definition
+manifest.yaml  # manifest that maps "shared_data" to "data"
+foo.txt        # the input file
+my_vars.yaml   # file containing user variables
+shared_data    # the directory containing "data" files
+└─ bar.txt
+```
+
+Activate the virtual environment that you used to install `st4sd-runtime-core` and then run:
+
+```bash
+elaunch.py -l40 --nostamp  \
+      --failSafeDelays=no \
+      --input foo.txt \
+      --variables my_vars.yaml \
+      --manifest manifest.yaml workflow.yaml
+echo "\n\nComponent stdout was:"
+cat workflow.instance/stages/stage0/hello/out.stdout
+```
+
+If you omit the `--variables` parameter then the `var` variable will receive the value that the `default` platform sets to it.
+
+You can override the contents of the `data` file `bar.txt` by adding the argument: `--data path/to/a/different/bar.txt`.
+Finally, you can use the `--data` and `--input` parameters multiple times.
+
+## Store outputs to S3
+
+Workflows may optionally define [`key-outputs`](/tutorial#key-outputs) which which `elaunch.py`
+may upload to S3 after the experiment terminates.
+
+You can instruct `elaunch.py` to upload `key-outputs` to S3 via the the `--s3StoreToURI` parameter.
+When setting the parameter `--s3StoreToURI` you must also use exactly one of the parameters `--s3AuthWithEnvVars` or `--s3AuthBearer64`.
+
+### Example:
+
+
+```bash
+export bucket="a-bucket"
+export path_in_bucket="optional/path"
+
+export S3_ACCESS_KEY_ID="s3 access key id"
+export S3_SECRET_ACCESS_KEY="s3 secret access key"
+export S3_END_POINT="s3 end point"
+
+elaunch.py --s3StoreToURI s3://${bucket}/${path_in_bucket} \
+  --s3AuthWithEnvVars \
+  path/to/workflow
+```
+
+When `--s3StoreToURI` is set, after the experiment terminates, `elaunch.py` will start uploading the `key-outputs` to the S3 bucket you provided under the specifeid `${path_in_bucket}`.
+`elaunch.py` replaces occurences of the `%(instanceDir)s` literal in `--s3StoreToURI` with the name of the experiment instance.
+For example, you can use this to store the `key-outputs` of multiple workflow instances in the same bucket.
+
+Alternatively, you can base64-encode the JSON representation of the dictionary `{"S3_ACCESS_KEY_ID": "val", "S3_SECRET_ACCESS_KEY": "val", "S3_END_POINT": "val"}` and use the `--s3AuthBearer64` parameter instead:
+
+```bash
+export bucket="a-bucket"
+export path_in_bucket="optional/path"
+export json="{\"S3_ACCESS_KEY_ID\": \"val\", \"S3_SECRET_ACCESS_KEY\": \"val\", \"S3_END_POINT\": \"val\"}"
+export s3_auth=`echo "${json}" | base64`
+
+elaunch.py --s3StoreToURI s3://${bucket}/${path_in_bucket} \
+  --s3AuthBearer64 \
+  path/to/workflow
+```

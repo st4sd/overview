@@ -250,6 +250,8 @@ Metadata describing key-outputs will be in the `output` directory in the top lev
 In addition, users may also request key-outputs be copied to an external location when an experiment instance finishes.
 You can do this by setting the `--s3StoreToURI` and `--s3AuthWithEnvVars` (or `--s3AuthBearer64=S3AUTHBEARER64`) arguments to `elaunch.py`.
 
+See the [documentation for direct runs](/direct-run) for more information.
+
 </Tab>
 
 <Tab label="Developers">

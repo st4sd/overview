@@ -26,6 +26,8 @@
     path: /virtual-experiment-developer-best-practices
   - title: Workflow Specification
     path: /workflow-specification
+  - title: Directly running workflows
+    path: /direct-run
   - title: Restarting
     path: /restart
   - title: Virtual Experiment Interfaces
