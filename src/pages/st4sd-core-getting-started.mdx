@@ -79,12 +79,51 @@ increase the chances that complex long-running workflow will complete successful
 
 ## Try it yourself
 
-`pip install st4sd-runtime-core` and execute
+Run a real virtual experiment on your laptop, it takes just a couple of minutes!
+
+You can use [one of the experiments](https://github.com/st4sd/nanopore-geometry-experiment) that the community has contributed to the public [ST4SD registry](/using-the-virtual-experiments-registry-ui).
+You just need git, a docker-like container runtime system, and a modern version of python 3 (3.7+).
+
+<Row>
+<Column colMd={5} colLg={8}>
+
+Install [git](https://git-scm.com/), [docker](https://www.docker.com/), [python 3.7+](https://www.python.org/) and then run:
+
+</Column>
+
+<Column colMd={2} colLg={3} offsetMd={1} offsetLg={1}>
+<Aside>
+python 3.7 to 3.10 tested
+</Aside>
+</Column>
+</Row>
+
+<InlineNotification kind="info">
+
+Run the git clone command in a directory that the docker-like runtime system can mount. The experiment will mount the parent directory of the git repository to store the outputs of tasks in it.
+
+</InlineNotification>
+
 
 ```bash
-git clone https://github.com/st4sd/sum-numbers.git
-elaunch.py --nostamp -l40 sum-numbers
+pip install st4sd-runtime-core
+
+git clone https://github.com/st4sd/nanopore-geometry-experiment.git
+
+elaunch.py -l40 --nostamp --instanceName nanopore-geometry-experiment \
+    --manifest nanopore-geometry-experiment/manifest.yaml \
+    --input nanopore-geometry-experiment/docker-example/cif_files.dat \
+    --platform docker nanopore-geometry-experiment/conf/flowir_package.yaml
+
+ls -lth nanopore-geometry-experiment.instance
 ```
+
+<InlineNotification kind="info">
+
+If you prefer to use [podman](https://podman.io/) then include the parameter `--dockerExecutableOverride=$(which podman)`. Alternatively, execute `./nanopore-geometry-experiment/docker-example/run.sh` and let the script auto-detect the docker runtime-system on your machine.
+
+</InlineNotification>
+
 
 ## Learn more
 
