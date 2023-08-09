@@ -47,7 +47,7 @@ It is the computational analog of a lab experiment.
     background="true"
     pictogram={<Kubernetes />}>
 
-  **ST4SD Cloud** provides secure, scalable and robust deployments of ST4SD on OpenShift clusters. [Get Started](/st4sd-cloud-getting-started)
+  **ST4SD Cloud** creates and maintains secure, scalable and robust deployments of ST4SD on OpenShift clusters. [Get Started](/st4sd-cloud-getting-started)
 
   </ExpressiveList>
 
@@ -79,7 +79,7 @@ It is the computational analog of a lab experiment.
 <Row>
 <Column colMd={5} colLg={8}>
 
-If you have `python3` with `virtualenv` installed execute the following code to install `st4sd-runtime-core` and run a toy-workflow on your laptop
+If you have python3, `pip install "st4sd-runtime-core[develop]` and execute the following code to run a toy-workflow
 
 </Column>
 
@@ -91,18 +91,13 @@ python 3.7 to 3.10 tested
 </Row>
 
 ```bash
-virtualenv -p python3 $HOME/st4sd-runtime-test
-source $HOME/st4sd-runtime-test/bin/activate
-pip install "st4sd-runtime-core[develop]"
-```
-
-Then execute
-
-```bash
 git clone https://github.com/st4sd/sum-numbers.git
 elaunch.py --nostamp -l40 sum-numbers
 ```
 
-This will create a new virtualenv called `st4sd-runtime-test` at `$HOME/st4sd-runtime-test` and install `st4sd-runtime-core` into it. It will also clone a repository into a directory called `sum-numbers` in whatever directory you run the above commands in. It will then run a toy-workflow that takes a couple of minutes to run. The toy workflow output will be in a directory called `sum-numbers.instance`
+This will clone a repository into a directory called `sum-numbers` in your current working dir.
+It will then run a toy-workflow that sums a set of numbers.
+The workflow output will be in a directory called `sum-numbers.instance`.
 
-To learn more see [**ST4SD Core**](/st4sd-core-getting-started).
+To learn more visit [ST4SD Core](/st4sd-core-getting-started) and try an example of running a real chemistry experiment.
+Then check the [ST4SD Core tutorial](/tutorial) which uses the `sum-numbers` workflow to illustrate key features.
