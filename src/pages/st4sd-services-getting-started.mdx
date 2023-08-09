@@ -31,30 +31,29 @@ VV: Some interesting looking pictograms that could represent "data"
 <FileBackup />
 -->
 
-**ST4SD Services** is a collection of microservices that power the ST4SD technologies.
-The APIs of these microservices act as a bridge between users and ST4SD technologies.
+**ST4SD Services** provides capabilities for creating and controlling virtual experiments via a RESTapi and for capturing and storing the resulting data.
+It is built on enterprise-grade database and industry-standard RESTapi technology.
 Any researcher comfortable with programming can start using ST4SD Services.
 
 ## Why ST4SD Services ?
 
 <div className="expressive-content-list-group">
   <ExpressiveList
-    title="APIs to interact with ST4SD technologies"
+    title="APIs to launch and control virtual experiments"
     background="true"
     pictogram={<AppDeveloper />}>
 
-Use the APIs to create, parameterise, run, and monitor the progress of experiments.
+Create, run, and monitor the progress of, experiments from e.g. Jupyter Notebooks using our python or REST APIs.
 
   </ExpressiveList>
 
 
   <ExpressiveList
-    title="Metadata database"
+    title="Perform complex queries and retrieve results"
     background="true"
     pictogram={<Construct />}>
 
-Executing an experiment generates metadata, intermediate files, and outputs.
-ST4SD automatically maintains a record of this information in its Datastore.
+Our python Datastore API enables executing powerful queries over 1000s of virtual-experiment executions and retrieving any data produced by them.
 
   </ExpressiveList>
 
@@ -63,7 +62,7 @@ ST4SD automatically maintains a record of this information in its Datastore.
     background="true"
     pictogram={<AcceleratedComputing />}>
 
-Use memoization to reuse results of previous calculations rather than executing them again.
+ST4SD Services enables reusing results of previous calculations rather than executing them again, a feature called Memoization
 This can significantly improve the execution time of your experiments.
 
   </ExpressiveList>
@@ -72,17 +71,17 @@ This can significantly improve the execution time of your experiments.
 
 ## Try it yourself
 
-Use [**ST4SD Cloud**](/st4sd-cloud-getting-started#try-it-yourself) to deploy the services on OpenShift.
-Next, install the [**ST4SD Core**](/st4sd-core-getting-started#try-it-yourself) python client code.
+If you have access to an ST4SD Cloud instance `pip install "st4sd-runtime-core[develop]"` then execute:
 
+```bash
+git clone https://github.com/st4sd/st4sd-examples/
+cd st4sd-examples
+jupyter-notebook main/ST4SD\ Runtime\ API\ Example.ipynb
 ```
-pip install st4sd-runtime-core
-```
 
-Finally, use the python client code to try out some of our example Jupyter [notebooks](https://github.com/st4sd/st4sd-examples/tree/main/notebooks):
+Follow the notebooks instructions to access your `ST4SD Cloud` instance and try the APIs.
+Also try the `ST4SD\ Datastore\ Common\ Query\ Examples.ipynb` notebook in the same folder for examples of retrieving the metadata, files, and logs that experiments generate.
 
-- [Create, run, and monitor experiments](https://github.com/st4sd/st4sd-examples/blob/main/notebooks/ST4SD%20Runtime%20API%20Example.ipynb)
-- [Query the Datastore for metadata, files, and logs that experiments generate](https://github.com/st4sd/st4sd-examples/blob/main/notebooks/ST4SD%20Datastore%20-%20Common%20Query%20Examples.ipynb)
 
 ## Learn More
 
@@ -139,7 +138,7 @@ Check out these other ST4SD technologies. All are designed to work together to p
     background="true"
     pictogram={<Kubernetes />}>
 
-Get secure, scalable and robust performance by deploying ST4SD on an OpenShift cluster using **ST4SD Cloud**. [Get Started](/st4sd-cloud-getting-started)
+ **ST4SD Cloud** provides secure, scalable and robust deployments of ST4SD on  OpenShift clusters. [Get Started](/st4sd-cloud-getting-started)
 
   </ExpressiveList>
 

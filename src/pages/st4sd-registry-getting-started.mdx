@@ -21,11 +21,11 @@ import { Reliability } from '@carbon/pictograms-react';
 
 
 
-**ST4SD Registry** is a web-based UI and associated command-line tool for working
-with virtual experiments. The UI allows researchers to search and inspect
+**ST4SD Registry** provides a web-based UI and command-line tool for working
+with virtual experiments. The UI allows searching and inspecting
 virtual experiment packages along with logs and results from when they were
-executed. The command line tool makes it simple to create, modify and share
-virtual experiment packages with colleagues or the wider ST4SD community. Anyone
+executed. The command line tool simplifies creating, modifying and sharing
+virtual experiment packages with colleagues or the wider community. Anyone
 can use ST4SD Registry.
 
 ## Why ST4SD Registry?
@@ -39,8 +39,7 @@ can use ST4SD Registry.
 
 The ST4SD Registry provides a powerful yet easy to use UI that enables both
 novice and expert users to explore available virtual experiments, track their
-runs, and inspect their outputs. Visit the
-[ST4SD Global Registry](https://registry.st4sd.res.ibm.com/) for a first look.
+runs, and inspect their outputs.
 
   </ExpressiveList>
 
@@ -50,12 +49,12 @@ runs, and inspect their outputs. Visit the
     pictogram={<Tools />}>
 
 The `stp` command line tool provides a conversational-style interface that makes
-it trivial for developers to create and manage virtual experiment packages.
+it simple for developers to create and manage virtual experiment packages.
 
   </ExpressiveList>
 
   <ExpressiveList 
-    title="Rich history support"
+    title="Rich version support"
     background="true"
     pictogram={<FileBackup />}>
 
@@ -69,16 +68,15 @@ critical in scientific research.
 
 ## Try it yourself
 
-Download a package from the
-[ST4SD Global Registry](https://registry.st4sd.res.ibm.com/) via `stp`:
+Download a package from the ST4SD Global Registry via `stp`.
+
+`pip install "st4sd-runtime-core[develop]"` then execute:
 
 ```bash
-pip install st4sd-runtime-core
 stp package download https://registry.st4sd.res.ibm.com/registry-ui/experiment/nanopore-geometry-experiment
 ```
 
-If you have ST4SD Cloud, you can also log in via `stp` and push the package to
-your local Registry:
+If you have an ST4SD Cloud instance, you can log in to your ST4SD Registry via `stp` and push the package to it:
 
 ```bash
 ST4SD_AUTHENTICATION_ROUTE=$(oc get route st4sd-authentication -o=jsonpath={.spec.host})
@@ -98,7 +96,8 @@ UI.
     background="true"
     pictogram={<CarbonForIbmDotcom />}>
 
-Learn about all the features of the ST4SD Registry UI with a guided tour.
+Learn about all the features of the ST4SD Registry UI with a [guided tour](/using-the-virtual-experiments-registry-ui) or visit the
+[ST4SD Global Registry](https://registry.st4sd.res.ibm.com/) for a first look.
 
   </ExpressiveList>
 
@@ -107,7 +106,7 @@ Learn about all the features of the ST4SD Registry UI with a guided tour.
     background="true"
     pictogram={<Tools />}>
 
-Learn all that `stp` has to offer and how it can help you when using ST4SD.
+Learn all that `stp` has to offer and how it can help you when using ST4SD. Documentation coming soon.
 
   </ExpressiveList>
 
@@ -117,7 +116,7 @@ Learn all that `stp` has to offer and how it can help you when using ST4SD.
     pictogram={<Reliability />}>
 
 We've distilled many years of experience in creating virtual experiments into a
-set of developer best-practices.
+set of [developer best-practices](/virtual-experiment-developer-best-practices).
 
   </ExpressiveList>
 
@@ -131,7 +130,7 @@ set of developer best-practices.
     background="true"
     pictogram={<CodeSyntax />}>
 
-  **ST4SD Core** provides tools for writing virtual experiments that can run on your laptop, on HPC machines, or on cloud. [Get Started](/st4sd-core-getting-started)
+  **ST4SD Core** enables writing virtual experiments that can run on your laptop, on HPC machines, or on cloud. [Get Started](/st4sd-core-getting-started)
 
   </ExpressiveList>
 
@@ -140,7 +139,7 @@ set of developer best-practices.
     background="true"
     pictogram={<Kubernetes />}>
 
-  Get secure, scalable and robust performance by deploying ST4SD on an OpenShift cluster using **ST4SD Cloud**. [Get Started](/st4sd-cloud-getting-started)
+  **ST4SD Cloud** provides secure, scalable and robust deployments of ST4SD on  OpenShift clusters. [Get Started](/st4sd-cloud-getting-started)
 
   </ExpressiveList>
 

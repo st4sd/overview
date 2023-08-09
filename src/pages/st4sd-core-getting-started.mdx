@@ -22,6 +22,7 @@ import { Reliability } from '@carbon/pictograms-react';
 import { CloudTutorials } from '@carbon/pictograms-react';
 import { Reset } from '@carbon/pictograms-react';
 import { Containers } from '@carbon/pictograms-react';
+import { Docker } from '@carbon/pictograms-react';
 
 **ST4SD Core** is a python framework for automating computational science workflows.
 It enables researchers to create robust and reusable virtual experiments that can be deployed on HPC and cloud environments, or on their laptops.
@@ -79,16 +80,15 @@ increase the chances that complex long-running workflow will complete successful
 
 ## Try it yourself
 
-Run a real virtual experiment on your laptop, it takes just a couple of minutes!
+Run a real virtual experiment on your laptop!
 
-You can use [one of the experiments](https://github.com/st4sd/nanopore-geometry-experiment) that the community has contributed to the public [ST4SD registry](/using-the-virtual-experiments-registry-ui).
-You just need git, a docker-like container runtime system, and a modern version of python 3 (3.7+).
 
 <Row>
 <Column colMd={5} colLg={8}>
 
-Install [git](https://git-scm.com/), [docker](https://www.docker.com/), [python 3.7+](https://www.python.org/) and then run:
+If you have git, docker, and a modern version of python installed on your system.
 
+`pip install "st4sd-runtime-core[develop]"` and execute:
 </Column>
 
 <Column colMd={2} colLg={3} offsetMd={1} offsetLg={1}>
@@ -98,16 +98,9 @@ python 3.7 to 3.10 tested
 </Column>
 </Row>
 
-<InlineNotification kind="info">
-
-Run the git clone command in a directory that the docker-like runtime system can mount. The experiment will mount the parent directory of the git repository to store the outputs of tasks in it.
-
-</InlineNotification>
-
+`pip install "st4sd-runtime-core[develop]"` then execute:
 
 ```bash
-pip install st4sd-runtime-core
-
 git clone https://github.com/st4sd/nanopore-geometry-experiment.git
 
 elaunch.py -l40 --nostamp --instanceName nanopore-geometry-experiment \
@@ -117,12 +110,6 @@ elaunch.py -l40 --nostamp --instanceName nanopore-geometry-experiment \
 
 ls -lth nanopore-geometry-experiment.instance
 ```
-
-<InlineNotification kind="info">
-
-If you prefer to use [podman](https://podman.io/) then include the parameter `--dockerExecutableOverride=$(which podman)`. Alternatively, execute `./nanopore-geometry-experiment/docker-example/run.sh` and let the script auto-detect the docker runtime-system on your machine.
-
-</InlineNotification>
 
 
 ## Learn more
@@ -159,6 +146,17 @@ The [restart documentation](/restart) describes ST4SD Core features for handling
   </ExpressiveList>
 
 
+  <ExpressiveList
+    title="Using containers"
+    background="true"
+    pictogram={<Docker />}
+    >
+
+We support running containerized applications using a native container runtime system but also on Kubernetes as Jobs.
+Check out our [documentation](/using-containers) for using containers in ST4SD.
+
+  </ExpressiveList>
+
 </div>
 
 ## Accelerate your simulation research with ST4SD
@@ -172,7 +170,7 @@ Check out these other ST4SD technologies. All are designed to work together to p
     background="true"
     pictogram={<Kubernetes />}>
 
-  Get secure, scalable and robust performance by deploying ST4SD on an OpenShift cluster using **ST4SD Cloud**. [Get Started](/st4sd-cloud-getting-started)
+  **ST4SD Cloud** provides secure, scalable and robust deployments of ST4SD on  OpenShift clusters. [Get Started](/st4sd-cloud-getting-started)
 
   </ExpressiveList>
 

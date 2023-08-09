@@ -38,7 +38,7 @@ It is the computational analog of a lab experiment.
     background="true"
     pictogram={<CodeSyntax />}>
 
-  **ST4SD Core** provides tools for writing virtual experiments that can run on your laptop, on HPC machines, or on cloud. [Get Started](/st4sd-core-getting-started)
+  **ST4SD Core** enables writing virtual experiments that can run on your laptop, on HPC machines, or on cloud. [Get Started](/st4sd-core-getting-started)
 
   </ExpressiveList>
 
@@ -47,7 +47,7 @@ It is the computational analog of a lab experiment.
     background="true"
     pictogram={<Kubernetes />}>
 
-  Get secure, scalable and robust performance by deploying ST4SD on an OpenShift cluster using **ST4SD Cloud**. [Get Started](/st4sd-cloud-getting-started)
+  **ST4SD Cloud** provides secure, scalable and robust deployments of ST4SD on OpenShift clusters. [Get Started](/st4sd-cloud-getting-started)
 
   </ExpressiveList>
 
@@ -74,7 +74,7 @@ It is the computational analog of a lab experiment.
 
 
 
-## Run a Virtual Experiment Now!
+## Try it yourself
 
 <Row>
 <Column colMd={5} colLg={8}>
@@ -90,12 +90,15 @@ python 3.7 to 3.10 tested
 </Column>
 </Row>
 
-
-
 ```bash
 virtualenv -p python3 $HOME/st4sd-runtime-test
 source $HOME/st4sd-runtime-test/bin/activate
-pip install st4sd-runtime-core[deploy]
+pip install "st4sd-runtime-core[develop]"
+```
+
+Then execute
+
+```bash
 git clone https://github.com/st4sd/sum-numbers.git
 elaunch.py --nostamp -l40 sum-numbers
 ```

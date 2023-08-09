@@ -138,16 +138,6 @@ In this case on platform `bigmem` this component would still ask for 16 cores bu
     - resourceString: A LSF request string e.g. `"rusage[ngpus_physical=4.00] select[(v100&&infiniband)]"`
 - variables: A `key: value` collection of variables; can either override those defined in platform or introduce new ones. In both cases the value specified here is visible to *this* component only. See [FlowIR options/variable inheritance sequence](#flowir-optionsvariable-inheritance-sequence) for details on how scope layering/inheritance functions in FlowIR.
 
-<InlineNotification kind="info">
-
-By default, ST4SD will use `docker` to execute components whose `resourceManager.config.backend` is set to `docker`.
-Use the `elaunch.py` parameter `--dockerExecutableOverride` to use a different `docker`-like backend.
-For example, if the `$PATH` environment variable on your terminal is configured such that you can run the `podman`
-executable you can use it for your `docker` components by setting `--dockerExecutableOverride=podman`.
-If the executable is not in `$PATH` you can still use it, you just need to use the full path to it when you set
-the value of the `--dockerExecutableOverride` parameter.
-
-</InlineNotification>
 
 #### Defining components
 
