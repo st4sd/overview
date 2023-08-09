@@ -97,9 +97,9 @@ computational workflow developers.
 - **More Information**:
   - Read [our tutorial](/tutorial) for examples of how to use this capability
   - Many studies using ST4SD, for example on
-    [computational force-field training](http://dx.doi.org/10.1021/acs.jpcb.0c06132)
+    [computational force-field training](https://dx.doi.org/10.1021/acs.jpcb.0c06132)
     and
-    [worm-like micelle identification](http://dx.doi.org/10.1021/acs.jctc.0c00311)
+    [worm-like micelle identification](https://dx.doi.org/10.1021/acs.jctc.0c00311)
     used this capability heavily
 
 </AccordionItem>

@@ -10,11 +10,13 @@ set -e
 gatsby serve --prefix-paths &
 
 # Download and unpack linkcheck
-wget https://github.com/filiph/linkcheck/releases/download/2.0.23/linkcheck-2.0.23-linux-x64.tar.gz
-tar -xzf linkcheck-2.0.23-linux-x64.tar.gz
+wget https://github.com/filiph/linkcheck/releases/download/3.0.0/linkcheck-3.0.0-linux-x64.tar.gz
+tar -xzf linkcheck-3.0.0-linux-x64.tar.gz
 
 # We need to wait a bit for the http server to be up on Travis
-sleep 10s
+sleep 30s
 
 # Check for broken links and anchors
-./linkcheck/linkcheck localhost:9000/overview/
+# -e checks external links as well
+# --skip-file is used to provide a list of "problematic" URLs (e.g., doi returning 403 to crawlers)
+./linkcheck/linkcheck localhost:9000/overview/ -e --skip-file test/skipfile
