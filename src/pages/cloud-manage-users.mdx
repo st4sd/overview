@@ -19,6 +19,7 @@ Manage the access rights of users in your ST4SD deployment on OpenShift.
   <AnchorLink>Give a group of users full access to the ST4SD namespace</AnchorLink>
   <AnchorLink>Give a group of users access to just the ST4SD microservices</AnchorLink>
   <AnchorLink>Role objects that ST4SD creates in its namespace</AnchorLink>
+  <AnchorLink>Enable a namespace administrator to install ST4SD in a namespace</AnchorLink>
 </AnchorLinks>
 
 
@@ -34,7 +35,7 @@ For example, if you wish to configure the RBAC of the users `A` and `B` so that 
 kind: Group
 apiVersion: user.openshift.io/v1
 metadata:
-  name: st4sd-full-access-<namespace-you-deployed-st4sd-in>
+  name: st4sd-full-access-my-namespace
 users:
   - Account name of user A
   - Account name of user B
@@ -47,11 +48,17 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: st4sd-full-access
-  namespace: <namespace-you-deployed-st4sd-in>
+
+  # modify this field if your namespace has a different name
+  namespace: st4sd-full-access-my-namespace
+
 subjects:
   - kind: Group
     apiGroup: rbac.authorization.k8s.io
-    name: st4sd-full-access-<namespace-you-deployed-st4sd-in>
+
+    # modify this field if your namespace has a different name
+    name: st4sd-full-access-my-namespace
+
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -60,7 +67,7 @@ roleRef:
 
 Now, make sure that you:
 
-1. have replaced `<namespace-you-deployed-st4sd-in>` in the 2 files with the namespace that you deployed ST4SD in.
+1. have replaced `my-namespace` in the 2 files with the namespace that you deployed ST4SD in.
 2. have written down the correct account name of your users.
     1. Login to your OpenShift Web Console as an Administrator.
     2. On the left pane expand the `User Management` menu
@@ -71,14 +78,17 @@ Run `oc create -f group-full-access.yaml && oc create -f rolebinding-full-access
 
 ## Give a group of users access to just the ST4SD microservices
 
-You may want to enable two users `A` and `B` to use the ST4SD microservices but be unable to interact with OpenShift in any meaningful way. In this case, put the following in a file called `microservices-only.yaml`:
+You may want to enable two users `A` and `B` to use the ST4SD microservices in the namespace `my-namespace` but be unable to interact with OpenShift in any meaningful way. In this case, put the following in a file called `microservices-only.yaml`:
 
 
 ```yaml
 kind: Group
 apiVersion: user.openshift.io/v1
 metadata:
-  name: st4sd-microservices-only-<namespace-you-deployed-st4sd-in>
+
+  # modify this field if your namespace has a different name
+  name: st4sd-microservices-only-my-namespace
+
 users:
   - Account name of user A
   - Account name of user B
@@ -91,11 +101,16 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: st4sd-microservices-only
-  namespace: <namespace-you-deployed-st4sd-in>
+
+  # modify this field if your namespace has a different name
+  namespace:  my-namespace
+
 subjects:
   - kind: Group
     apiGroup: rbac.authorization.k8s.io
-    name: st4sd-microservices-only-<namespace-you-deployed-st4sd-in>
+
+    # modify this field if your namespace has a different name
+    name: st4sd-microservices-only-my-namespace
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -104,7 +119,7 @@ roleRef:
 
 Now, make sure that you:
 
-1. have replaced `<namespace-you-deployed-st4sd-in>` in the 2 files with the namespace that you deployed ST4SD in.
+1. have replaced `my-namespace` in the 2 files with the namespace that you deployed ST4SD in.
 2. have written down the correct account name of your users.
     1. Login to your OpenShift Web Console as an Administrator.
     2. On the left pane expand the `User Management` menu
@@ -132,5 +147,100 @@ Installing ST4D in a namespace creates the following 2 Role objects in the same 
 
 <InlineNotification kind="info">
 The 2 roles above do not enable users to modify the "simulationtoolkit" CustomResource objects that st4sd-olm monitors to control the deployment of the ST4SD instance in the namespace.
+
+Follow the instructions below to configure the Role Based Access Control for the "simulationtoolkit" objects.
 </InlineNotification>
 
+
+## Enable a namespace administrator to install ST4SD in a namespace
+
+We recommend that you appoint some of the users/administrators of the cluster to be administrator of namespaces that you deploy ST4SD in.
+
+You may then assign a Kubernetes Role which enables just the administrators of a namespace to create/modify a ST4SD deployment.
+
+For example, if your namespace is called `my-namespace` create the following file: `admin-role.yaml`
+
+```yaml
+apiVersion: authorization.openshift.io/v1
+kind: Role
+metadata:
+  name: st4sd-olm-permissions
+
+  # modify this field if your namespace has a different name
+  namespace: my-namespace
+
+  labels:
+    deploy.st4sd.ibm.com/component: st4sd-olm-permissions
+rules:
+- apiGroups:
+  - deploy.st4sd.ibm.com
+  resources:
+  - simulationtoolkits
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+```
+
+Then create the role:
+
+```bash
+oc create -f admin-role.yaml
+```
+
+Next, create a group for your administrators by placing the following in the file `admin-group.yaml`:
+
+
+```yaml
+kind: Group
+apiVersion: user.openshift.io/v1
+metadata:
+
+  # modify this field if your namespace has a different name
+  name: st4sd-administrators-my-namespace
+
+users:
+  - Account name of Administrator A
+  - Account name of Administrator B
+```
+
+Then create the group:
+
+```bash
+oc create -f admin-group.yaml
+```
+
+Finally, assign the role to the group by creating the file `admin-binding.yaml`:
+
+```yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: st4sd-administrators-my-namespace
+
+  # modify this field if your namespace has a different name
+  namespace:  my-namespace
+
+subjects:
+  - kind: Group
+    apiGroup: rbac.authorization.k8s.io
+
+    # modify this field if your namespace has a different name
+    name: st4sd-administrators-my-namespace
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: st4sd-olm-permissions
+```
+
+Run:
+
+```bash
+oc create -f admin-binding.yaml
+```
+
+You can manage the ST4D administrators for the `my-namespace` namespace by changing the users of the `Group` object `st4sd-administrators-my-namespace`.
