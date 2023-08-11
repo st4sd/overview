@@ -79,7 +79,7 @@ It is the computational analog of a lab experiment.
 <Row>
 <Column colMd={5} colLg={8}>
 
-If you have python3, `pip install "st4sd-runtime-core[develop]` and execute the following code to run a toy-workflow
+`pip install "st4sd-runtime-core[develop]"`, which installs the command-line-tool `elaunch.py`, and execute the following code to run a toy-experiment:
 
 </Column>
 
@@ -95,9 +95,10 @@ git clone https://github.com/st4sd/sum-numbers.git
 elaunch.py --nostamp -l40 sum-numbers
 ```
 
-This will clone a repository into a directory called `sum-numbers` in your current working dir.
-It will then run a toy-workflow that sums a set of numbers.
-The workflow output will be in a directory called `sum-numbers.instance`.
+This clones a repository into a directory called `sum-numbers` in your current working dir.
+It then uses the `elauncy.py` tool to run the toy experiment defined in `sum-numbers` directory.
+
+The output of the `elaunch.py` command will be a directory called `sum-numbers.instance` in the same directory you ran `elaunch.py`.
 
 To learn more visit [ST4SD Core](/st4sd-core-getting-started) and try an example of running a real chemistry experiment.
 Then check the [ST4SD Core tutorial](/tutorial) which uses the `sum-numbers` workflow to illustrate key features.
