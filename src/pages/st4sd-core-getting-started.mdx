@@ -85,7 +85,7 @@ Run a virtual experiment to calculate the geometric properties of a nanoporous m
 <Row>
 <Column colMd={5} colLg={8}>
 
-`pip install "st4sd-runtime-core[develop]"` and execute:
+`pip install "st4sd-runtime-core[develop]"`, which installs the command-line-tool `elaunch.py`, and execute:
 
 </Column>
 
@@ -98,8 +98,10 @@ python 3.7 to 3.10 tested
 
 
 ```bash
+#This command creates a directory that will provide input to the next command
 git clone https://github.com/st4sd/nanopore-geometry-experiment.git
 
+#Run `elaunch.py` specifying certain files in the directory created above
 elaunch.py -l40 --nostamp --instanceName nanopore-geometry-experiment \
     --manifest nanopore-geometry-experiment/manifest.yaml \
     --input nanopore-geometry-experiment/docker-example/cif_files.dat \
@@ -108,7 +110,9 @@ elaunch.py -l40 --nostamp --instanceName nanopore-geometry-experiment \
 
 Note, this experiment requires `docker` is installed on your laptop.
 
-When the experiment is finished `cat nanopore-geometry-experiment.instance/output/properties.csv` for the measured properties of the material.
+The output of the `elaunch.py` command will be a directory called `nanopore-geometry-experiment.instance` in the same directory you ran `elaunch.py`.
+
+When the experiment is finished `cat nanopore-geometry-experiment.instance/properties.csv` for the measured properties of the material.
 To find out more about this experiment visit its [source repository](https://github.com/st4sd/nanopore-geometry-experiment.git).
 
 
