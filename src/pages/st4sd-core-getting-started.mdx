@@ -98,17 +98,18 @@ python 3.7 to 3.10 tested
 
 
 ```bash
-#This command creates a directory that will provide input to the next command
+: # Get the directory that provides input to the next command
 git clone https://github.com/st4sd/nanopore-geometry-experiment.git
 
-#Run `elaunch.py` specifying certain files in the directory created above
+: # Run elaunch.py specifying certain files in the directory created above
 elaunch.py -l40 --nostamp --instanceName nanopore-geometry-experiment \
     --manifest nanopore-geometry-experiment/manifest.yaml \
     --input nanopore-geometry-experiment/docker-example/cif_files.dat \
     --platform docker nanopore-geometry-experiment/conf/flowir_package.yaml
 ```
 
-Note, this experiment requires `docker` is installed on your laptop.
+
+Note, this experiment requires that `docker` is installed on your laptop.
 
 The output of the `elaunch.py` command will be a directory called `nanopore-geometry-experiment.instance` in the same directory you ran `elaunch.py`.
 

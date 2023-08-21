@@ -40,7 +40,7 @@ command:
   arguments: str
   environment: (null, str)
 references:
-- <reference:str>
+  - <reference:str>
 workflowAttributes:
   aggregate: bool
   replicate: (int, null, str containing %(variable-reference)s or array access)
@@ -64,7 +64,7 @@ resourceManager:
     queue: str
     dockerImage: str (optional)
 variables:
-  s<variable name:str>: <value: str, int, bool, float>
+  <variable name:str>: <value: str, int, bool, float>
 ```
 
 ### Override
@@ -86,7 +86,7 @@ Only the key/values specified are changed or added. Existing key/values that are
 resourceRequest:
   numberThreads: 16
   threadsPerCore: 1
-	memory: 100 MBi
+  memory: 100 MBi
 override:
    bigmem:
      resourceRequest:
@@ -226,7 +226,7 @@ components:
       environment: myDefinedEnvironment
 ```
 
-You can set `command.environment` to `None` to ensure ST4SD does not add any environment variables to the task execution. Note, backends ST4SD uses e.g. k8s, lsf, may add env-vars afterwards. 
+You can set `command.environment` to `"none"` to instruct ST4SD to only inject a couple of auto-generated environment variables. Note, backends that ST4SD uses e.g. k8s, docker, lsf, may add env-vars afterwards.
 
 If `command.environment` is not explicitly set, the `st4sd-runtime` will default to using a built-in, environment called `environment`. This contains the environment from which `elaunch.py` was run.
 
@@ -241,7 +241,9 @@ environments:
       ENV-VAR3: sensible/default/for/env-var3
 ```
 
+The runtime always injects a couple of variables to the environments of components (`INSTANCE_DIR`, `FLOW_EXPERIMENT_NAME`, and `FLOW_RUN_ID`).
 
+For more information, see our environment resolution [rules](#flowir-optionsvariable-inheritance-sequence).
 
 ## Variables
 
@@ -410,7 +412,7 @@ platforms:
    - nvidia-gpu
 ```
 
-When you run a workflow you specify the platform by name. Then the relevant sections of  [blueprints](#blueprints), [variables](#variables), [overrides][#override] and [environments](#environments) will become active. 
+When you run a workflow you specify the platform by name. Then the relevant sections of  [blueprints](#blueprints), [variables](#variables), [overrides](#override) and [environments](#environments) will become active.
 
 Platforms are designed to assist in implementing generic components which are specialized for different purposes when specifying different platforms. This is particularly useful when working with packages that can utilize various kinds of HPC resources (e.g. a cluster fitted with LSF, a kubernetes installation, etc). For example, a component can be configured to utilize a certain amount of GPUs when it targets platform A but exclusively use CPUs on platform B.
 
@@ -453,12 +455,13 @@ Inheritance for `variables` works in the same spirit (it's effectively the same 
 
 In the case of `environments`, the `st4sd-runtime` follows the rules below:
 
-1. If the environment is None (i.e. no environment is selected) then the environment contains the active shell environment.
+1. If the environment is not set then the environment contains the default environment called "environment". If the default environment is unset, then the default environment is the active shell environment.
 1. If the name is the literal string "none" then the environment contains {}
 1. Otherwise the `st4sd-runtime` uses the definition for the environment name from the selected platform. If there is no definition in the active platform the `st4sd-runtime` falls back to the  `default` platform.
 1. If an environment defines a `DEFAULTS` key then that key is expected to have the format `VAR1:VAR2:VAR3...`. Other options in the environment could reference the aforementioned vars using the `$VAR` and `${VAR}` notation and these options will be resolved using their matching keys in the default environment. 
    1. Any $VAR and ${VAR} references not matched by `DEFAULTS` keys will be resolved using the active shell(workflow launch environment). 
-   1. If a variable is defined in `DEFAULTS` but there is no value for it in the default environment then treat it as if it was never in the `DEFAULTS` option in the first place.
+   1. If a variable is defined in `DEFAULTS` but there is no value for it in the default environment then treat it as if it was never in the `DEFAULTS` option in the first place. This means that references to it will remain as is. The system that is executing the component's task will resolve such environment variables just in time.
+1. The runtime injects a couple of variables to the environment (`INSTANCE_DIR`, `FLOW_EXPERIMENT_NAME`, and `FLOW_RUN_ID`).
 
 <InlineNotification>
 
