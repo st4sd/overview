@@ -84,7 +84,9 @@ Add the **Simulation Toolkit for Scientific Discovery (ST4SD)** operator to the 
 oc apply -f https://raw.githubusercontent.com/st4sd/st4sd-olm/main/examples/deploy.yaml
 ```
 
-Then follow our <a href="https://github.com/st4sd/st4sd-olm" target="_blank">instructions</a> to configure and install ST4SD:
+Then wait for the pod `st4sd-catalog-xxxx` in the namespace `openshift-marketplace` to transition to the `Running` state.
+
+At this point you can follow our <a href="https://github.com/st4sd/st4sd-olm/blob/main/README.md#configure-the-operator" target="_blank">instructions</a> to configure and subsequently install ST4SD:
 ST4SD Core, ST4SD Services, ST4SD Registry all managed by ST4SD Cloud.
 
 ## Learn More
