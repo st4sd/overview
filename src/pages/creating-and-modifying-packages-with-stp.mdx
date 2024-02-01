@@ -1,0 +1,170 @@
+---
+title: Creating and modifying packages with stp
+---
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<PageDescription>
+
+A high level overview of how `stp` can help you create and modify packages.
+
+<InlineNotification kind="info">
+
+You can always use the `-h` flag to see additional help for each of the commands
+mentioned here.
+
+</InlineNotification>
+
+</PageDescription>
+
+<AnchorLinks>
+  <AnchorLink>Creating PVEPs</AnchorLink>
+  <AnchorLink>Updating PVEP definitions</AnchorLink>
+  <AnchorLink>Checking PVEP syntax</AnchorLink>
+</AnchorLinks>
+
+## Prerequisites
+
+- Ensure you have correctly installed the ST4SD Runtime Core module
+  (instructions [here](/#try-it-yourself)).
+
+## Creating PVEPs
+
+Parameterised Virtual Experiment Packages (PVEPs) are parameterisations of our
+experiments that need to be created before they can be added the Registry to be
+run or shared. `stp` can help getting started with this by generating a valid,
+high-level PVEP that the user can later add details to.
+
+<InlineNotification kind="info">
+
+This feature requires for the experiment to be in a git repository.
+
+</InlineNotification>
+
+As we need a virtual experiment to test this feature, we will use the
+[nanopore-geometry-experiment](https://github.com/st4sd/nanopore-geometry-experiment)
+experiment as our starting point. Let us start by cloning it and `cd`-ing into
+its directory:
+
+```commandline
+git clone https://github.com/st4sd/nanopore-geometry-experiment
+cd nanopore-geometry-experiment
+```
+
+To create the PVEP we then need to run:
+
+```commandline
+stp package create --manifest manifest.yaml
+```
+
+The resulting PVEP can already be pushed to the Registry using the
+`stp package push` command we learned about in the
+[previous tutorial](/getting-and-adding-packages-with-stp#pushing-pveps).
+
+## Updating PVEP definitions
+
+During the development phase of our virtual experiments, we will regularly
+commit changes to the git repository.
+
+If we are following the set of
+[best practices](/virtual-experiment-developer-best-practices#strong-versioning)
+we have defined, the commit ID will be included in our PVEP, ensuring ST4SD
+executes the _exact_ version of our experiment, improving results
+reproducibility. Provided is an example of how this might look like in your
+PVEP:
+
+```json
+{
+  "name": "nanopore-geometry-experiment",
+  "source": {
+    "git": {
+      "location": {
+        "url": "https://github.com/st4sd/nanopore-geometry-experiment",
+        "commit": "85244f5c84d6c0e02aa7a2e1685b004cd0b3cdd2"
+      }
+    }
+  }
+}
+```
+
+`stp` makes updating the commit ID and metadata tags of our PVEP as painless as
+possible by providing the `update-definition` command. In the
+`nanopore-geometry-experiment` folder from the previous example we can run:
+
+```commandline
+stp package update-definition --path nanopore-geometry-experiment.json \
+        --use-latest-commit \
+        --tag latest
+```
+
+The PVEP definition may now look similar to the following:
+
+```json
+{
+  "base": {
+    "packages": [
+      {
+        "name": "nanopore-geometry-experiment",
+        "source": {
+          "git": {
+            "location": {
+              "url": "https://github.com/st4sd/nanopore-geometry-experiment",
+              "commit": "1682f979531ddef602440f0a3b146edb5916c001"
+            }
+          }
+        },
+      }
+    ]
+  },
+  "metadata": {
+    "package": {
+      ...
+      "tags": [
+        "latest"
+      ],
+    }
+  },
+}
+```
+
+## Checking PVEP syntax
+
+When we manually edit our PVEPs, we risk making mistakes. Fortunately, `stp`
+includes a syntax checker that can help us identify and fix our errors. Let's
+intentionally introduce a mistake into our `nanopore-geometry-experiment` PVEP,
+which we obtained earlier in this tutorial, by adding a `nonexistent` field to
+the `metadata` section.
+
+Here's how the updated section now looks:
+
+```json
+"metadata": {
+  "package": {
+    "name": "nanopore-geometry-experiment",
+    "tags": [],
+    "license": "",
+    "maintainer": "",
+    "description": "",
+    "nonexistent": true,
+    "keywords": []
+  }
+},
+```
+
+`stp` will point us to the error when we run `stp package test`, as such:
+
+```commandline
+stp package test nanopore-geometry-experiment.json
+Validation error in instance['metadata']['package']:
+Additional properties are not allowed ('nonexistent' was unexpected)
+```
+
+## Next steps
+
+- Learn how to use the [ST4SD Python APIs](/running-workflows-on-openshift).
+- See all the [available stp commands](/stp).

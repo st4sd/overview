@@ -48,8 +48,10 @@
     path: /st4sd-registry-getting-started
   - title: Virtual Experiment Registry
     path: /using-the-virtual-experiments-registry-ui
-  - title: Getting and adding experiments with stp
-    path: /getting-and-adding-experiments-with-stp
+  - title: Getting and adding packages with stp
+    path: /getting-and-adding-packages-with-stp
+  - title: Creating and modifying packages with stp
+    path: /creating-and-modifying-packages-with-stp
   - title: The stp command line tool
     path: /stp
   - title: Parameterized Packages
