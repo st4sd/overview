@@ -11,35 +11,47 @@ title: Using the Virtual Experiments Registry UI
 
 <PageDescription>
 
-This page gives an overview of the ST4SD Virtual Experiments Registry UI.
+This page gives an overview of the features provided by the ST4SD Virtual
+Experiments Registry UI.
 
 </PageDescription>
 
 <AnchorLinks>
   <AnchorLink>The homepage</AnchorLink>
   <AnchorLink>The experiments page</AnchorLink>
+  <AnchorLink>The View Graph page</AnchorLink>
+  <AnchorLink>The Parameterisation Options page</AnchorLink>
+  <AnchorLink>The View Runs page</AnchorLink>
 </AnchorLinks>
-
-The ST4SD Registry UI is a web-based UI designed to provide information at a
-glance about virtual experiments. You can watch a quick video walkthrough of the registry here:
-
-<Video src="../assets/videos/using-the-virtual-experiments-registry-ui/ST4SD Global Registry Showcase.mp4"></Video>
 
 ## The homepage
 
-The homepage of the Registry UI gives users an overview of the available
-_parameterised virtual experiment packagess_. allowing them to filter the
-results by domain, platform, or surrogate status, as shown in the screenshot
-below:
+The homepage of the Registry UI provides a user-friendly interface for browsing
+and searching the available _parameterised virtual experiment packages_ (PVEPs),
+virtual experiments that have been pre-configured to perform a specific
+measurement. Refer to the [Terminology](/concepts#terminology) section to learn
+more.
+
+The search bar allows users to search PVEPs by name, description, maintainer, or
+properties measured. Additionally, the filtering panel enables users to narrow
+down their search results by domain, platform, and other criteria.
 
 <InlineNotification>
 
-  Developers can find out more about creating parameterised virtual experiments
-  packages [here](/creating-a-parameterised-package).
+Documentation for the "Build an experiment" functionality can be found
+[here](/build-experiments-registry-ui).
 
 </InlineNotification>
 
+<Accordion>
+
+  <AccordionItem title="View Screenshot">
+
 ![Registry UI main interface](../assets/images/using-the-ve-registry-ui/ve-registry-ui-main.png)
+
+  </AccordionItem>
+
+</Accordion>
 
 ## The experiments page
 
@@ -49,64 +61,285 @@ below:
   <AnchorLink>Package information</AnchorLink>
 </AnchorLinks>
 
-Upon clicking on one of the entries, users will be presented with three sections
-containing detailed information about the experiment.
+When users click on one of the entries, they'll see three sections that provide
+detailed information about the experiment.
 
 ### Experiment specification
 
-The first section serves two purposes: a) give immediate access to the interface
-(description, measured properties, inputs, etc) of the virtual experiment, and
-b) provide a visual feedback about how well the experiment adheres to
-[best practices](/virtual-experiment-developer-best-practices).
+The experiment specification section has three main objectives:
 
-Clicking the progress indicator on the right opens a panel where developers can
-read how they can improve their virtual experiments to get the most out of the
-features provided by ST4SD and why each element is important.
+1. Providing easy access to the virtual experiment's interface, along with its
+   description, properties, and input requirements.
+2. Offering visual feedback on how well the experiment aligns with the
+   [best practices](/virtual-experiment-developer-best-practices) for virtual
+   experiments.
+3. Providing quick links to view the experiment's graph, runs, along with
+   editing and running functionalities.
+
+To get the most out of the features provided by ST4SD, developers can click on
+the progress indicator on the right to open a panel with helpful information.
+The panel will provide guidance on how to improve their virtual experiments and
+explain why each element is important.
+
+To access more advanced features of the Registry UI, users can find a series of
+links below the experiment description section. For more information about these
+features, users can check out their respective sections, which contain more
+in-depth explanations:
+
+<AnchorLinks small>
+  <AnchorLink>The View Graph page</AnchorLink>
+  <AnchorLink>The Parameterisation Options page</AnchorLink>
+  <AnchorLink>The View Runs page</AnchorLink>
+</AnchorLinks>
+
+<Accordion>
+
+  <AccordionItem title="View Screenshot">
 
 ![Registry UI experiment specification](../assets/images/using-the-ve-registry-ui/ve-registry-ui-experiment-specification.png)
 
+  </AccordionItem>
+
+</Accordion>
+
 ### Parameterisation
 
-This section describes the available options to customize the execution of a
-parameterisable virtual experiment package. Users may override variables,
-runtime arguments, environment variables, and
-[`platform`](/workflow-specification/#platforms) of the resulting virtual
-experiment instance.
+This section shows the execution options and presets that make up the
+parameterisation of the PVEP.
 
-In the **Execution options** section, users can see what parameters they can
-customize. Depending on the developer settings, users may specify an arbitrary
-value for parameters, or choose between a list of choices. Finally, the **Preset
-parameters** section, presents the parameters users cannot override. The
-developers pre-configure these parameters when they
-[push the parameterised package](/creating-a-parameterised-package) to the
+**Execution options** represent values that users can set at runtime to override
+defaults. Depending on the parameterisation, users may be able to set arbitrary
+values or only choose from a list of values set by the developer. **Presets**,
+instead, are parameters that were set when the PVEP was
+[added](/creating-a-parameterised-package) to the registry, and typically
+represent. To modify these, a new version of the PVEP must be uploaded to the
 registry.
 
+<Accordion>
+
+  <AccordionItem title="View Screenshot">
+
 ![Registry UI experiment parameterisation](../assets/images/using-the-ve-registry-ui/ve-registry-ui-experiment-parameterisation.png)
+
+  </AccordionItem>
+
+</Accordion>
 
 ### Package information
 
 This section contains information about the internals of the parameterised
-package, such as the list of base packages, container images used in the
-virtual experiment, and developer-provided metadata. For virtual experiment
-definitions hosted on Git, the users also get the option to report problems by
-opening Github issues. The issues, automatically include relevant information to
-help the developers debug the problem. For example, the commit and branch/tag of
-the repository containing the definition of this particular version of the
-virtual experiment.
+package, such as the list of base packages, container images used in the virtual
+experiment, and developer-provided metadata. For virtual experiment definitions
+hosted on GitHub, users also get the option to report problems by opening issues
+that are pre-populated to include relevant information to help developers debug
+the problem, such as the commit and branch/tag of the repository containing the
+definition of this particular version of the virtual experiment.
+
+<Accordion>
+
+  <AccordionItem title="View Screenshot">
 
 ![Registry UI package information](../assets/images/using-the-ve-registry-ui/ve-registry-ui-package-information.png)
 
+  </AccordionItem>
+
+</Accordion>
+
 The registry also displays all available revisions of the parameterised virtual
-experiment package in the **History** section. The table includes the
-current/previous tags, and the creation date of revisions. Clicking on a digest
-opens a new page with point-in-time data about that specific revision of the
+experiment package in the **History** section. The table includes current and
+previous tags, as well as the creation date of each revision. Clicking on a
+digest will display point-in-time data about that specific revision of the
 experiment, allowing users to see how the parameterised virtual experiment
 package looked in the past.
 
+<Accordion>
+
+  <AccordionItem title="View Screenshot">
+
 ![Registry UI history information](../assets/images/using-the-ve-registry-ui/ve-registry-ui-history.png)
 
-Users can also quickly download the experiment package entry or import it
-directly in their own ST4SD Runtime Service instance using the button or the
-Python code provided at the bottom of the page.
+  </AccordionItem>
+
+</Accordion>
+
+Users can easily download the experiment package entry or import it directly
+into their own ST4SD Runtime Service instance using the button or Python code
+provided at the bottom of the page.
+
+<Accordion>
+
+  <AccordionItem title="View Screenshot">
 
 ![Registry UI import](../assets/images/using-the-ve-registry-ui/ve-registry-ui-import.png)
+
+  </AccordionItem>
+
+</Accordion>
+
+## The View Graph page
+
+The Registry UI allows users to visualize the compuational graphs that make up
+virtual experiments. Users can click on items in the graph to see more
+information, such as parameters, executable, and arguments. The download button
+can be used to download the DSL that makes up the experiment. If
+[relationships](/using-graph-relationships) have been defined for this
+experiment, users can use the "Transform Experiment" button to preview and apply
+them.
+
+<Accordion>
+
+  <AccordionItem title="View Screenshots">
+
+<ImageGallery>
+<ImageGalleryImage alt="View Graph UI" title="View Graph UI" col={4}>
+
+![Registry UI view graph](../assets/images/using-the-ve-registry-ui/ve-registry-ui-view-graph.png)
+
+</ImageGalleryImage>
+
+<ImageGalleryImage  alt="View Graph UI details" title="View Graph UI details" col={4}>
+
+![Registry UI view graph details](../assets/images/using-the-ve-registry-ui/ve-registry-ui-view-graph-details.png)
+
+</ImageGalleryImage>
+
+<ImageGalleryImage  alt="View Graph Apply Transformation" title="View Graph Apply Transformation" col={4}>
+
+![Registry UI view graph transformation](../assets/images/using-the-ve-registry-ui/ve-registry-ui-view-graph-transformation.png)
+
+</ImageGalleryImage>
+
+</ImageGallery>
+
+  </AccordionItem>
+
+</Accordion>
+
+## The Parameterisation Options page
+
+In addition to the [parameterisation section](#parameterisation) of the
+experiments page, the Registry UI also features a dedicated page in which users
+can view and modify the parameterisation for platforms, variables, data files,
+input files, and runtime options.
+
+<Accordion>
+
+  <AccordionItem title="View Screenshots">
+
+<ImageGallery>
+<ImageGalleryImage alt="View Parameterisation Options" title="View Parameterisation Options" col={4}>
+
+![View Parameterisation Options](../assets/images/using-the-ve-registry-ui/ve-registry-ui-parameterisation-viewing.png)
+
+</ImageGalleryImage>
+
+<ImageGalleryImage alt="Edit Parameterisation Options" title="Edit Parameterisation Options" col={4}>
+
+![Edit Parameterisation Options](../assets/images/using-the-ve-registry-ui/ve-registry-ui-parameterisation-editing.png)
+
+</ImageGalleryImage>
+
+</ImageGallery>
+
+  </AccordionItem>
+
+</Accordion>
+
+## The View Runs page
+
+The Registry provides users with a convenient way to track their experiment runs
+and view key information. At a glance, users can see the success rate of their
+experiment campaigns for the selected time period. For more details, users can
+refer to the table at the bottom of the page, which includes information such as
+the state of the run, the PVEP revision and ST4SD version used, and the creation
+date of the run. Additionally, users can click on the "Logs" entry for each run
+to view the logs produced by ST4SD.
+
+<Accordion>
+
+  <AccordionItem title="View Screenshot">
+
+![Registry UI Runs Table](../assets/images/using-the-ve-registry-ui/ve-registry-ui-view-runs-table.png)
+
+  </AccordionItem>
+
+</Accordion>
+
+When the experiment incorporates a
+[Virtual Experiment Interface](/writing-a-virtual-experiment-interface/), users
+can explore all the properties measured in the experiment campaign by clicking
+the "Compare Experiment Run Properties" link. Alongside a comprehensive table,
+users are presented with line graphs and histograms displaying the measured
+properties. The table's content can also be exported as a CSV file for further
+analysis.
+
+<Accordion>
+
+  <AccordionItem title="View Screenshots">
+
+<ImageGallery>
+<ImageGalleryImage alt="Compare Experiment Run Properties table" title="Compare Experiment Run Properties table" col={4}>
+
+![Compare Experiment Run Properties table](../assets/images/using-the-ve-registry-ui/ve-registry-ui-view-runs-table-properties-table.png)
+
+</ImageGalleryImage>
+
+<ImageGalleryImage alt="Compare Experiment Run Properties line chart" title="Compare Experiment Run Properties line chart" col={4}>
+
+![Compare Experiment Run Properties line chart](../assets/images/using-the-ve-registry-ui/ve-registry-ui-view-runs-table-properties-table-line-chart.png)
+
+</ImageGalleryImage>
+
+<ImageGalleryImage alt="Compare Experiment Run Properties histogram" title="Compare Experiment Run Properties histogram" col={4}>
+
+![Compare Experiment Run Properties histogram](../assets/images/using-the-ve-registry-ui/ve-registry-ui-view-runs-table-properties-table-histogram.png)
+
+</ImageGalleryImage>
+
+</ImageGallery>
+
+  </AccordionItem>
+
+</Accordion>
+
+In addition to viewing information about the experiment runs, users can also
+click on the experiment identifiers (REST UIDs) to access the status and logs of
+the components that make up the experiment. If the experiment includes a Virtual
+Experiment Interface, users can also view and download the properties measured
+by the experiment.
+
+<Accordion>
+
+  <AccordionItem title="View Screenshots">
+
+<ImageGallery>
+<ImageGalleryImage alt="Single run Components table" title="Single run Components table" col={4}>
+
+![Single run Components table](../assets/images/using-the-ve-registry-ui/ve-registry-ui-view-runs-table-single-run-table.png)
+
+</ImageGalleryImage>
+
+<ImageGalleryImage alt="Single run Component log" title="Single run Component log" col={4}>
+
+![Single run Component log](../assets/images/using-the-ve-registry-ui/ve-registry-ui-view-runs-table-single-run-component-log.png)
+
+</ImageGalleryImage>
+
+<ImageGalleryImage alt="Single run Properties table" title="Single run Properties table" col={4}>
+
+![Single run Properties table](../assets/images/using-the-ve-registry-ui/ve-registry-ui-view-runs-table-single-run-properties.png)
+
+</ImageGalleryImage>
+
+</ImageGallery>
+
+  </AccordionItem>
+
+</Accordion>
+
+## Next steps
+
+- Learn how to visually build virtual experiments using the
+  [Build Canvas](/build-experiments-registry-ui).
+- Learn how [`stp`](/stp) can help you interact with ST4SD.
+- Learn how you can use the [ST4SD APIs](/running-workflows-on-openshift).
