@@ -2,7 +2,6 @@
 title: ST4SD Registry
 ---
 
-
 <!--
 
   Copyright IBM Inc. All Rights Reserved.
@@ -10,23 +9,22 @@ title: ST4SD Registry
 
 -->
 
-import { CodeSyntax } from '@carbon/pictograms-react';
-import { NetworkServices } from '@carbon/pictograms-react';
-import { CarbonForIbmDotcom } from '@carbon/pictograms-react';
-import { Kubernetes } from '@carbon/pictograms-react';
+import { CodeSyntax } from "@carbon/pictograms-react";
+import { NetworkServices } from "@carbon/pictograms-react";
+import { CarbonForIbmDotcom } from "@carbon/pictograms-react";
+import { Kubernetes } from "@carbon/pictograms-react";
 
-import { Tools } from '@carbon/pictograms-react';
-import { FileBackup } from '@carbon/pictograms-react';
-import { Reliability } from '@carbon/pictograms-react';
-import { ArtTools_01 } from '@carbon/pictograms-react';
-
+import { Tools } from "@carbon/pictograms-react";
+import { FileBackup } from "@carbon/pictograms-react";
+import { Reliability } from "@carbon/pictograms-react";
+import { ArtTools_01 } from "@carbon/pictograms-react";
 
 **ST4SD Registry** provides a web-based UI and command-line tool for working
-with virtual experiments. The UI allows searching and inspecting
-virtual experiment packages along with logs and results from when they were
-executed. The command line tool simplifies creating, modifying and sharing
-virtual experiment packages with colleagues or the wider community. Anyone
-can use ST4SD Registry.
+with virtual experiments. The UI allows searching and inspecting virtual
+experiment packages along with logs and results from when they were executed.
+The command line tool simplifies creating, modifying and sharing virtual
+experiment packages with colleagues or the wider community. Anyone can use ST4SD
+Registry.
 
 ## Why ST4SD Registry?
 
@@ -76,7 +74,8 @@ Download a package from the ST4SD Global Registry via `stp`.
 stp package download https://registry.st4sd.res.ibm.com/registry-ui/experiment/nanopore-geometry-experiment
 ```
 
-If you have an ST4SD Cloud instance, you can log in to your ST4SD Registry via `stp` and push the package to it:
+If you have an ST4SD Cloud instance, you can log in to your ST4SD Registry via
+`stp` and push the package to it:
 
 ```bash
 ST4SD_AUTHENTICATION_ROUTE=$(oc get route st4sd-authentication -o=jsonpath={.spec.host})
@@ -96,28 +95,31 @@ UI.
     background="true"
     pictogram={<CarbonForIbmDotcom />}>
 
-Learn about all the features of the ST4SD Registry UI with a [guided tour](/using-the-virtual-experiments-registry-ui) or visit the
+Learn about all the features of
+[our web interface](/using-the-virtual-experiments-registry-ui) for browsing and
+examining virtual experiments packages and runs. You can visit the
 [ST4SD Global Registry](https://registry.st4sd.res.ibm.com/) for a first look.
 
   </ExpressiveList>
-
-
-  <ExpressiveList
-    title="No Code, No Fuss creation of Experiments"
-    background="true"
-    pictogram={<ArtTools_01 />}>
-
-Use [an interactive Build Canvas and a Graph Library](/build-experiments-registry-ui) to create and modify experiments straight from your browser.
-
-  </ExpressiveList>
-
 
   <ExpressiveList 
     title="Mastering stp"
     background="true"
     pictogram={<Tools />}>
 
-Learn all that `stp` has to offer and how it can help you when using ST4SD in its [dedicated page](/stp).
+Learn how to master [our command line tool](/stp), `stp`, for creating and
+managing virtual experiment packages.
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="No Code, No Fuss creation of Experiments"
+    background="true"
+    pictogram={<ArtTools_01 />}>
+
+Use
+[an interactive Build Canvas and a Graph Library](/build-experiments-registry-ui)
+to create and modify experiments straight from your browser.
 
   </ExpressiveList>
 
@@ -128,39 +130,6 @@ Learn all that `stp` has to offer and how it can help you when using ST4SD in it
 
 We've distilled many years of experience in creating virtual experiments into a
 set of [developer best-practices](/virtual-experiment-developer-best-practices).
-
-  </ExpressiveList>
-
-</div>
-
-## Explore other ST4SD technologies
-
-<div className="expressive-content-list-group">
-  <ExpressiveList
-    title="Multi-platform virtual experiments"
-    background="true"
-    pictogram={<CodeSyntax />}>
-
-  **ST4SD Core** enables writing virtual experiments that can run on your laptop, on HPC machines, or on cloud. [Get Started](/st4sd-core-getting-started)
-
-  </ExpressiveList>
-
-   <ExpressiveList
-    title="Robust, scalable deployment"
-    background="true"
-    pictogram={<Kubernetes />}>
-
-  **ST4SD Cloud** creates and maintains, secure, scalable and robust deployments of ST4SD on OpenShift clusters. [Get Started](/st4sd-cloud-getting-started)
-
-  </ExpressiveList>
-
-  <ExpressiveList
-    title="Ease-of-use"
-    background="true"
-    pictogram={<NetworkServices />}>
-
-  **ST4SD Services** allows scientists to run virtual experiments and query their data via Jupyter notebooks.
-   It includes a high-performance metadata-store that enables memoization. [Get Started](/st4sd-services-getting-started)
 
   </ExpressiveList>
 

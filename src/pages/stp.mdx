@@ -2,6 +2,10 @@
 title: The stp command line tool
 ---
 
+import { CarbonForIbmDotcom } from "@carbon/pictograms-react";
+import { ArtTools_01 } from "@carbon/pictograms-react";
+import { ServerOperatingSystems } from "@carbon/pictograms-react";
+
 <!--
 
   Copyright IBM Inc. All Rights Reserved.
@@ -277,3 +281,45 @@ in your shell history).
 <Column colMd={5} colLg={8}>
   <Video src="../assets/videos/stp/stp-stack-pull-secrets-add.mp4"></Video>
 </Column>
+
+## Learn more
+
+<div className="expressive-content-list-group">
+
+  <ExpressiveList 
+    title="Exploring the Registry UI"
+    background="true"
+    pictogram={<CarbonForIbmDotcom />}>
+
+Learn about all the features of
+[our web interface](/using-the-virtual-experiments-registry-ui) for browsing and
+examining virtual experiments packages and runs. You can visit the
+[ST4SD Global Registry](https://registry.st4sd.res.ibm.com/) for a first look.
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="No Code, No Fuss creation of Experiments"
+    background="true"
+    pictogram={<ArtTools_01 />}>
+
+Use
+[an interactive Build Canvas and a Graph Library](/build-experiments-registry-ui)
+to create and modify experiments straight from your browser.
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Use the APIs"
+    background="true"
+    pictogram={<ServerOperatingSystems />}>
+
+[Learn](/running-workflows-on-openshift) how to use the ST4SD python client API
+to run, query, and interact with virtual experiments. The APIs also offer access
+to a trove of experiment metadata and files such as logs and outputs. You can
+find more examples in our Jupyter Notebooks
+[example repository](https://github.com/st4sd/st4sd-examples).
+
+  </ExpressiveList>
+
+</div>

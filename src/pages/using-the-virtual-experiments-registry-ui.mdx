@@ -2,6 +2,10 @@
 title: Using the Virtual Experiments Registry UI
 ---
 
+import { Tools } from "@carbon/pictograms-react";
+import { Kubernetes } from "@carbon/pictograms-react";
+import { ArtTools_01 } from "@carbon/pictograms-react";
+
 <!--
 
   Copyright IBM Inc. All Rights Reserved.
@@ -337,9 +341,40 @@ by the experiment.
 
 </Accordion>
 
-## Next steps
+## Learn more
 
-- Learn how to visually build virtual experiments using the
-  [Build Canvas](/build-experiments-registry-ui).
-- Learn how [`stp`](/stp) can help you interact with ST4SD.
-- Learn how you can use the [ST4SD APIs](/running-workflows-on-openshift).
+<div className="expressive-content-list-group">
+
+  <ExpressiveList 
+    title="Mastering stp"
+    background="true"
+    pictogram={<Tools />}>
+
+Learn how to master [our command line tool](/stp), `stp`, for creating and
+managing virtual experiment packages.
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Installation"
+    background="true"
+    pictogram={<Kubernetes />}
+    >
+
+If you have access to an OpenShift cluster, follow our
+[instructions](/installation#install-on-kubernetes-and-openshift) to install
+ST4SD Cloud using <a href="https://olm.operatorframework.io/">OLM</a>.
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Run experiments on your laptop"
+    background="true"
+    pictogram={<ArtTools_01 />}>
+
+Don't have access to an ST4SD Registry or can't install it? You can test virtual
+experiments on your laptop using our command line tool.
+
+  </ExpressiveList>
+
+</div>

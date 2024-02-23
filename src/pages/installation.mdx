@@ -2,6 +2,9 @@
 title: Installation
 ---
 
+import { ServerOperatingSystems } from "@carbon/pictograms-react";
+import { CarbonForIbmDotcom } from "@carbon/pictograms-react";
+
 <!--
 
   Copyright IBM Inc. All Rights Reserved.
@@ -22,11 +25,11 @@ Learn how to install ST4SD on a variety of platforms
   <AnchorLink>Install on Classic HPC</AnchorLink>
 </AnchorLinks>
 
-
-
 <InlineNotification kind="warning">
 
-If you are not an administrator then, depending on your [user environment](/user-environments), you may not have to install anything. Its recommended you check [first steps](/) to determine if you need to do so.
+If you are not an administrator then, depending on your
+[user environment](/user-environments), you may not have to install anything.
+Its recommended you check [first steps](/) to determine if you need to do so.
 
 </InlineNotification>
 
@@ -36,18 +39,22 @@ If you are not an administrator then, depending on your [user environment](/user
 
 - **For**: Researchers & Developers
 - **Use When:**
-  - You want to run workflows on a Kubernetes/OpenShift instance of the workflow stack **from your laptop** via e.g. a jupyter-notebook
-  - You want to develop workflows 
-  - You want to test writing/running some simple workflows that can run on your laptop/desktop
+  - You want to run workflows on a Kubernetes/OpenShift instance of the workflow
+    stack **from your laptop** via e.g. a jupyter-notebook
+  - You want to develop workflows
+  - You want to test writing/running some simple workflows that can run on your
+    laptop/desktop
 
 </InlineNotification>
 
-The local client install only requires `st4sd-runtime-core`. You can install `st4sd-runtime-core` directly on your laptop using `pip`. 
+The local client install only requires `st4sd-runtime-core`. You can install
+`st4sd-runtime-core` directly on your laptop using `pip`.
 
 ### Requirements
 
-- `python3` 
-   - We recommend that you use python 3.9 although versions 3.7 through 3.10 should work.
+- `python3`
+  - We recommend that you use python 3.9 although versions 3.7 through 3.10
+    should work.
 
 ### Installing
 
@@ -63,7 +70,8 @@ pip install "st4sd-runtime-core[develop]"
 
 - **For**: Developers
 - **Use When**
-  - You want to test, develop and run small-scale virtual experiments on your laptop.
+  - You want to test, develop and run small-scale virtual experiments on your
+    laptop.
   - You want to develop or examine the ST4SD micro-services on your laptop
 
 </InlineNotification>
@@ -78,22 +86,38 @@ pip install "st4sd-runtime-core[develop]"
   - The two latest stable Fedora releases
   - Windows 10
   - macOS 11.0 Big Sur or later
-- Ubuntu 18.04 LTS or later and Debian 10 or later **are not officially supported** and may require manual setup.
+- Ubuntu 18.04 LTS or later and Debian 10 or later **are not officially
+  supported** and may require manual setup.
 
 We recommend using a x86 device.
+
 </InlineNotification>
 
-You can deploy a small scale version of [ST4SD Cloud](/st4sd-cloud-getting-started) on your personal device using <a href="https://developers.redhat.com/products/openshift-local/overview" target="_blank">Red Hat OpenShift Local</a>. To get started with Red Hat OpenShift Local, download the "OpenShift Local" binary (crc) from the <a href="https://console.redhat.com/openshift/create/local" target="_blank">Red Hat Console</a> website.
+You can deploy a small scale version of
+[ST4SD Cloud](/st4sd-cloud-getting-started) on your personal device using <a
+  href="https://developers.redhat.com/products/openshift-local/overview"
+  target="_blank"> Red Hat OpenShift Local</a>. To get started with Red Hat
+OpenShift Local, download the "OpenShift Local" binary (crc) from the <a 
+href="https://console.redhat.com/openshift/create/local" target="_blank"> Red
+Hat Console</a> website.
 
- <InlineNotification kind="info">
-You need a Red Hat account to use OpenShift Local. If you do not have one, you can get one for free on the <a href="https://developers.redhat.com/register?intcmp=701f20000012ngPAAQ" target="_blank">Red Hat Developer</a> website.
+<InlineNotification kind="info">
+  You need a Red Hat account to use OpenShift Local. If you do not have one, you
+  can get one for free on the
+  <a
+    href="https://developers.redhat.com/register?intcmp=701f20000012ngPAAQ"
+    target="_blank"
+  >
+    Red Hat Developer
+  </a>
+  website.
 </InlineNotification>
-
 
 ### One time Setup
 
 After you install OpenShift Local you will get access to the `crc` binary.
-Ensure the `crc` binary is in your `${PATH}` for example when you run `crc version` in your terminal you get similar output to:
+Ensure the `crc` binary is in your `${PATH}` for example when you run
+`crc version` in your terminal you get similar output to:
 
 ```
 CRC version: 2.22.1+e8068b4
@@ -104,11 +128,13 @@ Podman version: 4.4.4
 Below we use `crc` in a script to:
 
 1. create and configure the Virtual Machine that will host OpenShift Local
-2. Set the password of the <b>kubeadmin</b> account to `fun` - do not use insecure passwords in production.
+2. Set the password of the <b>kubeadmin</b> account to `fun` - do not use
+   insecure passwords in production.
 3. Deploy ST4SD Cloud on the `st4sd-local` namespace
 4. Wait for the ST4SD microservices to go online
 5. Open a browser to visit your instance of the Registry UI!
-   1. Login as the user `developer` with the password `developer` - this is the default non-admin user that `crc` creates for you.
+   1. Login as the user `developer` with the password `developer` - this is the
+      default non-admin user that `crc` creates for you.
 
 Copy the text below and execute it in your terminal:
 
@@ -165,38 +191,47 @@ chmod +x one_time_setup.sh
 ./one_time_setup.sh
 ```
 
-The script will take 5-15 minutes to complete. While it is building your local ST4SD Cloud deployment, consider exploring the [ST4SD Services](/running-workflows-on-openshift) and [ST4SD Registry](/st4sd-registry-getting-started) webpages. You can use the information in there to populate your catalog of experiments and more!
+The script will take 5-15 minutes to complete. While it is building your local
+ST4SD Cloud deployment, consider exploring the
+[ST4SD Services](/running-workflows-on-openshift) and
+[ST4SD Registry](/st4sd-registry-getting-started) webpages. You can use the
+information in there to populate your catalog of experiments and more!
 
-Continue reading if you would like to get more information about the individual steps above.
+Continue reading if you would like to get more information about the individual
+steps above.
 
 ### Setting up your Virtual Machine for OpenShift Local
 
-Red Hat OpenShift Local runs as a Virtual Machine on your device.
-There is a one-time setup that you need to do using the `crc` command-line utility that you downloaded in the above step.
-The default installation of OpenShift Local produces a local OpenShift cluster with:
- - 4 virtual CPU cores,
- - 9 GB of RAM, and
- - 31 GB of storage space
+Red Hat OpenShift Local runs as a Virtual Machine on your device. There is a
+one-time setup that you need to do using the `crc` command-line utility that you
+downloaded in the above step. The default installation of OpenShift Local
+produces a local OpenShift cluster with:
+
+- 4 virtual CPU cores,
+- 9 GB of RAM, and
+- 31 GB of storage space
 
 We recommend increasing the defaults with the following:
 
-  ```
-  # one time command
-  crc setup
-  # if OpenShift Local is already running, execute "crc stop" first
-  crc config set cpus 8
-  crc config set memory 14336
-  crc config set disk-size 50
-  ```
+```
+# one time command
+crc setup
+# if OpenShift Local is already running, execute "crc stop" first
+crc config set cpus 8
+crc config set memory 14336
+crc config set disk-size 50
+```
 
-Below we also change the default password for the <b>kubeadmin</b> so that the instructions are easier to follow.
+Below we also change the default password for the <b>kubeadmin</b> so that the
+instructions are easier to follow.
 
 ```
 # Set the password to "fun" - do not use insecure passwords in production
 crc config kubeadmin-password fun
 ```
 
-If you ever want to view the credentials for accessing your OpenShift Local instance, you can run
+If you ever want to view the credentials for accessing your OpenShift Local
+instance, you can run
 
 ```
 crc console --credentials
@@ -204,8 +239,10 @@ crc console --credentials
 
 ### Starting and Stopping the OpenShift Local Virtual Machine
 
-Recall that OpenShift Local runs as a small scale Virtual Machine on your personal device.
-We recommend starting it before you experiment with ST4SD and stopping it when you are done running experiments to release the compute resources that the Virtual Machine is taking up.
+Recall that OpenShift Local runs as a small scale Virtual Machine on your
+personal device. We recommend starting it before you experiment with ST4SD and
+stopping it when you are done running experiments to release the compute
+resources that the Virtual Machine is taking up.
 
 To start the virtual machine type:
 
@@ -218,18 +255,24 @@ crc console
 ```
 
 <InlineNotification kind="info">
-The command <b>crc start</b> prints useful information on the terminal including how to access the OpenShift Web Console as well as the credentials for the <b>kubeadmin</b> and <b>developer</b> users. In our instructions below we login using the <b>kubeadmin</b> user.
+  The command <b>crc start</b> prints useful information on the terminal
+  including how to access the OpenShift Web Console as well as the credentials
+  for the <b>kubeadmin</b> and <b>developer</b> users. In our instructions below
+  we login using the <b>kubeadmin</b> user.
 </InlineNotification>
 
 To stop the virtual machine type:
+
 ```
 crc stop
 ```
 
 ### Installing ST4SD Cloud
 
-When `crc start` finishes printing information on the terminal, your OpenShift Local cluster has started running.
-You may now connect using the <b>kubeadmin</b> account:
+When `crc start` finishes printing information on the terminal, your OpenShift
+Local cluster has started running. You may now connect using the
+
+<b>kubeadmin</b> account:
 
 ```bash
 # Use the `oc` command line interface
@@ -244,25 +287,33 @@ crc console
 
 ### Installing
 
-After your OpenShift Local is up and running (i.e. `crc start` has finished). Follow the instructions on your terminal
-   to login in as an administrator into OpenShift.
-   1. Run `crc console --credentials` to see the `oc login` commands you can type in your terminal.
-2. Create the project `st4sd-local`: `oc new-project st4sd-local`.
-3. Deploy the minimal version of ST4SD: `oc apply -f https://raw.githubusercontent.com/st4sd/st4sd-deployment/main/manifests/openshift-local-minimal-release.yaml`.
-4. The url to your local instance of ST4SD is https://local.apps-crc.testing
-   - You can access your local ST4SD registry-ui at https://local.apps-crc.testing/registry-ui/
-   - The very first time you login, OpenShift will inform you that ST4SD wishes to know that you are an authorized user of the system. Accept the OpenShift prompt on your browser.
-   - Both default OpenShift accounts (`developer` and `kubeadmin` will have access to your ST4SD microservices).
-      - By default, the `developer` account has the password `developer`.
-      - You can print the administrator credentials using `crc console --credentials`.
+After your OpenShift Local is up and running (i.e. `crc start` has finished).
+Follow the instructions on your terminal to login in as an administrator into
+OpenShift.
 
+1. Run `crc console --credentials` to see the `oc login` commands you can type
+   in your terminal.
+2. Create the project `st4sd-local`: `oc new-project st4sd-local`.
+3. Deploy the minimal version of ST4SD:
+   `oc apply -f https://raw.githubusercontent.com/st4sd/st4sd-deployment/main/manifests/openshift-local-minimal-release.yaml`.
+4. The url to your local instance of ST4SD is https://local.apps-crc.testing
+   - You can access your local ST4SD registry-ui at
+     https://local.apps-crc.testing/registry-ui/
+   - The very first time you login, OpenShift will inform you that ST4SD wishes
+     to know that you are an authorized user of the system. Accept the OpenShift
+     prompt on your browser.
+   - Both default OpenShift accounts (`developer` and `kubeadmin` will have
+     access to your ST4SD microservices).
+     - By default, the `developer` account has the password `developer`.
+     - You can print the administrator credentials using
+       `crc console --credentials`.
 
 <InlineNotification kind="info">
 
-You can see the credentials of the default accounts that OpenShift Local creates for you by running `crc console --credentials` in your terminal.
+You can see the credentials of the default accounts that OpenShift Local creates
+for you by running `crc console --credentials` in your terminal.
 
 </InlineNotification>
-
 
 ## Install on Kubernetes and OpenShift
 
@@ -270,27 +321,33 @@ You can see the credentials of the default accounts that OpenShift Local creates
 
 - **For**: Administrators
 - **Use When**
-  - You want to install an instance of the workflow stack on a k8s/OpenShift cluster 
+  - You want to install an instance of the workflow stack on a k8s/OpenShift
+    cluster
 
 </InlineNotification>
 
-
-First, add the **Simulation Toolkit for Scientific Discovery (ST4SD)** operator to the Operator Catalog of your OpenShift cluster:
+First, add the **Simulation Toolkit for Scientific Discovery (ST4SD)** operator
+to the Operator Catalog of your OpenShift cluster:
 
 ```
 oc apply -f https://raw.githubusercontent.com/st4sd/st4sd-olm/main/examples/deploy.yaml
 ```
 
-Then follow our <a href="https://github.com/st4sd/st4sd-olm" target="_blank">instructions</a> to configure and install. For comprehensive details on customizing ST4SD deployments using `helm` post-installation see <https://github.com/st4sd/st4sd-deployment>.
+Then follow our
+
+<a href="https://github.com/st4sd/st4sd-olm" target="_blank">
+  instructions
+</a> to configure and install. For comprehensive details on customizing ST4SD deployments
+using `helm` post-installation see https://github.com/st4sd/st4sd-deployment.
 
 ## Install on Classic HPC
-
 
 <InlineNotification>
 
 - **For**: Administrators
 - **Use When:**
-  - You want to run workflows on a classic HPC infrastructure that uses the LSF scheduler
+  - You want to run workflows on a classic HPC infrastructure that uses the LSF
+    scheduler
 
 </InlineNotification>
 
@@ -300,16 +357,48 @@ The following installation instructions assume you have
 
 1. **Internet access**
 2. **swig is in your $PATH**
-     - *swig* is a program for creating scripting language wrappers. Required for building the LSF wrappers
+   - _swig_ is a program for creating scripting language wrappers. Required for
+     building the LSF wrappers
 3. **python3 (3.7 to 3.10) is in your $PATH**
-4. **The command `tox` is available** 
-    - Check by typing `tox` and pressing return
+4. **The command `tox` is available**
+   - Check by typing `tox` and pressing return
 
 ### Installing
 
-1. Clone the ST4SD runtime core repository 
-    - run  `git clone https://github.com/st4sd/st4sd-runtime-core.git`
+1. Clone the ST4SD runtime core repository
+   - run `git clone https://github.com/st4sd/st4sd-runtime-core.git`
 2. `cd` into the cloned repository
-3. run  `DEPLOY_VENV=$MYVENV tox -e py37-deploy-lsf --site-packages` where
-    - `$MYVENV` is where you want the virtual environment to be created
+3. run `DEPLOY_VENV=$MYVENV tox -e py37-deploy-lsf --site-packages` where
+   - `$MYVENV` is where you want the virtual environment to be created
 
+## Learn more
+
+<div className="expressive-content-list-group">
+
+  <ExpressiveList 
+    title="Exploring the Registry UI"
+    background="true"
+    pictogram={<CarbonForIbmDotcom />}
+  >
+
+Install successful? You can now learn about all the features of
+[our web interface](/using-the-virtual-experiments-registry-ui) for browsing and
+examining virtual experiments packages and runs.
+
+  </ExpressiveList>
+
+  <ExpressiveList
+    title="Use the APIs"
+    background="true"
+    pictogram={<ServerOperatingSystems />}
+  >
+
+[Learn](/running-workflows-on-openshift) how to use the ST4SD python client API
+to run, query, and interact with virtual experiments. The APIs also offer access
+to a trove of experiment metadata and files such as logs and outputs. You can
+find more examples in our Jupyter Notebooks
+[example repository](https://github.com/st4sd/st4sd-examples).
+
+  </ExpressiveList>
+
+</div>
