@@ -20,8 +20,8 @@ additional checks so you don't have to.
 
 <InlineNotification kind="info">
 
-**NOTE:** for all commands, you can always add the `-h` or `--help` flag to see
-all the available options and descriptions.
+You can always use the `-h` flag to see additional help for each of the commands
+mentioned here.
 
 </InlineNotification>
 
@@ -29,23 +29,29 @@ all the available options and descriptions.
 
 <AnchorLinks>
   <AnchorLink>Logging in to your ST4SD instance</AnchorLink>
-  <AnchorLink>Working with PVEPs</AnchorLink>
-  <AnchorLink>Working with contexts</AnchorLink>
-  <AnchorLink>Working with stack-wide settings</AnchorLink>
+  <AnchorLink>Downloading PVEPs</AnchorLink>
+  <AnchorLink>Pushing PVEPs</AnchorLink>
+  <AnchorLink>Importing PVEPs</AnchorLink>
+  <AnchorLink>Creating PVEPs</AnchorLink>
+  <AnchorLink>Updating PVEP definitions</AnchorLink>
+  <AnchorLink>Checking PVEP syntax</AnchorLink>
+  <AnchorLink>Managing multiple ST4SD instances</AnchorLink>
+  <AnchorLink>Advanced usage</AnchorLink>
 </AnchorLinks>
+
+## Prerequisites
+
+- You are familiar with the ST4SD [Terminology](/concepts#terminology).
+- Ensure you have correctly installed the ST4SD Runtime Core module
+  (instructions [here](/#try-it-yourself)).
 
 ## Logging in to your ST4SD instance
 
-<InlineNotification kind="info">
-
-**NOTE:** `stp` supports multiple ST4SD instances at the same time.
-
-</InlineNotification>
-
-The easiest way to log into your ST4SD instance via `stp` is to use the snippet
-in the Registry UI. If you're logged into your OpenShift cluster, you can paste
-the following command in your terminal to automatically open the ST4SD Registry
-UI:
+To interact with ST4SD instances using `stp`, we need to log in first. The
+simplest method is to use the code snippet provided by the Registry UI. If
+you're already logged into your OpenShift cluster, you can copy and paste the
+following command into your terminal to open the ST4SD Registry UI
+automatically:
 
 ```commandline
 open "https://$(oc get route st4sd-authentication -o jsonpath="{.spec.host}")/registry-ui/"
@@ -56,198 +62,365 @@ Here you will:
 1. Click on the **Login on stp** button
 2. Press the copy button in the information box that you're presented with and
    paste the content of the information box in your terminal.
-3. Once prompted, write `y` and press enter in your terminal to be brought to
-   the authentication service.
-4. Authenticate if needed and copy the token that is displayed.
-5. Paste the token in the terminal and press enter. The login procedure should
-   be completed soon.
+3. Once prompted, type `y` and press Enter to continue to the authentication
+   service.
+4. Authenticate if necessary and copy the token that is displayed.
+5. Paste the token in the terminal and press Enter. The login process should now
+   be complete.
 
-You can also follow this video walkthrough:
+<Accordion>
+
+  <AccordionItem title="View video walkthrough">
 
 <Video src="../assets/videos/stp/logging-in-via-stp.mp4"></Video>
 
-## Working with PVEPs
+  </AccordionItem>
 
-<AnchorLinks small>
-  <AnchorLink>Creating a PVEP</AnchorLink>
-  <AnchorLink>Downloading a PVEP</AnchorLink>
-  <AnchorLink>Importing a PVEP</AnchorLink>
-  <AnchorLink>Pushing a PVEP</AnchorLink>
-  <AnchorLink>Testing a PVEP</AnchorLink>
-  <AnchorLink>Updating a PVEP's definition</AnchorLink>
-</AnchorLinks>
+</Accordion>
 
-### Creating a PVEP
+## Downloading PVEPs
 
-To publish an experiment to our registry after
-[writing a workflow](/workflow-specification), we need to create a
-_Parameterised Virtual Experiment Package_ -or PVEP for short- that defines how
-to run a virtual experiment in a particular way. `stp` can create a working
-template for you with the `stp package create` command. Set the `--from` flag to
-point to a git repository containing your experiment and optionally the
-`--manifest` flag (in case your experiment has a manifest).
+The ST4SD Registry allows users to easily access and explore _Parameterised
+Virtual Experiment Packages_ (PVEPs) through a user-friendly web interface.
+Through the interface, users can browse available experiments, view their
+details, logs, and the results of their runs. Additionally, users can download
+experiments by scrolling to the bottom of the page and clicking the "Download
+JSON" button. There may be instances, however, where they want to perform these
+actions programmatically. With `stp` this is trivial: let us imagine we want to
+download the
+[band-gap-dft-gamess-us](https://registry.st4sd.res.ibm.com/registry-ui/experiment/band-gap-dft-gamess-us)
+experiment that is available on our public registry.
 
-<Column colMd={5} colLg={8}>
-  <Video src="../assets/videos/stp/stp-package-create.mp4"></Video>
-</Column>
+We can simply copy the link and run:
 
-### Downloading a PVEP
+```commandline
+stp package download https://registry.st4sd.res.ibm.com/registry-ui/experiment/band-gap-dft-gamess-us
+```
 
-`stp` helps us programmatically download a PVEP definition via the
-`stp package download` command. If you're downloading a PVEP from a registry
-that requires authentication, you can add the `--from-context` flag to ensure
-`stp` can authenticate correctly.
+For the experiment JSON to be downloaded to our currently active directory.
 
-<Column colMd={5} colLg={8}>
-  <Video src="../assets/videos/stp/stp-package-download.mp4"></Video>
-</Column>
+<Accordion>
 
-### Importing a PVEP
+  <AccordionItem title="View video walkthrough">
 
-ST4SD provides a
-[public registry of virtual experiments](https://registry.st4sd.res.ibm.com/)
-that you can freely import from. To help you import PVEPs from any registry to
-your own instance, `stp` provides the `stp package import` command. Make sure
-you add the `--from-context` flag if you're importing from a private ST4SD
-instance to ensure `stp` can authenticate correctly.
+<Video src="../assets/videos/stp/stp-package-download.mp4"></Video>
 
-<Column colMd={5} colLg={8}>
-  <Video src="../assets/videos/stp/stp-package-import.mp4"></Video>
-</Column>
+  </AccordionItem>
 
-### Pushing a PVEP
+</Accordion>
 
-`stp` makes it easy for you to push PVEPs to registry instances, simply run
-`stp package push` and give it the path to your PVEP for it to be added to the
-registry from your active context.
+## Pushing PVEPs
 
-<Column colMd={5} colLg={8}>
-  <Video src="../assets/videos/stp/stp-package-push.mp4"></Video>
-</Column>
+We need to add experiments to our Registry instance before we can view or run
+them. To do this, we can either create a local PVEP definition from scratch or
+download it from another instance (e.g., by using the `stp package download`
+command). Once we have the definition, we can use `stp` to push it to our
+registry.
 
-### Testing a PVEP
+Assuming our local file is called `nanopore-geometry-experiment.json` and is in
+our current directory, we can run:
 
-`stp` supports testing PVEP syntax locally before pushing them to the Registry.
-Simply run `stp package test` and give it the path to the PVEP you want to test.
-**NOTE: there will be no output in case of no errors**.
+```commandline
+stp package push nanopore-geometry-experiment.json
+```
 
-<Column colMd={5} colLg={8}>
-  <Video src="../assets/videos/stp/stp-package-test.mp4"></Video>
-</Column>
+And `stp` will add it to our Registry instance.
 
-### Updating a PVEP's definition
+<Accordion>
 
-During development, you will likely make multiple commits to your repository,
-and if you're following the
-[best practices](/virtual-experiment-developer-best-practices) we wrote, this
-will mean having to update the commit ID in your PVEP. For this, and for
-modifying tags, `stp` offers the `stp package update-definition` command. Set
-the path to the PVEP with the `--path` flag; then, the `--use-latest-commit`
-flag will update the `commit` field to the HEAD of the local repository, while
-by passing one or more `--tag` flags, you'll be able to set the tags of your
-PVEP.
+  <AccordionItem title="View video walkthrough">
 
-<InlineNotification kind="warning">
+<Video src="../assets/videos/stp/stp-package-push.mp4"></Video>
 
-**NOTE:** for this command to work, the `--path` containing the PVEP must belong
-to a git repository.
+  </AccordionItem>
+
+</Accordion>
+
+## Importing PVEPs
+
+In the previous sections, we learned how to download PVEPs and add them to our
+Registry instance using the `download` and `push` commands. These commands are
+versatile and can be used in various scenarios. However, if our goal is simply
+to download a PVEP from an external instance and add it to our own, `stp` offers
+another command, `import`, that can accomplish this task efficiently.
+
+Copy the link to the experiment you want to import and run:
+
+```commandline
+stp package import https://registry.st4sd.res.ibm.com/registry-ui/experiment/band-gap-dft-gamess-us
+```
+
+To automatically add it to your Registry instance.
+
+<Accordion>
+
+  <AccordionItem title="View video walkthrough">
+
+<Video src="../assets/videos/stp/stp-package-import.mp4"></Video>
+
+  </AccordionItem>
+
+</Accordion>
+
+## Creating PVEPs
+
+_Parameterised Virtual Experiment Packages_ (PVEPs) are parameterisations of our
+experiments that need to be created before they can be added the Registry to be
+run or shared. `stp` can help getting started with this by generating a valid,
+high-level PVEP that the user can later add details to.
+
+<InlineNotification kind="info">
+
+This feature requires for the experiment to be in a git repository.
 
 </InlineNotification>
 
-<InlineNotification kind="warning">
+As we need a virtual experiment to test this feature, we will use the
+[nanopore-geometry-experiment](https://github.com/st4sd/nanopore-geometry-experiment)
+experiment as our starting point. Let us start by cloning it and `cd`-ing into
+its directory:
 
-**NOTE:** by default, the PVEP will be overwritten, but you can pass a path to
-the `--output` flag to change this behavior.
+```commandline
+git clone https://github.com/st4sd/nanopore-geometry-experiment
+cd nanopore-geometry-experiment
+```
 
-</InlineNotification>
+To create the PVEP we then need to run:
 
-<Column colMd={5} colLg={8}>
-  <Video src="../assets/videos/stp/stp-package-update-definition.mp4"></Video>
-</Column>
+```commandline
+stp package create --manifest manifest.yaml
+```
 
-## Working with contexts
+The resulting PVEP can be pushed to the Registry using the
+[`stp package push`](#pushing-pveps) command.
+
+<Accordion>
+
+  <AccordionItem title="View video walkthrough">
+
+<Video src="../assets/videos/stp/stp-package-create.mp4"></Video>
+
+  </AccordionItem>
+
+</Accordion>
+
+## Updating PVEP definitions
+
+During the development phase of our virtual experiments, we will regularly
+commit changes to the git repository.
+
+If we are following the set of
+[best practices](/virtual-experiment-developer-best-practices#strong-versioning)
+we have defined, the commit ID will be included in our PVEP, ensuring ST4SD
+executes the _exact_ version of our experiment, improving results
+reproducibility. Provided is an example of how this might look like in your
+PVEP:
+
+```json
+{
+  "name": "nanopore-geometry-experiment",
+  "source": {
+    "git": {
+      "location": {
+        "url": "https://github.com/st4sd/nanopore-geometry-experiment",
+        "commit": "85244f5c84d6c0e02aa7a2e1685b004cd0b3cdd2"
+      }
+    }
+  }
+}
+```
+
+Additionally, we might want to give a specific experiment version an
+easy-to-remember name by means of a tag. `stp` makes updating the commit ID and
+metadata tags of our PVEP as painless as possible by providing the
+`update-definition` command. In the `nanopore-geometry-experiment` folder from
+the previous example we can run:
+
+```commandline
+stp package update-definition --path nanopore-geometry-experiment.json \
+        --use-latest-commit \
+        --tag hello
+```
+
+The PVEP definition may now look similar to the following:
+
+```json
+{
+  "base": {
+    "packages": [
+      {
+        "name": "nanopore-geometry-experiment",
+        "source": {
+          "git": {
+            "location": {
+              "url": "https://github.com/st4sd/nanopore-geometry-experiment",
+              "commit": "1682f979531ddef602440f0a3b146edb5916c001"
+            }
+          }
+        },
+      }
+    ]
+  },
+  "metadata": {
+    "package": {
+      ...
+      "tags": [
+        "hello"
+      ],
+    }
+  },
+}
+```
+
+<Accordion>
+
+  <AccordionItem title="View video walkthrough">
+
+<Video src="../assets/videos/stp/stp-package-update-definition.mp4"></Video>
+
+  </AccordionItem>
+
+</Accordion>
+
+## Checking PVEP syntax
+
+When we manually edit our PVEPs, we risk making mistakes. Fortunately, `stp`
+includes a syntax checker that can help us identify and fix our errors. Let's
+intentionally introduce a mistake into our `nanopore-geometry-experiment` PVEP,
+which we obtained earlier in this tutorial, by adding a `nonexistent` field to
+the `metadata` section.
+
+Here's how the updated section now looks:
+
+```json
+"metadata": {
+  "package": {
+    "name": "nanopore-geometry-experiment",
+    "tags": [],
+    "license": "",
+    "maintainer": "",
+    "description": "",
+    "nonexistent": true,
+    "keywords": []
+  }
+},
+```
+
+`stp` will point us to the error when we run `stp package test`, as such:
+
+```commandline
+stp package test nanopore-geometry-experiment.json
+Validation error in instance['metadata']['package']:
+Additional properties are not allowed ('nonexistent' was unexpected)
+```
+
+<Accordion>
+
+  <AccordionItem title="View video walkthrough">
+
+<Video src="../assets/videos/stp/stp-package-test.mp4"></Video>
+
+  </AccordionItem>
+
+</Accordion>
+
+## Managing multiple ST4SD instances
+
+With `stp` it is possible to log in to multiple ST4SD instances - which we refer
+to as _contexts_ - and quickly switch between them.
 
 <AnchorLinks small>
-  <AnchorLink>Showing the active context</AnchorLink>
-  <AnchorLink>Listing all the available contexts</AnchorLink>
+  <AnchorLink>Getting the currently active context</AnchorLink>
+  <AnchorLink>Listing the available contexts</AnchorLink>
   <AnchorLink>Changing the active context</AnchorLink>
-  <AnchorLink>Deleting a context</AnchorLink>
   <AnchorLink>Renaming a context</AnchorLink>
+  <AnchorLink>Deleting a context</AnchorLink>
 </AnchorLinks>
 
-### Showing the active context
+### Getting the currently active context
 
-When working with multiple contexts in `stp`, it can be useful to check which
-one we are currently using.
+To see what the currently active context - meaning the ST4SD instance that `stp`
+will run commands against - is, you can use the `stp context show` command. By
+default, it will only print the name of the context, but an option is provided
+to also print out the URL of the ST4SD instance for the context.
 
-This can be done with:
+<Accordion>
 
-```commandline
-stp context show
-```
+  <AccordionItem title="View video walkthrough">
 
-Additionally, if you also want to see the URL that the context is for, you can
-add the `--show-url` flag:
+<Video src="../assets/videos/stp/stp-context-show.mp4"></Video>
 
-```commandline
-stp context show --show-url
-```
+  </AccordionItem>
 
-<Column colMd={5} colLg={8}>
-  <Video src="../assets/videos/stp/stp-context-show.mp4"></Video>
-</Column>
+</Accordion>
 
-### Listing all the available contexts
+### Listing the available contexts
 
-To see all the contexts that are available for you in `stp`, you can use the
-command:
+To see what instances you have logged in to, you can use the `stp context list`
+command. By default, the results will be printed as a table but this can be
+disabled with the `--simple` flag.
 
-```commandline
-stp context list
-```
+<Accordion>
 
-As before, you can add the `--show-url` flag to also see the URLs the contexts
-are for:
+  <AccordionItem title="View video walkthrough">
 
-```commandline
-stp context list --show-url
-```
+<Video src="../assets/videos/stp/stp-context-list.mp4"></Video>
 
-<Column colMd={5} colLg={8}>
-  <Video src="../assets/videos/stp/stp-context-list.mp4"></Video>
-</Column>
+  </AccordionItem>
+
+</Accordion>
 
 ### Changing the active context
 
-To change the active context (the one output by `stp context show`) you can use
-the `stp context activate` command, passing it the name of one of the available
-contexts:
+In case you need your commands to target a different `stp` context from the one
+currently active (as shown by `stp context show`), you can use the
+`stp context activate` command.
 
-<Column colMd={5} colLg={8}>
-  <Video src="../assets/videos/stp/stp-context-activate.mp4"></Video>
-</Column>
+<Accordion>
 
-### Deleting a context
+  <AccordionItem title="View video walkthrough">
 
-To remove a context and its associated credentials you can use the
-`stp context delete` command, passing it the name of the context you want to
-delete.
+<Video src="../assets/videos/stp/stp-context-activate.mp4"></Video>
 
-<Column colMd={5} colLg={8}>
-  <Video src="../assets/videos/stp/stp-context-delete.mp4"></Video>
-</Column>
+  </AccordionItem>
+
+</Accordion>
 
 ### Renaming a context
 
-In case you don't like the name of one of the contexts, you can always rename it
-via `stp context rename`, passing it the name of the context you want to rename
-and setting the `--to` flag to the new name.
+If you created a context without specifying the `--context-name` flag, you might
+have ended up with a context whose name is the full URL of the instance. You can
+change this with `stp context rename`.
 
-<Column colMd={5} colLg={8}>
-  <Video src="../assets/videos/stp/stp-context-rename.mp4"></Video>
-</Column>
+<Accordion>
 
-## Working with stack-wide settings
+  <AccordionItem title="View video walkthrough">
+
+<Video src="../assets/videos/stp/stp-context-rename.mp4"></Video>
+
+  </AccordionItem>
+
+</Accordion>
+
+### Deleting a context
+
+If you no longer need one of the existing contexts, you can remove it with
+`stp context delete`.
+
+<Accordion>
+
+  <AccordionItem title="View video walkthrough">
+
+<Video src="../assets/videos/stp/stp-context-delete.mp4"></Video>
+
+  </AccordionItem>
+
+</Accordion>
+
+## Advanced usage
+
+`stp` offers some additional commands for more advanced useDebugValue, such as
+interacting with stack-wide settings.
 
 <AnchorLinks small>
   <AnchorLink>Listing available pull secrets</AnchorLink>

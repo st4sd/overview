@@ -8,9 +8,3 @@ Sleep 1.5s
 Type "stp package import https://registry.st4sd.res.ibm.com/registry-ui/experiment/band-gap-dft-gamess-us"
 Enter
 Sleep 6s
-Type "stp context show"
-Enter
-Sleep 2s
-Type "stp package import --from-context st4sd-5446-dev https://st4sd-5446-dev.ve-5446-9ca4d14d48413d18ce61b80811ba4308-0000.us-south.containers.appdomain.cloud/registry-ui/experiment/nanopore-geometry-experiment"
-Enter
-Sleep 6s

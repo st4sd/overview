@@ -54,10 +54,6 @@
       path: /stp
     - title: Build experiments
       path: /build-experiments-registry-ui
-    - title: Getting and adding packages with stp
-      path: /getting-and-adding-packages-with-stp
-    - title: Creating and modifying packages with stp
-      path: /creating-and-modifying-packages-with-stp
     - title: Parameterized Packages
       path: /creating-a-parameterised-package
 - title: ST4SD Services
