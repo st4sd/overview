@@ -49,23 +49,18 @@ The code here can be tested using the
 
 ## Overview
 
-We provide a python API for ease of use of virtual experiment in an iPython
-notebook setting. The features the API enables includes:
+We provide a python API for interacting with the ST4SD Services. The API enables
+you to:
 
-1. launching virtual experiment instances
-2. monitoring virtual experiment instances
-3. downloading outputs and measured properties of virtual experiment instances
-
-The Python API is a wrapper around a RESTapi. You can find RESTapi documentation
-[here](/api-docs/openapi/st4sd-runtime-service/st4sd-runtime-service.openapi.html).
-In addition, we provide a python API to our `st4sd-datastore` which allows
-deeper querying and data-retrieval from completed virtual experiments in a
-notebook.
+1. Launch virtual experiment instances
+2. Monitor virtual experiment instances
+3. Download outputs and measured properties of virtual experiment instances
 
 ### Requirements
 
 The basic requirements are access to an OpenShift instance with ST4SD installed
-(see [first steps](/) for more information).
+(see the [ST4SD Cloud Installation instructions](/installation) for more
+information).
 
 #### Getting data into and out-of virtual experiments: Cloud Object Store
 
@@ -101,8 +96,16 @@ see what topics are covered in the other notebooks.
 ## Connecting to ST4SD
 
 To connect to an ST4SD instance you need to obtain an `auth-token` or use an
-`api-key`. Please refer to
-[How do I connect to the ST4SD runtime service?](/runtime-service#how-do-i-connect-to-the-st4sd-runtime-service).
+`api-key`.
+
+<InlineNotification>
+
+To learn what `auth-token`s and `api-key`s are in ST4SD and how to retrieve
+them, read the
+[How do I connect to the ST4SD runtime service?](/runtime-service#how-do-i-connect-to-the-st4sd-runtime-service)
+section.
+
+</InlineNotification>
 
 The following code blocks show how to connect to an ST4SD instance.
 
@@ -135,10 +138,12 @@ The following code blocks show how to connect to an ST4SD instance.
 ```
 
 <InlineNotification>
+
   ST4SD may print warnings to your python terminal e.g. `Unable to import tinydb
   module - tinydb interface not available`. These are not problems. They are
   just informing you that select features are not supported on the machine you
   are using. You can ignore them.
+  
 </InlineNotification>
 
 The `ExperimentRestAPI` initializer validates the authentication token you
