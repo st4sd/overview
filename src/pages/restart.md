@@ -135,10 +135,11 @@ The restart hook is supplied by the developer as a python function called `Resta
 The signature and docs of this function are:
 
 ```python
-def Restart(workingDirectory, restarts, componentName, log, exitReason, exitCode):
+def Restart(workingDirectory, restarts, componentName, 
+            log, exitReason, exitCode):
     """
-    This function is expected to examine the components workingDirectory, optionally make modifications to it, 
-    and return a restart decision.
+    This function is expected to examine the components workingDirectory, 
+    optionally make modifications to it, and return a restart decision.
 
     Parameters
     ----------

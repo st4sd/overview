@@ -16,6 +16,10 @@
   pages:
     - title: Getting Started
       path: /st4sd-core-getting-started
+    - title: The elaunch command line tool
+      path: /direct-run
+    - title: Restarting
+      path: /restart
     - title: Tutorial
       path: /tutorial
     - title: Project Structure
@@ -28,10 +32,6 @@
       path: /workflow-specification
     - title: Workflow Specification 2.0
       path: /workflow-specification-dsl
-    - title: Directly running workflows
-      path: /direct-run
-    - title: Restarting
-      path: /restart
     - title: Virtual Experiment Interfaces
       path: /writing-a-virtual-experiment-interface
 - title: ST4SD Cloud
