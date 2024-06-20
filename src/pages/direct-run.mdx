@@ -43,7 +43,7 @@ pip install "st4sd-runtime-core[develop]"
 
 With elaunch.py you can run experiments - sets of files describing computational workflows - given their path: simply run `elaunch.py <path to experiment>`.
 
-For example, you can run the toy workflow [`nanopore-geometry-experiment`]https://github.com/st4sd/nanopore-geometry-experiment) like so:
+For example, you can run the toy workflow [`nanopore-geometry-experiment`](https://github.com/st4sd/nanopore-geometry-experiment) like so:
 
 ```bash
 : # Get the directory that provides input to the next command
@@ -55,6 +55,23 @@ cd nanopore-geometry-experiment
 elaunch.py --nostamp -l 40 --input docker-example/cif_files.dat \
       --applicationDependencySource="nanopore-database=cif:copy" \
       nanopore-geometry-experiment.package
+```
+
+The experiment should take about 5 minutes to complete. The `-l 40` option keeps the log printouts to the bare minimum. When the experiment completes expect to see something similar to the following text on your terminal:
+
+```
+completed-on=2024-03-15 14:39:29.909105
+cost=0
+created-on=2024-03-15 14:38:04.402969
+current-stage=stage3
+exit-status=Success
+experiment-state=finished
+stage-progress=1.0
+stage-state=finished
+stages=['stage0', 'stage1', 'stage2', 'stage3']
+total-progress=1.0
+updated=2024-03-15 14:39:33.804727
+updated-on=2024-03-15 14:39:33.804727
 ```
 
 Running an experiment creates a directory which contains the outputs. For example, the code above creates the directory `nanopore-geometry-experiment.instance`. See Section [What is the output of my experiment?](#what-is-the-output-of-my-experiment) for more information.
