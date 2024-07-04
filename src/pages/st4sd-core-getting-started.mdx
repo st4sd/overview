@@ -20,6 +20,7 @@ import { Documentation } from '@carbon/pictograms-react';
 import { Reliability } from '@carbon/pictograms-react';
 
 import { CloudTutorials } from '@carbon/pictograms-react';
+import { FileBackup } from "@carbon/pictograms-react";
 import { Reset } from '@carbon/pictograms-react';
 import { Containers } from '@carbon/pictograms-react';
 import { Docker } from '@carbon/pictograms-react';
@@ -122,13 +123,25 @@ To find out more about this experiment visit its [source repository](https://git
 <div className="expressive-content-list-group">
 
   <ExpressiveList 
-    title="Tutorial"
+    title="Run experiments locally"
     background="true"
     pictogram={<CloudTutorials />}>
 
-Start with our [tutorial](/tutorial) to get an introduction to writing virtual experiments with ST4SD Core
+Start with our documentation on [running experiments locally](/direct-run).
 
   </ExpressiveList>
+
+
+  <ExpressiveList
+    title="Write experiments"
+    background="true"
+    pictogram={<FileBackup />}>
+
+Get an introduction to [writing virtual experiment](/write-experiments) with ST4SD Core.
+
+  </ExpressiveList>
+
+
 
   <ExpressiveList 
     title="Getting application images"

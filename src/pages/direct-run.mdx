@@ -43,7 +43,7 @@ pip install "st4sd-runtime-core[develop]"
 
 With elaunch.py you can run experiments - sets of files describing computational workflows - given their path: simply run `elaunch.py <path to experiment>`.
 
-For example, you can run the toy workflow [`nanopore-geometry-experiment`](https://github.com/st4sd/nanopore-geometry-experiment) like so:
+For example, you can run the workflow [`nanopore-geometry-experiment`](https://github.com/st4sd/nanopore-geometry-experiment) like so:
 
 ```bash
 : # Get the directory that provides input to the next command
@@ -149,14 +149,16 @@ If the experiment fails you will see the line `exit-status=Failed` in the logs o
 
 All outputs of the experiment are placed in a directory called `${package-name}-${timestamp}.instance` which is created in the directory you were in when you ran `elaunch.py`. The structure of this directory is:
 
-* `output`: contains the runtime logs and files describing the outputs and status of your experiment
-* `stages`: contains one directory per stage of your experiment. Each stage directory contains one directory per component in that stage of your experiment.
+* `stages`: contains one directory per stage of your experiment. Each stage directory contains one directory for each of the working directories of the components in that stage. Components store any files their produce, as well as text they print to the terminal under their working directory.
+* `output`: contains the runtime logs and files with metadata about the outputs and status of your experiment
 * `inputs`: contains the input files you provided, including any variable files
 * `data`: (optional) contains files that the workflow definition bundles and the workflow steps can reference. Users may optionally override those files when they launch an experiment
 * `conf`: contains the experiment definition
 
+The key directories are `stages` and `output`.
 
-The key directories are `output` and `stages`.
+Components specify which stage they belong to and by default they are all part of stage `0`. Generally, stages help you create logical groups of components. They do not really play a role in scheduling decisions.
+
 
 ### The output directory
 
@@ -377,6 +379,15 @@ To restart an existing instance from a given stage index use `elaunch.py --resta
 
 
 ## Learn more
+
+<ExpressiveList
+    title="Write experiments"
+    background="true"
+    pictogram={<FileBackup />}>
+
+Get an introduction to [writing virtual experiment](/write-experiments) with ST4SD Core.
+
+  </ExpressiveList>
 
 <div className="expressive-content-list-group">
 
