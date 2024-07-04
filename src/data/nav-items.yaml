@@ -16,7 +16,7 @@
   pages:
     - title: Getting Started
       path: /st4sd-core-getting-started
-    - title: Run experiments locally
+    - title: The elaunch.py command line tool
       path: /direct-run
     - title: Write experiments
       path: /write-experiments
