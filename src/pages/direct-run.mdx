@@ -57,7 +57,7 @@ elaunch.py --nostamp -l 40 --input docker-example/cif_files.dat \
       nanopore-geometry-experiment.package
 ```
 
-The experiment should take about 5 minutes to complete. The `-l 40` option keeps the log printouts to the bare minimum. When the experiment completes expect to see something similar to the following text on your terminal:
+The experiment should take about 5 minutes to complete. The `-l 40` option keeps the log printouts to the bare minimum so don't worry if the command is silent for a few minutes. When the experiment completes expect to see something similar to the following text on your terminal:
 
 ```
 completed-on=2024-03-15 14:39:29.909105
@@ -74,7 +74,7 @@ updated=2024-03-15 14:39:33.804727
 updated-on=2024-03-15 14:39:33.804727
 ```
 
-Running an experiment creates a directory which contains the outputs. For example, the code above creates the directory `nanopore-geometry-experiment.instance`. See Section [What is the output of my experiment?](#what-is-the-output-of-my-experiment) for more information.
+Running an experiment creates a directory which contains the outputs. In this example we set the argument `--nostamp` which instructs ST4SD to not include a timestamp in the directory it creates for the experiment. As such it creates the directory `nanopore-geometry-experiment.instance`. If you run the same command a second time elaunch.py will complain that the experiment instance already exists. Either remove the `--nostamp` argument or delete the directory and retry `elaunch.py`. See Section [What is the output of my experiment?](#what-is-the-output-of-my-experiment) for more information.
 
 ### Experiment project types
 
@@ -147,18 +147,15 @@ If the experiment fails you will see the line `exit-status=Failed` in the logs o
 
 ## What is the output of my experiment ?
 
-All outputs of the experiment are placed in a directory called `${package-name}-${timestamp}.instance` which is created in the directory you were in when you ran `elaunch.py`. The structure of this directory is:
+All outputs of the experiment are placed in the experiment instance directory. By default, this directory is`${package-name}-${timestamp}.instance` and you will find it under the directory you were in when you ran `elaunch.py`. If you specify the `--nostamp` argument then elaunch.py will not omit the `-${timestamp}` part.
 
-* `stages`: contains one directory per stage of your experiment. Each stage directory contains one directory for each of the working directories of the components in that stage. Components store any files their produce, as well as text they print to the terminal under their working directory.
+The experiment instance directory contains several nested directories, of which the most noteworthy are `output` and `stages`. Here is the full list of directories and their description:
+
+* `stages`: contains one directory per stage of your experiment. Each stage directory contains one directory for each of the working directories of the components in that stage. Components store any files their produce, as well as text they print to the terminal under their working directory
 * `output`: contains the runtime logs and files with metadata about the outputs and status of your experiment
 * `inputs`: contains the input files you provided, including any variable files
 * `data`: (optional) contains files that the workflow definition bundles and the workflow steps can reference. Users may optionally override those files when they launch an experiment
 * `conf`: contains the experiment definition
-
-The key directories are `stages` and `output`.
-
-Components specify which stage they belong to and by default they are all part of stage `0`. Generally, stages help you create logical groups of components. They do not really play a role in scheduling decisions.
-
 
 ### The output directory
 
@@ -176,6 +173,8 @@ It contains the following files:
 ### The stages directory
 
 A virtual experiment is a computational workflow that executes tasks. Task outputs are organized under the `stages` directory like so: `stages/stage{$index}/${task-name}`. To find out the tasks that are in your experiment read the  experiment definition or look at the file structure of the `stages` directory.
+
+Components specify which stage they belong to and by default they are all part of stage `0`. Generally, stages help you create logical groups of components. They do not really play a role in scheduling decisions, except for some special cases which are outside the scope of the information in this document
 
 ### Understanding an experiment's execution requirements
 

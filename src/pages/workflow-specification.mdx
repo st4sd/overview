@@ -172,7 +172,7 @@ components:
 
 `DataReference` is the way to define references to data in FlowIR.
 
-Components define their dependencies to other components in the graph and data external to the graph (e.g. `input`, `data`, and `application-dependencies`) using `DataReference`s.
+Components define their dependencies to other components in the graph and data external to the graph (e.g. `input`, `data`, and `application-dependencies` which are custom directories that experiments may bundle) using `DataReference`s.
 [Key-outputs](#key-outputs) also use `DataReference`s.
 
  A `DataReference` can have two forms: an `absolute` and a `relative` representation. The latter is syntax sugar for the former.
@@ -186,7 +186,7 @@ Components define their dependencies to other components in the graph and data e
 The `DataReference` points to either a `component` in the graph or a `directory` in the root of the instance directory.
 
 - `stage<Index>.`: is the stage of the producer. This is only valid for `DataReference`s that point to components. `Index` should be an integer greater than 0.
-- `producerName`: Either the name of a producer `component`, or the name of the `directory` in the root of the instance directory. The directories include all `application-dependencies` and directories that `ST4SD` manages (e.g. `input`, `data`, `conf`, `hooks`, etc).
+- `producerName`: Either the name of a producer `component`, or the name of the `directory` in the root of the instance directory. The directories include all directories that `ST4SD` an experiment instance directory contains (e.g. `input` plus directories found in a standalone project such as `data`, `conf`, `hooks`, `application-dependencies`, etc).
 - `</fileRef>`: Optional path, relative to the root directory of the `producer`. When omitted defaults to `/`.
 - `method`: One of `ref`, `output`, `copy`, `link`. The `method` determines how ST4SD interprets the `DataReference`.
    - `ref`: The `DataReference` expands to the absolute path of the referenced file/directory

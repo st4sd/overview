@@ -44,7 +44,7 @@ Spend up to 60 minutes familiarizing yourself with building an experiment. This 
     ```
 - A local copy of https://github.com/st4sd/st4sd-examples
 
-    Clone the github repository and then cd into the directory `tutorials/1-write-experiments`
+    Clone the github repository and then cd into its sub-directory `tutorials/1-write-experiments`
 
     ```bash
     git clone https://github.com/st4sd/st4sd-examples.git
@@ -59,6 +59,12 @@ ST4SD experiments consist of 2 parts, the templates of the experiment and the en
 A component describes how to execute a task. A workflow describes how to execute its children steps which they themselves can be instances of other workflows or components.
 
 Let's see a couple of experiment examples.
+
+<InlineNotification kind="info">
+
+Make sure your working directory is the sub-directory `tutorials/1-write-experiments` of the directory you stored https://github.com/st4sd/st4sd-examples in.
+
+</InlineNotification>
 
 ## Hello world
 
@@ -85,12 +91,14 @@ components:
     arguments: "%(message)s"
 ```
 
-File: [0-hello-world.yaml](https://github.com/st4sd/st4sd-examples/blob/main/tutorials/1-write-experiments//0-hello-world.yaml)
+File: `0-hello-world.yaml`
+
+
 
 Run it like so:
 
 ```commandline
-elaunch.py -l40 --nostamp examples/0-hello-world.yaml
+elaunch.py -l40 --nostamp 0-hello-world.yaml
 ```
 
 
@@ -100,7 +108,7 @@ For more information on running and troubleshooting experiments locally, check o
 
 </InlineNotification>
 
-We use the `elaunch.py` script to execute a package, which happens to be a YAML file, and whose location is at `examples/0-hello-world.yaml`. This happens to be a single-file package which we call `standard` project or package. There are also `directory` flavoured experiments which we call `standalone` packages. We'll see an example of that further down.
+We use the `elaunch.py` script to execute a package, which happens to be a YAML file, and whose location is at `0-hello-world.yaml`. This happens to be a single-file package which we call `standard` project or package. There are also `directory` flavoured experiments which we call `standalone` packages. We'll use a `standalone` project in our next example, so for the time being let's focus on this `standard` project.
 
 In ST4SD the outputs of an experiment are placed in a directory called `${package-name}.instance` which is created in the directory you were in when you ran `elaunch.py`.
 
@@ -108,7 +116,7 @@ For more information on the structure of `0-hello-world.instance` and how to run
 
 Before you continue any further, use `ls` and `cd` to look at the structure of `0-hello-world.instance` which contains the files related to this instance of your experiment. Make sure to look at the stdout of your component. You will find that file under `0-hello-world.instance/stages/stage0/entry-instance/out.stdout`.
 
-You might be wondering why your `hello` component is called `entry-instance`. This is because of how `entrypoint` works.
+You might be wondering why your `hello` component is called `entry-instance`. The next section explains why.
 
 ### Entrypoint
 
@@ -123,15 +131,15 @@ entrypoint:
       message: Hello world
 ```
 
-The purpose of the `entrypoint` is to reference the root template instance of your experiment and describe how to execute it by providing values to its parameters/arguments.
+The purpose of the `entrypoint` is to reference the root template instance of your experiment and describe how to execute it by providing values to its parameters/arguments. This is similar to how in object oriented languages you create instances of classes. In ST4SD you use the entrypoint and workflows to execute component and workflow templates.
 
-In ST4SD the root template instance is always called `entry-instance`, kind of how you always have a `main` function in C and other languages. Because your experiment points to a component template, the instance of that component must be called `entry-instance`.
+The entrypoint always points to exactly 1 instance of some template. This instance is always called `entry-instance`, kind of how you always have a `main` function in C and other languages. Because the `0-hello-world` experiment points to a component template, the instance of that component template is called `entry-instance`. You can find the files it produces under the directory `0-hello-world.instance/stages/stage0/entry-instance`.
 
-Notice that in `entrypoint.execute[0].target` the entrypoint references `<entry-instance>` instead of `entry-instance`. This is to make it explicit that we are referencing an **instance** of a template, not the template itself. In ST4SD, references to template instances are enveloped in `<>` like `<this>`.
+Notice that in `entrypoint.execute[0].target` the entrypoint references `<entry-instance>` instead of `entry-instance`. This is to make it explicit that we are referencing an **instance** of a template, not the template itself. In ST4SD, references to template instances are enveloped in `<>` just like `<this>`.
 
 ### Components
 
-Let's take a closer look at the `components` array. This is where you define the tasks that your experiments execute. A component consists of a signature (i.e. unique name and parameters), what it executes (i.e. its command). There are also other optional configuration options for controlling its behaviour but we will ommit for now. If you wish to know more, there is a link at the bottom of this page with more information about the Domain Specific Language (DSL) that the ST4SD experiments use.
+The `components` array is where you define the component templates that your experiments may instantiate as steps. A component consists of a signature (i.e. unique name and parameters) and what it executes (i.e. its command). There are also other optional configurations which control its behaviour but we will omit these for now. If you wish to know more, there is a link at the bottom of this page with more information about the Domain Specific Language (DSL) that ST4SD experiments use.
 
 Here is that component we saw above:
 
@@ -145,7 +153,15 @@ command:
   arguments: "%(message)s"
 ```
 
-It is effectively a wrapper component for the `echo` executable. It just prints the contents of its parameter `message`. Notice that the `message` parameter does not have a default value. We could have added one like this:
+Focusing on the `command` dictionary we see that the command of this component points to the `echo` executable. You have 3 options when you define the executable of a command:
+
+- The name of a binary which the runtime expects to exist in a directory that the `$PATH` environment variable points to (this example)
+- An absolute path to the binary
+- A path to the binary which relative to the instance directory. This last option is mostly useful when working with `standalone` projects which we cover in our next example.
+
+`hello` is effectively a wrapper for the binary file `echo` which comes bundled with your typical Unix/MacOS/Linux operating system. When an instance of this component template runs it prints the contents of the `message` parameter to the stdout.
+
+Speaking of parameters, notice that the `message` parameter does not have a default value. We could have added one like this:
 
 ```yaml
 parameters:
@@ -155,10 +171,9 @@ parameters:
 
 The `default` value of a parameter is only used if the caller of the component (in this example the `entrypoint`) does not assign a value to that parameter. In this instance, the entrypoint does assign a value to the `message` parameter so adding a default value will not make a difference.
 
-
 ### Exercises
 
-In ST4SD you can override the parameters of the `entry-instance` template that the `entrypoint` sets via the dictionary `entrypoint.execute[0].args`.
+In ST4SD you can override the parameters of `entry-instance` that the `entrypoint` sets via the dictionary `entrypoint.execute[0].args`.
 
 For example, place the following into a new file `my-variables.yaml`:
 
@@ -170,6 +185,7 @@ global:
 Then remove the `0-hello-world.instance` directory and run the experiment again but this time use load the `my-variables.yaml` file:
 
 ```bash
+: # Recall that you have to remove 0-hello-world.instance because of --nostamp
 rm -rf 0-hello-world.instance
 elaunch.py -l40 --nostamp -a my-variables.yaml 0-hello-world.yaml
 ```
@@ -191,12 +207,12 @@ import sys
 print(sys.argv[1])
 ```
 
-File: [1-hello-python.package/bin/hello.py](https://github.com/st4sd/st4sd-examples/blob/main/tutorials/1-write-experiments//1-hello-python.package/bin/hello.py)
+File: `1-hello-python.package/bin/hello.py`
 
 
 <InlineNotification kind="info">
 
-Make sure that files you use for `command.executable` are actually "executable"! In this example, we've already run `chmod +x examples/1-hello-python.package/bin/hello.py` for you.
+Make sure that files you use for `command.executable` are actually "executable"! In this example, we've already run `chmod +x 1-hello-python.package/bin/hello.py` for you.
 
 </InlineNotification>
 
@@ -220,17 +236,11 @@ components:
     arguments: '"%(message)s"'
 ```
 
-File: [1-hello-python.package/conf/dsl.yaml](https://github.com/st4sd/st4sd-examples/blob/main/tutorials/1-write-experiments//1-hello-python.package/conf/dsl.yaml)
+File: `1-hello-python.package/conf/dsl.yaml`
 
-Take a closer look at the `command` field of the `hello` component:
+Eagle eye readers will have noticed that the path to the DSL file is now `1-hello-python.package/conf/dsl.yaml`. Contrary to the `0-hello-world.yaml` experiment above this new experiment is not a "single file" experiment (i.e. a `standard` project). It is what we call a `standalone` project. A standalone project is a directory which contains the experiment configuration file under the `conf` sub-directory. It may also contain other sub-directories which it can reference. For example, it is common for standalone projects to contain  the script(s) they're using under the `bin` directory.
 
-```yaml
-command:
-  executable: bin/hello.py
-  arguments: '"%(message)s"'
-```
-
-The executable is `bin/hello.py`. Eagle eye readers will have also noticed that the path to the DSL file is now `1-hello-python.package/conf/dsl.yaml`. This experiment is no longer a "single file" experiment (i.e. a `standard` project). It is a `standalone` project which contains the experiment configuration file in the `conf` directory and the script(s) it's using in the `bin` directory.
+When you looked at the contents of the `0-hello-world.instance` directory for the above example you actually saw some of these directories. This is because a "standard" project is just a compressed form of a "standalone" project. Before `elaunch.py` starts executing your experiment it populates the contents of the experiment instance directory by copying over the contents of the project in the form of a `standalone` project. This gets you the `conf`, `data`, and other directories that we went over in our [outputs of experiments](/direct-run#what-is-the-output-of-my-experiment) docs.
 
 <InlineNotification kind="info">
 
@@ -238,9 +248,21 @@ ST4SD supports a couple of different ways to write experiments. It determines wh
 
 </InlineNotification>
 
+Let's take a closer look at the `command` field of the `hello` component:
+
+```yaml
+command:
+  executable: bin/hello.py
+  arguments: '"%(message)s"'
+```
+
+The executable is `bin/hello.py`. This is a relative path (it does not start with a `/` but contains a `/`) which instructs the runtime that it should find the binary that `command.executable` points to under the experiment instance directory.
+
+
+
 ### Exercises
 
-- Use `elaunch.py` to run [`1-hello-python.package`](https://github.com/st4sd/st4sd-examples/tree/main/tutorials/1-write-experiments) and look at the output of the component. Recall that `elaunch.py` expects a path to the package definition. Which in this example is `examples/1-hello-python.package/`. After `elaunch.py` completes, look at the stdout of your component.
+- Use `elaunch.py` to run `1-hello-python.package` and look at the output of the component. Recall that `elaunch.py` expects a path to the package definition. Which in this example is `1-hello-python.package/`. After `elaunch.py` completes, look at the stdout of your component.
 
 ## Your first multi-step experiment
 
@@ -262,15 +284,15 @@ workflows:
     parameters:
     - name: external
   steps:
-    first: hello
-    second: hello
+    foo: hello
+    bar: hello
   execute:
-    - target: <first>
+    - target: <foo>
       args:
         message: "from my parent workflow: %(external)s"
-    - target: <second>
+    - target: <bar>
       args:
-        message: "from my producer: <first>:output"
+        message: "from my producer: <foo>:output"
 
 components:
 - signature:
@@ -282,7 +304,7 @@ components:
     arguments: "%(message)s"
 ```
 
-File: [2-many-steps.yaml](https://github.com/st4sd/st4sd-examples/blob/main/tutorials/1-write-experiments//2-many-steps.yaml)
+File: `2-many-steps.yaml`
 
 ### Workflows
 
@@ -298,44 +320,46 @@ signature:
   parameters:
     - name: external
 steps:
-  first: hello
-  second: hello
+  foo: hello
+  bar: hello
 execute:
-- target: <first>
+- target: <foo>
     args:
-    message: "from my parent workflow: %(external)s"
-- target: <second>
+        message: "from my parent workflow: %(external)s"
+- target: <bar>
     args:
-    message: "from my producer: <first>:output"
+        message: "from my producer: <foo>:output"
 ```
 
 It has a `signature` with a name and parameters, just like the `hello` component. However, unlike the `component` kind of Templates, the `workflow` Templates do not have a `command` section or any of the other `component` sections. Instead they have a `steps` and an `execute` section.
 
-The `steps` section is a `stepIdentifier` to `templateIdentifier` mapping. The `execute` section describes how to execute the `steps` by referencing them like `<this>` and providing values for their parameters. Just like components, a workflow references its parameters like `%(this)s`. For example, it can reference its parameters when providing arguments to its steps. Like it does here for `<first>`:
+The `steps` section assigns identifiers to the template instances that the workflow creates. We call these identifiers `step identifiers`. The `execute` section describes how to execute the `steps`. For each step of the workflow, the execute array contains an entry with a `target` field that referencing a step like `<this>`. It also contains an `args` and dictionary for providing values to the parameters of the `target` step.
+
+Earlier we saw how components reference their parameters (e.g. in their commandline). Workflows can reference their own parameters to set the values of arguments to their `steps`. Here's how this workflow sets the  `message` parameter of its `<foo>` step:
 
 ```yaml
-- target: <first>
+- target: <foo>
     args:
-    message: "from my parent workflow: %(external)s"
+        message: "from my parent workflow: %(external)s"
 ```
 
-Workflow steps can also reference the outputs of other steps. Let's take a look at `<second>`:
+Workflow steps can also reference the outputs of other steps. Let's take a look at `<bar>`:
 
 ```yaml
-- target: <second>
+- target: <bar>
     args:
-    message: "from my producer: <first>:output"
+    message: "from my producer: <bar>:output"
 ```
 
-See how it references the `<first>` step? It actually uses the `:output` output of the `<first>` step which instructs the ST4SD runtime to replace the `<first>:output` string with the contents of the `stdout` of the `<first>` step. Referencing steps in the arguments of other steps also defines the execution order of the steps. There are other reference methods, like for example `:ref` which you can use to reference a file or a directory that a component produces.
+See how it references the `<foo>` step? It actually uses the `:output` output of the `<foo>` step which instructs the ST4SD runtime to replace the `<foo>:output` string with the contents of the contents of the `stdout` stream from the `<foo>` step. Referencing steps in the arguments of other steps also defines the execution order of the steps. There are other reference methods, like for example `:ref` which you can use to reference a file or a directory that a component produces. We have a link to the DataReference documentation at the bottom of this document.
 
-In this example, the runtime system will execute the `<first>` component first because it needs its output before it can launch the `<second>` component.
+In this example, the runtime system will execute the `<foo>` component first because it needs its output before it can launch the `<bar>` component.
 
 
 ### Exercises
 
-- Run the experiment and look at the directories under `stages/stage0`.
-- Add a new component to your experiment which references the `stdout` of both `first` and `second`.
+- Run the experiment and take a moment to think what the contents of the file out.stdout of `<bar>` should be.  Next, look at the directories under `stages/stage0` and read the `out.stdout` file for the `<bar>` component.
+- Add a third step to the workflow which references the `:output` of both `foo` and `bar`.
 
 ## Working with input files
 
@@ -372,10 +396,10 @@ components:
     arguments: "%(file)s"
 ```
 
-File: [3-input-files.yaml](https://github.com/st4sd/st4sd-examples/blob/main/tutorials/1-write-experiments//3-input-files.yaml)
+File: `3-input-files.yaml`
 
 
-The `printer` component has a `file` parameter. When the `wrapper` workflow instances `<printer>` it sets the value of `file` to `%(input.message)%s:ref`. This instructs the runtime that the `<printer>` is receiving a reference `(:ref)` to a file whose path is `%(input.message)s` i.e. `input/message`.
+The `printer` component has a `file` parameter. When the `wrapper` workflow instanciates the `<printer>` step it sets the value of its parameter `file` to `%(input.message)%s:ref`. This instructs the runtime that the `<printer>` is receiving a reference `(:ref)` to a file whose path is `%(input.message)s` i.e. `input/message`.
 
 To run this experiment create a file called `message` with a message like this:
 
@@ -391,12 +415,12 @@ elaunch.py -l40 --no-stamp -i message 3-input-files.yaml
 
 
 
-The `-i message` argument instructs the runtime that it should use the `message` file as an `input` file for your experiment. It'll place that file under the directory `3-input-files.instance/input` which will enable instances of components and workflows to reference it by including the text `input/message:$method` in their arguments. Where `method` can be one of [`output`, `ref`, `copy`, `link`]. The whole string `input/message:$method` is what we call a DataReference in ST4SD. You can find more information about DataReferences in our [workflow specification documentation](/workflow-specification#datareference).
+The `-i message` argument instructs the runtime that it should use the `message` file as an `input` file for your experiment. It'll place that file under the directory `3-input-files.instance/input` which will enable instances of components and workflows to reference it by including the text `input/message:$method` in their arguments. Where `method` can be one of [`output`, `ref`, `copy`, `link`]. The whole string `$path:$method` (in this example `input/message:ref` ) is what we call a DataReference in ST4SD. You can find more information about DataReferences in our [workflow specification documentation](/workflow-specification#datareference).
 
 
 ### Exercises
 
-- Execute the [3-input-files.yaml](https://github.com/st4sd/st4sd-examples/blob/main/tutorials/1-write-experiments//3-input-files.yaml) experiment using `elaunch.py` and then look at the output of the `printer` component in `stage0`.
+- Execute the `3-input-files.yaml` experiment using `elaunch.py` and then look at the output of the `printer` component in `stage0`.
 
 
 ## Read a file that a different part of the experiment produced
@@ -420,15 +444,15 @@ workflows:
     parameters:
     - name: external
   steps:
-    first: writer
-    second: reader
+    foo: writer
+    bar: reader
   execute:
-    - target: <first>
+    - target: <foo>
       args:
         message: "%(external)s"
-    - target: <second>
+    - target: <bar>
       args:
-        file: "<first>/my_output.txt:ref"
+        file: "<foo>/my_output.txt:ref"
 
 components:
 - signature:
@@ -450,20 +474,20 @@ components:
     arguments: "%(file)s"
 ```
 
-File: [4-read-step-outputs.yaml](https://github.com/st4sd/st4sd-examples/blob/main/tutorials/1-write-experiments//4-read-step-outputs.yaml)
+File: `4-read-step-outputs.yaml`
 
-Here's how we configure the `second` step to consume the file `my_output.txt` that the `first` component produces:
+Here's how we configure the `bar` step to consume the file `my_output.txt` that the `foo` component produces:
 
 
 ```yaml
 execute:
   # ...
-  - target: <second>
+  - target: <bar>
     args:
-      file: "<first>/my_output.txt:ref"
+      file: "<foo>/my_output.txt:ref"
 ```
 
-The parent workflow configures the value of the `file` parameter that the `second` step has to: `<first>/my_output.txt:ref`. This string means `a file reference (:ref) to the "my_output.txt" output that the <first> step produces`.
+The parent workflow configures the value of the `file` parameter that the `bar` step has to: `<foo>/my_output.txt:ref`. This represents `a file reference (:ref) to the "my_output.txt" output that the <foo> step produces`.
 
 ## Exercises
 
@@ -488,14 +512,16 @@ Take for example the graph below:
 </Column>
 
 
-Let's imagine that component `A` reads a file containing multiple "input entries" for each of which `B` and `C` execute one task. `D` then reads the outputs of of `B` and `C` for each of these entries and produces one output. Finally, component `E` reads all the outputs of all the tasks that `E` launched to produce the final result of the experiment.
+The component `A` access a database and produces some output which the components `B` and `C` read. The component `D` then reads the outputs of of `B` and `C`. Finally, component `E` processes the output of `D`. Databases typically hold more than just a single item and manually unrolling graphs to match the number of input items is tedious and error prone.
+
+ST4SD supports simple markets to indicate when the graph unrolling begins and ends. We call these markets `replication` and `aggregation` markers. Let's imagine that components `A`, `B`, `C`, and `D` should execute once per input item but the `E` component should execute just once to aggregate the results of all the replicas of the `D` component.
 
 You can write a ST4SD experiment in which:
 
 - the `A` component contains a configuration option which `replicates` the sub-graph that starts from `A`.
 - the `E` component contains a configuration option which `aggregates` the sub-graph(s) that feed their outputs to `E`.
 
-ST4SD will then auto configure the components between `A` and `E` (i.e. `B`, `C`, and `D`) to `replicate` for as many times as the `A` component replicates. It will then modify the component `E` so that any parameters it receives to any of the replicated components are rewritten to point to *all* replicated components. The resulting graph looks like this:
+ST4SD will automatically configure the components between `[A, E)` to `replicate` for as many times as the `A` component replicates. Notice that the components include `A` (start of replication) but exclude `E` (aggregating node). The runtime modifies the aggregating component `E` so that any parameters it receives to any of the replicated components are rewritten such that they point to *all* replicated components. The annotated graph with the replicate/aggregate markers looks like this:
 
 <Column colMd={4} colLg={4} noGutterSm>
 
@@ -509,7 +535,7 @@ ST4SD will then auto configure the components between `A` and `E` (i.e. `B`, `C`
 
 </Column>
 
-When executing the experiment and setting `A` to replicate 2 times you get this graph:
+When executing the experiment and setting `A` to replicate 2 times you get this unrolled graph:
 
 <Column colMd={11} colLg={11} noGutterSm>
 
@@ -594,7 +620,7 @@ components:
     arguments: "%(numbers)s"
 ```
 
-File: [examples/5-replication.package/conf/dsl.yaml](https://github.com/st4sd/st4sd-examples/blob/main/tutorials/1-write-experiments//5-replication.package/conf/dsl.yaml)
+File: `5-replication.package/conf/dsl.yaml`
 
 ### Replication and Aggregation
 
