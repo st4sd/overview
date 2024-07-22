@@ -139,11 +139,11 @@ The following code blocks show how to connect to an ST4SD instance.
 
 <InlineNotification>
 
-  ST4SD may print warnings to your python terminal e.g. `Unable to import tinydb
-  module - tinydb interface not available`. These are not problems. They are
-  just informing you that select features are not supported on the machine you
-  are using. You can ignore them.
-  
+ST4SD may print warnings to your python terminal e.g.
+`Unable to import tinydb module - tinydb interface not available`. These are not
+problems. They are just informing you that select features are not supported on
+the machine you are using. You can ignore them.
+
 </InlineNotification>
 
 The `ExperimentRestAPI` initializer validates the authentication token you
@@ -193,8 +193,10 @@ rest_uid = api.api_experiment_start(experimentIdentifier, payload=...)
 <InlineNotification kind="warning">
 
 The above example assumes `experimentIdentifier` is a valid identifier of a
-parameterised package. The value of `payload` is a python dictionary that
-contains the run options to the experiment.
+parameterised package (meaning a PVEP name, with an optional
+[tag or SHA identifier](/creating-a-parameterised-package#package-tags)). The
+value of `payload` is a python dictionary that contains the run options to the
+experiment.
 
 </InlineNotification>
 
@@ -782,8 +784,8 @@ managing virtual experiment packages.
     background="true"
     pictogram={<ArtTools_01 />}>
 
-Want to learn more about how experiments are run? Learn about the [command line tool](/direct-run) that the
-API uses to launch experiments.
+Want to learn more about how experiments are run? Learn about the
+[command line tool](/direct-run) that the API uses to launch experiments.
 
   </ExpressiveList>
   
