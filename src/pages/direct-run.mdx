@@ -361,6 +361,8 @@ After you spot a `Failed` component, try looking at the files it produced, inclu
 
 Sometimes, a component fails because one of its predecessors (direct, or indirect) produced unexpected output. To find the predecessors of a component, look at the `$INSTANCE_DIR/conf/flowir_instance.yaml`, locate the component you are investigating and then follow its predecessors by looking at the `references` of the component. You can then investigate the output files and stdout/stderr of those components to see if you can spot why the downstream component failed.
 
+Advanced experiments may also use [Restart Hooks](/restart#customizing-the-restart-process) to customize the restart logic of components. Additionally, a restart hook may print logs to the terminal using a logger that is associated with the execution engine of the component it controls. These logs will contain the text `eng.${lowercase of the component reference}`. For example, the logger of the component `Foo` in stage `0` will contain the text `eng.stage0.foo` in its logs. You can find the logs of the restart hooks in the terminal output of the `elaunch.py` process (which is also archived under `$INSTANCE_DIR/output/experiment.log`).
+
 ## How do I select an execution platform ?
 
 Often, workflows have support for multiple execution environments such as Cloud (e.g. Kubernetes/OpenShift), HPC, or even personal devices like laptops.
