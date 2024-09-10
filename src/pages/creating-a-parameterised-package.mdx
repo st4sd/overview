@@ -80,7 +80,39 @@ definition = {
 }
 ```
 
+## The parameterised virtual experiment package identifier (PVEP Identifier)
 
+The naming schema of a parameterised virtual experiment package (PVEP) is similar to that of container images.
+
+The identifier of a PVEP is the name of the PVEP followed by either a `@${digest hash} or a `:${tag name}`.
+The latest pushed version of a PVEP is always accessible via `${name of PVEP}:latest` or simply `${name of PVEP}`. If the PVEP definition also contains a tag `foo` then the identifier `${name of pvep}:foo` will also point to this version of the PVEP. When pushing a PVEP with a tag `foo` if a prior version of this same PVEP (i.e. with the same `name of pvep`) exists on the ST4SD registry then the tag `foo` will be removed from the old version and assigned to the just now pushed version.
+
+For example when this PVEP is pushed (only relevant fields shown below):
+
+```
+{
+    "base": {...},
+    "metadata": {
+        "package": {
+            "name": "my-experiment",
+            "tags": [
+                "foo", "bar"
+            ]
+        }
+    },
+    "parameterisation": {...}
+}
+```
+
+After the ST4SD accepts `my-experiment`, the following PVEP identifiers will all point to this version of the `my-experiment` PVEP:
+
+- `my-experiment`
+- `my-experiment:latest`
+- `my-experiment:foo`
+- `my-experiment:bar`
+- `my-experiment@sha256x60de8e469c486ddd3bd4d2c521518e932964a36296b08758a94b9a4f` (the ST4SD registry auto-generates the digest hash and stores it under the metadata field [metadata.registry.digest](#the-metadata.registry-section)).
+
+See the [metadata.package](#the-metadata.package-section) section for more information on configuring the name and tags of PVEPs.
 
 The rest of this document explains each section, outlining what information is required and optional.
 
@@ -346,8 +378,12 @@ Use execution options to allow user to choose values for parameters if they want
 
 ## The Metadata section
 
-The `metadata` section is used to provide various other information about the parameterised virtual experiment.
+The `metadata` section contains 2 fields: `package` and `registry`. The first is used to provide various other information about the parameterised virtual experiment.
+The latter contains metadata that the registry automatically populates.
 
+### The metadata.package section
+
+Populate `metadata.package` to set information about your parameterised virtual experiment package that you would like your users to know:
 
 ```yaml
 metadata:
@@ -363,7 +399,44 @@ metadata:
 
 ```
 
+### The metadata.registry section
 
+Read the `metadata.registry` section to get information that the ST4SD registry automatically extracts from your parameterised virtual experiment package:
+
+```yaml
+digest: A uid of this parameterised virtual experiment package (PVEP)
+        (see PVEP identifier)
+createdOn: UTC time that this digest was created,
+           format is %Y-%m-%dT%H%M%S.%f%z
+tags: The tags associated with this PVEP. This is a SUBSET
+      of metadata.package.tags. It can be EMPTY if no tag points to
+      this digest anymore (see PVEP identifier)
+timesExecuted: int - automatically increased every time a user launches this
+      virtual experiment entry in the ST4SD deployment the registry is attached to
+interface: {} # ST4SD injects the Virtual experiment interface if it exists
+data: #The list of filenames under the `data` directory
+      #(just top-level files, NO directories)
+- name: $DATA_FILE_NAME
+inputs: #The list of files under the `input` directory. These are files
+        #that users must provide when launching this virtual experiment
+- name: $INPUT_FILE_NAME
+output: #A list of dictionaries each of which contains the key "name"
+        #for each of the named key-outputs of this experiment
+- name: the name of a key-output
+containerImages: #A list of the names of the container images that
+                 #could be used by this virtual experiment.
+- name: the name of a container image (e.g. a URL)
+executionOptionsDefaults:
+    variables:
+        - name: The name of the variable
+          valueFrom:
+            - platform: The name of the platform
+              value: The default value of the variable when using this platform
+platforms: A list of all the known platform names for this experiment
+
+```
+
+Note that the ST4SD registry manages all fields under the `metadata.registry` section, developers cannot directly modify this dictionary.
 
 ## Adding a parameterised package to a registry
 
@@ -487,25 +560,7 @@ In general this operation involves updating the `metadata.registry.tags` fields 
 
 ### Registry metadata
 
-The registry adds various information it discovers to the `metadata` section of the package under the `registry` key. This includes the id of the package
-
-```yaml
-registry: #All data added by runtime - developers cannot set anything under registry
-    digest: $a string up to 63 characters #The identifier
-    createdOn: UTC time that this digest was created, format is %Y-%m-%dT%H%M%S.%f%z
-    timesExecuted: int - automatically increased every time a user launches this virtual experiment entry in the ST4SD deployment the registry is attached to
-    tags: #A list of tags which point to this digest.
-    - $TAG # This is a SUBSET of metadata.package.tags. It can be EMPTY if no tag points to this digest anymore
-    interface: {} # ST4SD injects the Virtual experiment interface if it exists
-    data: #The list of filenames under the `data` directory (just top-level files, NO directories)
-    - name: $DATA_FILE_NAME
-    inputs: #The list of files under the `input` directory. These are files that users must provide when launching this virtual experiment
-    - name: $INPUT_FILE_NAME
-    containerImages: #A list of the names of the container images that could be used by this virtual experiment. If
-    - name: the name of a container image (e.g. a URL)
-```
-
-
+The registry adds various information it discovers to the `metadata` section of the package under the [`registry` key](). This includes the id of the package.
 
 ## Example
 

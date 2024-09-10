@@ -4,6 +4,7 @@ title: Installation
 
 import { ServerOperatingSystems } from "@carbon/pictograms-react";
 import { CarbonForIbmDotcom } from "@carbon/pictograms-react";
+import { AccessManagement } from '@carbon/pictograms-react';
 
 <!--
 
@@ -333,12 +334,8 @@ to the Operator Catalog of your OpenShift cluster:
 oc apply -f https://raw.githubusercontent.com/st4sd/st4sd-olm/main/examples/deploy.yaml
 ```
 
-Then follow our
-
-<a href="https://github.com/st4sd/st4sd-olm" target="_blank">
-  instructions
-</a> to configure and install. For comprehensive details on customizing ST4SD deployments
-using `helm` post-installation see https://github.com/st4sd/st4sd-deployment.
+Then follow our <a href="https://github.com/st4sd/st4sd-olm" target="_blank">instructions</a> to configure and install. For comprehensive details on customizing ST4SD deployments
+using `helm` post-installation see <https://github.com/st4sd/st4sd-deployment>.
 
 ## Install on Classic HPC
 
@@ -374,6 +371,16 @@ The following installation instructions assume you have
 ## Learn more
 
 <div className="expressive-content-list-group">
+
+  <ExpressiveList
+    title="User management"
+    background="true"
+    pictogram={<AccessManagement />}
+    >
+
+[Manage](/cloud-manage-users) the access permissions of users in your ST4SD Cloud instance using standard Kubernetes mechanisms.
+
+  </ExpressiveList>
 
   <ExpressiveList 
     title="Exploring the Registry UI"

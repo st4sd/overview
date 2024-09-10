@@ -22,7 +22,7 @@ Learn how to use a virtual experiment interface
   <AnchorLink>Handling errors</AnchorLink>
 </AnchorLinks>
 
-Some virtual experiments define interfaces which make it simpler for users to retrieve the inputs systems and measured properties from executions of that virtual experiment
+Some virtual experiments define interfaces which make it simpler for users to retrieve the input systems and measured properties from executions of that virtual experiment
 
 ![image-20220915212832988](../assets/images/using-a-virtual-experiment-interface/image-20220915212832988.png)
 

@@ -127,10 +127,32 @@ Best practices:
   - Use each API-key in just one place.
     - For example, if you build 2 microservices and wish for both of them to have access to the ST4SD microservices you should repeat the above steps twice, once for each microservice.
 
+## How do I use the python api to ?
+
+First, instantiate `api = experiment.service.db.ExperimentRestAPI` before you continue ay further. See [How do I connect to the ST4SD runtime service?](#how-do-i-connect-to-the-st4sd-runtime-service) for instructions. Below, you will find a list of the most common actions you can do with the `api`.
+
+## How do I get a list of available experiments ?
+
+Use `api.api_experiment_list()` to get the list of all registered experiments on your ST4SD registry. This API returns a dictionary with the following format:
+
+```
+{
+    "full-experiment-identifier@with-hash": {
+        a parameterised virtual experiment package definition
+    }
+}
+```
+
+A parameterised virtual experiment package is a python dictionary (or YAML or JSON structure) that describes:
+
+- How to access a virtual experiment
+- What options to allow users to change
+- What options have preset values
+- Metadata about the package.
+
+You can find more information on the structure of a parameterised package [here](/creating-a-parameterised-package#structure-of-a-parameterised-virtual-experiment-package).
 
 ## How do I get the status of a virtual experiment instance?
-
-First, instantiate `experiment.service.db.ExperimentRestAPI` before you continue ay further. See [How do I connect to the ST4SD runtime service?](#how-do-i-connect-to-the-st4sd-runtime-service) for instructions.
 
 
 All virtual experiment instances have a unique REST-API identifier. We use the term `rest_uid` to refer such identifiers.
@@ -206,3 +228,32 @@ The virtual experiment instance above reports that:
 
 
 </details>
+
+
+## How do I find out the key-outputs of my experiment ?
+
+Recall that the definition of a virtual experiment contains an optional [key-outputs](/workflow-specification#key-outputs) dictionary that describes its outputs. If you have direct access to the source code of the experiment you can just read this `output` dictionary. It's a field under the `entrypoint` of DSL 2.0 experiments and a top-level field for experiments that use the older FlowIR schema.
+
+If your experiment is already registered on your ST4SD registry you can use the [api_experiment_get()]() method to get the Parameterised Virtual Experiment Package (PVEP) of your experiment. You will find the metadata about the key-outputs of your experiment under the field `metadata.registry.output`. For more information on the metadata that the ST4SD registry automatically generates for your experiments see our [docs](/creating-a-parameterised-package#the-metadata.registry-section).
+
+## How do I find out the key-outputs of an instance of my experiment ?
+
+A virtual experiment may have several key-outputs but an instance (i.e. execution) of this virtual experiment may not have succeeded in producing all its key-outputs. To find out the available outputs of an instance for an experiment use the method `api.api_rest_uid_output_list(rest_uid=${instance uid})`
+
+The API will return the following dictionary containing 1 entry for each available key-output:
+
+```
+{
+  "name of key-output": {
+    "creationtime": a floating point epoch number,
+    "description": "The value of the @description field in the definition of this key-output",
+    "filename": "The filename e.g. foo.bar",
+    "filepath": "The path to the file relative to the instance dir e.g. stages/stage2/MyComponent/foo.bar",
+    "type": "The value of the @type field in the definition of this key-output",
+  }
+}
+```
+
+## How do I download the key-outputs of my experiment ?
+
+Use the method `api.api_rest_uid_output_get(rest_uid=${instance uid}, output_name=${name of key-output})`.

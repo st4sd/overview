@@ -264,18 +264,19 @@ elaunch.py -i my-input.db --failSafeDelays=no -l40 dsl-params.yaml
 
 There are some differences between DSL 2.0 and [FlowIR](/workflow-specification).
 
-In the current version (0.1.x) of DSL 2.0:
+In the current version (0.2.x) of DSL 2.0:
 
 * we offer support for natural composition of Computational Graphs using Workflow and Component templates
 * the `signature` field replaces the `stage`, `name`, `references`, and `override` fields of the component specification in FlowIR
 * settings and inputs flow through parameters, we do not support global/stage environments or variables
-* the fields of components can only contain `%(parameter)s` references, in the future we are adding support for references to the component `%(variable)s` too
+* the fields of components can contain `%(parameter)s` references as well as component `%(variable)s`
 * dependencies between components are defined by referencing the output of a producer component in one parameter of the consumer component - [DataReferences](/workflow-specification/#datareference) are reserved for referencing input files only
     * the equivalent of a DataReference for Template instances is an OutputReference
+* key-outputs and interface
+* data files and manifests
 
 DSL 2.0 will eventually contain a superset of the FlowIR features. However, the current beta version of DSL 2.0 does not support:
 
-* using variables in the body of a component template
 * FlowIR platforms
-* defining Key Outputs or Interface and Property extraction methods
-* application-dependencies, data files, and manifests
+* application-dependencies
+    * however, you can use a manifest to implicitly define your application-dependencies

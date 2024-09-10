@@ -1,0 +1,341 @@
+---
+title: Write Advanced Experiments
+---
+
+import { CarbonForIbmDotcom } from "@carbon/pictograms-react";
+import { ArtTools_01 } from "@carbon/pictograms-react";
+
+<!--
+
+  Copyright IBM Inc. All Rights Reserved.
+  SPDX-License-Identifier: Apache-2.0
+
+-->
+
+<PageDescription>
+
+Spend up to 60 minutes learning how to write experiments that utilize some of the advanced features of ST4SD. This page assumes you are familiar with writing basic experiments and running them locally using the elaunch.py command line tool. If you need a refresher take a moment to read our [docs](/write-experiments) before continuing any further.
+
+</PageDescription>
+
+
+<AnchorLinks>
+
+  <AnchorLink>Requirements</AnchorLink>
+  <AnchorLink>An experiment that has key-outputs</AnchorLink>
+  <AnchorLink>An experiment that has an interface</AnchorLink>
+</AnchorLinks>
+
+
+
+### Requirements
+
+- An understanding of [how to run a ST4SD workflow locally](/direct-run).
+- An understanding of [how to write a basic ST4SD workflow](/write-experiments)
+- A python 3.9+ interpreter
+- A virtual environment with the `st4sd-runtime-core` python module
+
+    ```bash
+    python -m venv venv
+    . ./venv/bin/activate
+    pip install "st4sd-runtime-core[develop]"
+    ```
+- A local copy of https://github.com/st4sd/st4sd-examples
+
+    Clone the github repository and then cd into its sub-directory `tutorials/2-write-advanced-experiments`
+
+    ```bash
+    git clone https://github.com/st4sd/st4sd-examples.git
+    ```
+
+## An experiment that has key-outputs
+
+All experiments produce files, but not all generated files are equally important. To this end ST4SD has the concept of key-outputs. These are files, and directories, that an experiment produces which the developers of the experiment consider important.
+
+<InlineNotification kind="info">
+
+Make sure your working directory is the sub-directory `tutorials/2-write-experiments` of the directory you stored https://github.com/st4sd/st4sd-examples in.
+
+</InlineNotification>
+
+
+Here is a an example of an experiment with a key-output:
+
+
+```yaml
+entrypoint:
+  entry-instance: hello
+  execute:
+  - target: <entry-instance>
+    args:
+      message: Hello world
+  output:
+    - name: greeting
+      data-in: <entry-instance>:output
+      description: just a friendly greeting
+
+components:
+- signature:
+    name: hello
+    parameters:
+      - name: message
+  command:
+    executable: echo
+    arguments: "%(message)s"
+
+```
+
+File: `0-key-outputs.yaml`
+
+
+Run it like so:
+
+```commandline
+elaunch.py -l40 --nostamp 0-key-outputs.yaml
+```
+
+The `output` field in the `entrypoint` dictionary defines the key-outputs of this experiment:
+
+```yaml
+entrypoint:
+  # ... other fields ...
+  output:
+    - name: greeting
+      data-in: <entry-instance>:output
+```
+
+This experiment has a single key-output called `greeting`. The data associated with this key-output is actually the `stdout` of the `<entry-instance>` step which is an instance of the `hello` component. As the experiment finishes producing this key-output the `$INSTANCE_DIR/output/output.json` file is updated to reflect the state of this experiment.
+
+Here's an example of `output.json`:
+
+```json
+{
+    "greeting": {
+        "creationtime": "1725374555.6836693",
+        "description": "just a friendly greeting",
+        "filename": "out.stdout",
+        "filepath": "stages/stage0/entry-instance/out.stdout",
+        "final": "yes",
+        "production": "yes",
+        "type": "",
+        "version": "1"
+    }
+}
+```
+
+While the experiment is running, the runtime system asynchronously updates this file with metadata about the generated key-outputs of the experiment. In this example, there is just one key-output called `greeting`. For more information on key-outputs check out our [documentation](/workflow-specification#key-outputs).
+
+If you are running experiments on the cloud and are instructing the runtime system to register them into the ST4SD datastore you may also use the ST4SD python API to [download]() the key-outputs of your experiment instances.
+
+### Exercises
+
+- Use `elaunch.py` to run `0-key-outputs.yaml` and look at the file containing the key-output metadata.
+- Write a new experiment that has a single component called nested inside a workflow. See the example on [nested workflows](/write-experiments#your-first-multi-step-experiment) to refresh your memory on how to write experiments that contain both Workflow and Component templates. Add a key-output which points to the stdout of your component (use an [OutputReference](/workflow-specification-dsl#outputreference) that points to the `:output` of your component's instance).
+
+
+## An experiment that has an interface
+
+Some virtual experiments define interfaces which make it simpler for users to retrieve the input systems and measured properties from executions of that virtual experiment
+
+The `interface` of a virtual experiment defines:
+
+- The specification used to describe `input` systems it processes e.g. SMILEs for small molecules
+- Instructions to extract the `input` systems from input data
+- Instructions to extract the values of `properties` that the virtual experiment computes
+
+Once a virtual experiment has an `interface`  ST4SD can return a `pandas.DataFrame`  containing the properties calculated by instances of the virtual experiment, as well as the ids of the `input` systems that an instance processed. This functionality is provided via the `st4sd-datastore` API and the `st4sd-runtime-service` API. See [using a virtual experiment interface](/using-a-virtual-experiment-interface) for further information.
+
+
+In this example we will work with a virtual experiment which:
+1. extracts the IDs of its input systems
+2. has 2 key-outputs that correspond to 2 measured properties of the interface
+3. uses builtin hooks to extract the measured properties from the key-outputs
+
+The DSL of the experiment is :
+
+```yaml
+entrypoint:
+  interface:
+    description: Counts vowels in words
+    inputSpec:
+      namingScheme: words
+      inputExtractionMethod:
+        csvColumn:
+          source:
+            path: input/words.csv
+          args:
+            column: word
+    propertiesSpec:
+    - name: Vowels
+      propertyExtractionMethod:
+        csvDataFrame:
+          source:
+            keyOutput: vowels
+          args:
+            renameColumns:
+              word: input-id
+            usecols:
+            - word
+            - vowels
+    - name: Letters
+      propertyExtractionMethod:
+        csvDataFrame:
+          source:
+            keyOutput: letters
+          args:
+            renameColumns:
+              word: input-id
+            usecols:
+            - word
+            - letters
+  output:
+    - name: vowels
+      data-in: <entry-instance/count-vowels>/vowels.csv:ref
+    - name: letters
+      data-in: <entry-instance/count-letters>/letters.csv:ref
+
+  entry-instance: main
+  execute:
+    - target: <entry-instance>
+      args:
+        words_file: input/words.csv:ref
+
+workflows:
+  - signature:
+      name: main
+      parameters:
+        - name: words_file
+    steps:
+      count-vowels: count-vowels
+      count-letters: count-letters
+    execute:
+      - target: <count-vowels>
+        args:
+          words: "%(words_file)s"
+      - target: <count-letters>
+        args:
+          words: "%(words_file)s"
+
+components:
+- signature:
+    name: count-vowels
+    parameters:
+    - name: words
+  command:
+    executable: bin/count_vowels.py
+    arguments: "%(words)s"
+
+- signature:
+    name: count-letters
+    parameters:
+      - name: words
+  command:
+    executable: bin/count_letters.py
+    arguments: "%(words)s"
+```
+
+File: `1-interface.package/conf/dsl.yaml`
+
+
+The interface contains a human readable description of the experiment under `entrypoint.interface.description`.
+
+```yaml
+entrypoint:
+  interface:
+    description: Counts vowels in words
+```
+
+Then, in `entrypoint.interface.inputspec` it uses the builtin input extraction method `csvColumn` to extract the ids of the systems it processes:
+
+```yaml
+entrypoint:
+  interface:
+    inputSpec:
+      namingScheme: words
+      inputExtractionMethod:
+        csvColumn:
+          source:
+            path: input/words.csv
+          args:
+            column: word
+```
+
+It instructs the method to read the CSV file `input/words.csv` (i.e. the input file) and treat every row of the CSV as one input system whose identifier lies in the column `word`.
+
+Following that, it uses the builtin property extraction method `csvDataFrame` twice to measure its 2 properties `Vowels` and `Letters` from the key-outputs `vowels` and `letters` respectively.
+
+```yaml
+entrypoint:
+  interface:
+    propertiesSpec:
+    - name: Vowels
+      propertyExtractionMethod:
+        csvDataFrame:
+          source:
+            keyOutput: vowels
+          args:
+            renameColumns:
+              word: input-id
+            usecols:
+            - word
+            - vowels
+    - name: Letters
+      propertyExtractionMethod:
+        csvDataFrame:
+          source:
+            keyOutput: letters
+          args:
+            renameColumns:
+              word: input-id
+            usecols:
+            - word
+            - letters
+```
+
+The [`csvDataFrame`](/writing-a-virtual-experiment-interface#csvdataframe) property extraction method expects a CSV file which has the columns `input-id` and `${the property name}`. One of the requirements for using a ST4SD interface is that the property names start with a capital letter. One of the requirements of the `csvDataFrame` is that there should be a column with the same name as the property name that is being extracted. Another is that there should be a column called `input-id`.
+
+In this example the components happen to produce key-output CSV files which contain a properly named column for the values of properties but instead of using the `input-id` column they use the column `word`. To account for this inconsistency, the developers of the workflow use the `renameColumns` argument of the `csvDataFrame` property extraction method. Via `renameColumns` they instruct `csvDataFrame` to treat the column `word` as if it were called `input-id`.
+
+Notice that the entrypoint expects an input file called `words.csv`:
+
+```yaml
+entrypoint:
+    ...
+    execute:
+    - target: <entry-instance>
+      args:
+        words_file: input/words.csv:ref
+```
+
+This means that you have to create a CSV file called `words.csv` and use it as an input for (via the `-i` arg) to the workflow.
+
+To run this experiment, you can copy/paste the following to your terminal:
+
+```bash
+: create the input file
+cat<<EOF >words.csv
+word;
+hello;
+awesome;
+world;
+EOF
+
+: launch the experiment
+elaunch.py -l 20 -i words.csv 1-interface.package
+```
+
+## Exercises
+
+- Use `elaunch.py` to run `1-interface.package`. Then look at the files:
+    - `$INSTANCE_DIR/output/output.json`
+    - `$INSTANCE_DIR/output/input-ids.json`
+    - `$INSTANCE_DIR/output/properties.csv`
+- Update the experiment to use a custom python hook for extracting the measured properties from the key-outputs. The documentation for the `hookGetProperties` hok is [here](/writing-a-virtual-experiment-interface#hookgetproperties).
+
+
+## What's next?
+
+- More information on running experiments directly, i.e. via `elaunch.py` [here](https://st4sd.github.io/overview/direct-run)
+- More information on the DSL of ST4SD i.e. how to write experiments [here](https://st4sd.github.io/overview/workflow-specification-dsl)
+- More information on how to structure and test your experiments [here](https://st4sd.github.io/overview/packaging-workflows/)
+- More information on writing experiments with interfaces [here](/writing-a-virtual-experiment-interface).

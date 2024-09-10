@@ -217,14 +217,14 @@ See [providing external directories to experiments](/packaging-workflows#providi
 Virtual experiments can produce many output files of various sizes and importance.  
 
 <AnchorLinks small>
-  <AnchorLink>Key Outputs</AnchorLink>
+  <AnchorLink>Key-Outputs</AnchorLink>
   <AnchorLink>Properties</AnchorLink>
   <AnchorLink>Other Outputs</AnchorLink>
 </AnchorLinks>
 
-### Key Outputs
+### Key-Outputs
 
-Key outputs are files/directories produced by the virtual experiment that the developer has identified as being of particular interest. Since the filenames may themselves be meaningless the developer gives them unique identifiers
+Key-outputs are files/directories produced by the virtual experiment that the developer has identified as being of particular interest. Since the filenames may themselves be meaningless the developer gives them unique identifiers
 
 <Tabs>
 

@@ -24,7 +24,7 @@ Use this page to learn how to write a virtual experiment interface.
 
 A core-concept in ST4SD is a virtual experiment. This is a computational workflow that takes as input one or more systems of a given type, and produces as output values of `properties` of those systems.
 
-This document descries how ST4SD developers can describe this information in their virtual experiments via an `interface`
+This document describes how ST4SD developers can describe this information in their virtual experiments via an `interface`
 
 The `interface` of a virtual experiment defines:
 
@@ -131,7 +131,7 @@ To use this method the developer must provide an implementation of the following
 def get_input_ids(input_id_file: str, variables: Dict[str, str]) -> List[str]:
    '''
        Params: 
-            input_id_file (str): The path to the location of the file that contains input ids of the inputs systems. This comes from the `source.path` option in the interface YAML.
+            input_id_file (str): The path to the location of the file that contains input ids of the input systems. This comes from the `source.path` option in the interface YAML.
             variables (dict): A dictionary of the global and user variables passed to the virtual experiment instance
             
        Returns: 

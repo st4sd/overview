@@ -164,7 +164,7 @@ You can then specify files in the bucket as values to the `input` and `data` fie
 
 Then this file, `input_smiles.csv`, will be retrieved from the folder `get-smiles/` in the bucket.
 
-You may also store key outputs to `S3`. For example, [`sum-numbers`](https://github.com/st4sd/sum-numbers/) has a `TotalSum` key-output. You could use the payload below to upload that output to an S3 bucket:
+You may also store key-outputs to `S3`. For example, [`sum-numbers`](https://github.com/st4sd/sum-numbers/) has a `TotalSum` key-output. You could use the payload below to upload that output to an S3 bucket:
 
 ```python
 "s3Store":{

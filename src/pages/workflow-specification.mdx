@@ -477,9 +477,34 @@ Recall that the `st4sd-runtime` injects default values for the `default.global` 
 
 ## Key-outputs
 
-Key-Outputs are named [`DataReferences`](#datareference) that point to important paths which the virtual experiment produced.
+Key-Outputs are named [`DataReferences`](#datareference) for FlowIR virtual experiments and [OutputReferences](/workflow-specification-dsl#outputreference) for DSL 2.0 virtual experiments. The key-outputs point to important paths which the virtual experiment produced.
 
-Example:
+## Key-outputs for experiments written in DSL 2.0
+
+Example that creates a key-output called `OptimisationResults` which points to the file `energies.csv`. This file is created by a component template instance called `ExtractEnergies` which is a step of a workflow that the entry-instance of the experiment points to:
+
+```yaml
+output:
+  - name: OptimisationResults
+    data-in: <entry-instance/ExtractEnergies>/energies.csv:ref
+    description: homo/lumo results
+    type: csv
+```
+
+Above, `output` is a list nested under the `entrypoint` dictionary in DSL 2.0. The value of each entry is a dictionary with the following schema:
+
+```yaml
+name: the unique name of the key output
+data-in: "an OutputReference to the output of an instance of a component template"
+
+# Optional fields
+description: "A human readable description of the file"
+type: "e.g. csv, pdf, etc - this only used to label key-output"
+```
+
+## Key-outputs for experiments written in FlowIR
+
+Example that creates a key-output called `OptimisationResults` which points to the file `energies.csv`. This file is created by a component called `ExtractEnergies` which is in stage 1 of the experiment:
 
 ```yaml
 output:
@@ -489,10 +514,10 @@ output:
     type: csv
 ```
 
-Above, `output` is a top-level dictionary whose keys are names of `key-outputs`. Each key points to a dictionary with this schema:
+Above, `output` is a top-level dictionary in FlowIR the keys of the `output` dictionary are the names of the related `key-outputs`. The value of each key is a dictionary with the following schema:
 
 ```yaml
-data-in: "a DataReference"
+data-in: "a DataReference for FlowIR"
 
 # Optional fields
 description: "A human readable description of the file"
