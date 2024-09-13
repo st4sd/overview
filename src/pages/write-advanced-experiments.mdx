@@ -125,7 +125,7 @@ Here's an example of `output.json`:
 
 While the experiment is running, the runtime system asynchronously updates this file with metadata about the generated key-outputs of the experiment. In this example, there is just one key-output called `greeting`. For more information on key-outputs check out our [documentation](/workflow-specification#key-outputs).
 
-If you are running experiments on the cloud and are instructing the runtime system to register them into the ST4SD datastore you may also use the ST4SD python API to [download]() the key-outputs of your experiment instances.
+If you are running experiments on the cloud and are instructing the runtime system to register them into the ST4SD datastore you may also use the ST4SD python API to [download](/running-workflows-on-openshift#retrieving-the-outputs-of-a-virtual-experiment-instance) the key-outputs of your experiment instances.
 
 ### Exercises
 
@@ -323,6 +323,8 @@ EOF
 : launch the experiment
 elaunch.py -l 20 -i words.csv 1-interface.package
 ```
+
+If you are running experiments on the cloud and are instructing the runtime system to register them into the ST4SD datastore you may also use the ST4SD python API to [download](/using-a-virtual-experiment-interface#getting-the-properties) the measured properties of your experiment instances.
 
 ## Exercises
 
