@@ -37,12 +37,12 @@ The customizations that can be made include
 
 ## When restarts occur
 
-FlowIR defines a number of [exit-reasons](#exit-reasons). Whether a restart occurs depends on
+ST4SD defines a number of [exit-reasons](#exit-reasons). Whether a restart occurs depends on
 - The exit-reason
 - The components configuration
 - The result of executing developer custom hooks
 
-By default components are restarted when a component task exits with the following exit-reasons:
+By default, components are restarted when a component task exits with the following exit-reasons:
 - `ResourceExhausted`
   - *Max restart attempts:* None i.e. try forever
 - `SubmissionFailed`
@@ -85,7 +85,7 @@ workflowAttributes:
 ```
 
 **Note:** specifying `restartHookOn` overrides the default, which is `ResourceExhausted` (see [here](#special-case:-submissionfailed) for why `SubmissionFailed` is not included here).
-Therefore you must explicitly specify `ResourceExhausted` in the custom list you give to `restartHookOn` if you want to restart on this exit-reason in addition to others. 
+Therefore, you must explicitly specify `ResourceExhausted` in the custom list you give to `restartHookOn` if you want to restart on this exit-reason in addition to others. 
 
 ### Controlling the number of restart attempts
 
@@ -124,11 +124,11 @@ The sixth `SubmissionFailed` failed will result in the component transitioning t
 
 ### Defining a restart hook
 
-In many cases further information than the exit-reason is required to decide if a restart should be attempted e.g. checking if certain files have been written, or their content. It may also be neccessary to prepare the working directory of a component for restarting by deleting/modifying/creating files. 
+In many cases further information than the exit-reason is required to decide if a restart should be attempted e.g. checking if certain files have been written, or their content. It may also be necessary to prepare the working directory of a component for restarting by deleting/modifying/creating files. 
 
 The `st4sd-runtime` provides a mechanism for the workflow developer to add custom code to the restart process for a component. This custom code can decide if the restart should proceed and perform any modifications necessary to the working directory. We call this custom code a `restart hook`.
 
-This restart hook is called after the filtering on exit-reason i.e. if the workflow has been configued not to restart on a given exit-reason, the restart hook is not called.
+This restart hook is called after the filtering on exit-reason i.e. if the workflow has been configured not to restart on a given exit-reason, the restart hook is not called.
 
 The restart hook is supplied by the developer as a python function called `Restart` with certain parameters (see below). You can put this function in any file that follows the rules in [restart hook location](#restart-hook-location).
 
@@ -199,11 +199,11 @@ The restart hook function
    - This can be done using the experiment package directory structure or using a manifest.
 - The `hooks` directory must also contain an empty `__init__.py` file
 - If the file containing the restart hook function is called `restart.py` then nothing further is required. However:
-     - This `restart` hook function will be called for every component and it is the developer's responsibility to filter what should happen based on the component it is being called for
+     - This `restart` hook function will be called for every component, and it is the developer's responsibility to filter what should happen based on the component it is being called for
 - If the file containing the restart hook function is called any other name then this name must be specified in the components YAML using `restartHookFile`
      - This `restart` hook function will only be called for components that specify it via `restartHookFile`
 
-For example you might create restart hook for a component called `MyComponent` in a file `mycomponent.py`. The configuration of `MyComponent` would contain
+For example, you might create restart hook for a component called `MyComponent` in a file `mycomponent.py`. The configuration of `MyComponent` would contain
 
 ```yaml
 command:
@@ -231,7 +231,7 @@ The following describes how given an exit-reason for a component tasks the `st4s
   - Else
     - Restart
 - Else
-  - A restart it not attempted
+  - A restart is not attempted
 
 If a restart is initiated the `st4sd-runtime` waits until the restarted task finishes before beginning the above decision process again. 
 
@@ -259,7 +259,7 @@ When a components task exits the `st4sd-runtime` assigns it an exit-reason. Usua
 - `UnknownIssue`
    - Could not determine why the task failed. Maybe an internal `st4sd-runtime` issue.
 - `ResourceExhausted`
-   - Task hit the wall time. This can involves it gettting *SIGXCPU* and hence exiting with return-code 128+*SIGXCPU* (often 152). However it can be deduced without return-code from some backends
+   - Task hit the wall time. This can involve it gettting *SIGXCPU* and hence exiting with return-code 128+*SIGXCPU* (often 152). However, it can be deduced without return-code from some backends
    - **Default wall time is 1 hour**
 - `SubmissionFailed`
    - The submission to the execution backend failed at some point. 

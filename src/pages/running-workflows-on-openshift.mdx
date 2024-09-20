@@ -25,7 +25,7 @@ experiments
  <AnchorLink>Adding a virtual experiment package</AnchorLink>
   <AnchorLink>Running a virtual experiment</AnchorLink>
   <AnchorLink>Getting the status of a virtual experiment instance</AnchorLink>
-  <AnchorLink>Inspect the metadata of a virtual experiment instance</AnchorLink>
+  <AnchorLink>Get the details of a virtual experiment instance</AnchorLink>
   <AnchorLink>Retrieving the outputs of a virtual experiment instance</AnchorLink>
   <AnchorLink>Stopping a virtual experiment instance</AnchorLink>
 </AnchorLinks>
@@ -111,31 +111,36 @@ The following code blocks show how to connect to an ST4SD instance.
 
 - Connect using an `auth-token`:
 
-```python
-  import experiment.service.db
+    ```python
+      import experiment.service.db
 
-  # enter the https:// ST4SD url below
-  url="https://${your ST4SD url}"
+      # enter the https:// ST4SD url below
+      url="https://${your ST4SD url}"
 
-  # enter your auth-token below
-  auth_token="put your authentication/token - do not share it with anyone"
+      # enter your auth-token below
+      auth_token="put your authentication/token - do not share it with anyone"
 
-  api=experiment.service.db.ExperimentRestAPI(url, cc_auth_token=auth_token)
-```
+      api=experiment.service.db.ExperimentRestAPI(url, cc_auth_token=auth_token)
+    ```
+
+    You can get an auth token by visiting `https://${your ST4SD url}/authorisation/token`.
 
 - Connect using an `api-key`:
 
-```python
-  import experiment.service.db
+    ```python
+      import experiment.service.db
 
-  # enter the https:// ST4SD url below
-  url="https://${your ST4SD url}"
+      # enter the https:// ST4SD url below
+      url="https://${your ST4SD url}"
 
-  # enter your auth-token below
-  bearer_key="put your api-key - do not share it with anyone"
+      # enter your auth-token below
+      bearer_key="put your api-key - do not share it with anyone"
 
-  api=experiment.service.db.ExperimentRestAPI(url, cc_bearer_key=bearer_key)
-```
+      api=experiment.service.db.ExperimentRestAPI(url, cc_bearer_key=bearer_key)
+    ```
+
+    You can use the openshift token of service accounts for which there exists a Kubernetes RoleBinding to the `st4sd-authenticate-microservices` Role.
+    See our documentation on managing users with [ST4SD Cloud](/cloud-manage-users#give-a-group-of-users-access-to-just-the-st4sd-microservices) for more details.
 
 <InlineNotification>
 
@@ -192,8 +197,8 @@ rest_uid = api.api_experiment_start(experimentIdentifier, payload=...)
 
 <InlineNotification kind="warning">
 
-The above example assumes `experimentIdentifier` is a valid identifier of a
-parameterised package (meaning a PVEP name, with an optional
+The above example assumes `experimentIdentifier` is a valid [identifier](/creating-a-parameterised-package#the-parameterised-virtual-experiment-package-identifier-(pvep-identifier)) of a
+parameterised package (meaning the name of a Parameterised Virtual Experiment Package, with an optional
 [tag or SHA identifier](/creating-a-parameterised-package#package-tags)). The
 value of `payload` is a python dictionary that contains the run options to the
 experiment.
@@ -205,7 +210,14 @@ instance_. Each instance is assigned a unique identifier which is returned when
 you start the virtual experiment. We use the term `ExperimentRunID` and
 `rest_uid` to refer to such identifiers.
 
-The following sections explain how to fill the `payload`.
+Starting an experiment involves:
+
+1. specifying experiment inputs
+2. (optional) specifying experiment variables
+3. (optional) selecting an experiment platform
+4. (optional) specifying experiment data
+
+The following sections explain how to fill in the `payload`.
 
 ### Specifying experiment inputs
 
@@ -225,58 +237,6 @@ payload = {
 }
 ```
 
-#### Providing inputs via s3 or Datashim dataset
-
-If your input file is in an s3 bucket or a Datashim dataset you use the `s3`
-top-level key of the payload dictionary to provides details for accessing the
-bucket/dataset.
-
-<InlineNotification>
-
-- Currently the filenames in the bucket must have the same names as expected by
-  the experiment
-- Only one bucket/dataset can be specified in the payload i.e. all files you
-  want to pass an experiment from s3 must be in the same bucket
-- The value of the `filename` key should be the path inside the bucket to find
-  the file.
-
-</InlineNotification>
-
-Example: Using s3. Fill the `s3` parameters with the required values. In this
-case `input_filename.csv` is in the top-level of the bucket.
-
-```python
-payload = {
-    "inputs": [{
-       "filename": "input_filename.csv"
-   }],
-  "s3": {
-      "accessKeyID": "$S3_AccessKeyID",
-      "secretAccessKey": "$S3_SecretAccessKey",
-      "bucket": "$S3_BUCKET_NAME",
-      "endpoint": "$S3_ENDPOINT",
-      "region": "$S3_Region"
-  }
-}
-```
-
-Example: Using Datashim. In this case `input_filename.csv` is at path
-`data/input_filename.csv`
-
-```python
-
-payload = {
-    "inputs": [{
-       "filename": "data/input_filename.csv"
-   }],
-  "s3": {
-      "dataset": "$MYDATASET_NAME"
-  }
-}
-```
-
-#### Providing input content directly
-
 You can provide the content of input files directly in the payload using the
 `content` key
 
@@ -293,6 +253,56 @@ payload = {
 
 This specifies that the content of the input file `input_filename.csv` comes
 from the pandas DataFrame `data`.
+
+### Specifying experiment variables
+
+_variables_ are optional parameters controlling the behaviour of the experiment,
+e.g. number of cpus. They are experiment specific i.e. the same variables don't
+exist in all experiment and variables controlling similar behaviour in two
+experiments may not have the same name.
+
+<InlineNotification>
+
+_variables_ can only be overridden if the parameterised package allows it. If
+this is the case the variables that can be set will be listed in the
+`executionOptions` section in the package description
+
+</InlineNotification>
+
+_variables_ are set using the `variables` key in the payload. The value of this
+key is a dictionary of variable-name, variable-value pairs.
+
+```python
+payload = {
+    ... #Input/data options elided
+   "variables": {
+        "startIndex": 0,
+        "numberMolecules": 1,
+    }
+}
+```
+
+### Selecting an experiment platform
+
+There are cases where variables are dependent on the values of other variables. ST4SD implements a feature called
+experiment `platform` to help with these scenarios.
+
+You can think of an experiment platform as a specialization of the experiment for a specific use case. Here are some
+of the ways developers use experiment platforms:
+
+1. maintain a single experiment definition which can execute on multiple different compute environments (OpenShift, HPC, ocal mode, local mode with containers, etc )
+2. support mass-configuration of steps to account for different scenarios (e.g. using less accurate methods which are faster to compute, etc)
+3. enable debug mode to assist debugging
+
+and many more!
+
+The workflow developer can then use the [parameterised package section](/creating-a-parameterised-package#the-parameterisation-section) of experiments
+to encode the available options for running the experiment.
+
+If the experiment has a `preset` platform (i.e. the field `parameterisation.presets.platform` of the Parameterised Virtual Experiment Package definition is set) then the user does not get the option to select which platform to use for the execution of the experiment. This option is hard-coded.
+
+If the experiment has a configurable platform (i.e. the field `parameterisation.executionOptions.platforms` is set) then the user can select any of the options under `parameterisation.executionOptions.platforms`. If the user does not explicitly set a platform then the experiment instance will use the 1st platform in the `parameterisation.executionOptions.platforms` array.
+
 
 ### Specifying experiment data
 
@@ -324,34 +334,6 @@ The format of the `data` dictionary is identical to the `input` dictionary.
 
 Providing data files via S3/Datashim or providing their content directly follows
 same process as described for inputs. See those sections for details.
-
-### Specifying experiment variables
-
-_variables_ are optional parameters controlling the behaviour of the experiment,
-e.g. number of cpus. They are experiment specific i.e. the same variables don't
-exist in all experiment and variables controlling similar behaviour in two
-experiments may not have the same name.
-
-<InlineNotification>
-
-_variables_ can only be overridden if the parameterised package allows it. If
-this is the case the variables that can be set will be listed in the
-`executionOptions` section in the package description
-
-</InlineNotification>
-
-_variables_ are set using the `variables` key in the payload. The value of this
-key is a dictionary of variable-name, variable-value pairs.
-
-```python
-payload = {
-    ... #Input/data options elided
-   "variables": {
-        "startIndex": 0,
-        "numberMolecules": 1,
-    }
-}
-```
 
 ### Payload Details
 
@@ -459,8 +441,306 @@ import json
 print(json.dumps(status['status'], indent=2))
 ```
 
-This will print a dictionary with the following keys (among others). The
-potential values of these keys is also described.
+The most important field is `exit-status`. ST4SD sets it after an experiment terminates.
+
+Possible values:
+
+- **Success**: The experiment existed successfully
+- **Failed**: The experiment failed (at least one component)
+- **Stopped**: The experiment was stopped/killed
+- **N/A**: The experiment is running and doesn't have an exit-status yet
+- **""** (Empty): The experiment has not started.
+
+For the full schema of the `status` dictionary see the section describing the [status of an experiment instance](#the-status-of-an-experiment-instance).
+
+## Get the details of a virtual experiment instance
+
+In addition to the execution status information the `status` key also contains
+metadata on the experiment. To see it:
+
+```python
+import json
+print(json.dumps(status['status']['meta'], indent=2))
+```
+
+This will print a dictionary with the following keys
+
+- `arguments`: The command-line of the orchestrator
+- `data`: The list of files that override data files
+- `input`: The list of input files
+- `pid`: The process ID of the st4sd orchestrator
+- `platform`: The name of the platform that the virtual experiment instance
+  executes
+- `userVariables`: User provided variables, the schema is
+  `{'global':{name:value}, 'stages':{index:{name:value}}}`
+- `variables`: Global and stage variables active in the `platform`-scope that
+  the virtual experiment executes. The schema is
+  `{'global':{name:value}, 'stages':{index:{name:value}}}`
+- `hybridPlatform`: Name of hybrid-platform for communicating with LSF (can be
+  None),
+- `userMetadata`: A dictionary with `key(str): Any` value pairs that users can
+  provide
+- `instanceName`: The name of the directory containing the virtual experiment
+  instance.
+- `version`: The version of the st4sd orchestrator
+
+## Retrieving the outputs of a virtual experiment instance
+
+There are multiple ways to retrieve outputs of virtual experiments: via a
+virtual experiment interface, key-outputs, the Datastore APIs, and by leveraging
+ST4SD's automated upload to S3.
+
+<AnchorLinks small>
+  <AnchorLink>Retrieving the properties measured by an experiment</AnchorLink>
+  <AnchorLink>Retrieving key-outputs</AnchorLink>
+  <AnchorLink>Automatically uploading key-outputs to S3</AnchorLink>
+  <AnchorLink>
+    Listing outputs produced by virtual experiment components
+  </AnchorLink>
+  <AnchorLink>Retrieving outputs via the ST4SD Datastore APIs</AnchorLink>
+</AnchorLinks>
+
+### Retrieving the properties measured by an experiment
+
+Some virtual experiments define interfaces which make it simple for users to
+retrieve the input systems and measured properties from runs of that virtual
+experiment.
+
+Learn how to use virtual experiment interfaces [here](/using-a-virtual-experiment-interface/#getting-the-properties).
+
+### Retrieving key-outputs
+
+Key-Outputs are files produced by an experiment that the developer has flagged
+as being of special interest. Since the names of the file can be generic the
+developer gives the key-output a descriptive label to better explain what it is.
+
+Information on the key-outputs of a virtual experiment instance are stored in
+the dictionary returned by `api_rest_uid_status`
+
+```python
+status = api.api_rest_uid_status(restUID)
+pprint.pprint(instance_status['outputs'])
+```
+
+An example of the output of this is
+
+```python
+{'OptimisationResults': {'creationtime': '1669584128.077387',
+                         'description': '',
+                         'filename': 'energies.csv',
+                         'filepath': 'stages/stage1/ExtractEnergies/energies.csv',
+                         'final': 'yes',
+                         'production': 'yes',
+                         'type': '',
+                         'version': '1'}}
+```
+
+In the above example, the experiment has one key-output called **OptimisationResults**. This
+refers to a file `energies.csv` produced by the component `ExtractEnergies` in
+the given experiment.
+
+To retrieve a key-output we can use `api_rest_uid_output`. This method returns
+the contents as bytes so it needs to be converted to a string. Note: replace
+`OptimisationResults` with the name of a key-output relevant to an experiment
+you have run.
+
+```python
+filename, contents = api.api_rest_uid_output(rest_uid, 'OptimisationResults')
+contents = contents.decode('utf-8', 'ignore')
+# read it into a pandas dataframe
+df = pd.read_csv(io.StringIO(contents), sep=",", skipinitialspace=True)
+```
+
+### Automatically uploading key-outputs to S3
+
+ST4SD supports automatically uploading key-outputs to S3. To enable this feature
+include the following values in the `payload` you provide to
+`api.api_experiment_start(experimentId, payload)` (see
+[Running a virtual experiment](#running-a-virtual-experiment) for more
+information):
+
+<InlineNotification>
+
+See the [Cloud Object Store](/UsingCloudObjectStore) page for examples of
+getting the values to populate the `credentials` section.
+
+</InlineNotification>
+
+<InlineNotification>
+
+Note that `bucketPath` is optional and it defaults to `/`.
+
+</InlineNotification>
+
+The following example stores the key-outputs under `run1_output` in an bucket
+called`my-bucket`
+
+```json
+"s3Store":{
+      "credentials": {
+        "accessKeyID": "$S3_AccessKeyID",
+        "secretAccessKey": "$S3_SecretAccessKey",
+        "endpoint": "$S3_ENDPOINT",
+        "region": "$S3_Region",
+        "bucket": "my-bucket"
+      },
+      "bucketPath": "/run1_output/"
+    },
+```
+
+### Listing outputs produced by virtual experiment components
+
+Before being able to retrieve the contents of the output files that the
+virtual experiment components produce we need to know their paths. We start by
+retrieving the list of components that were part of our experiment through these
+two calls:
+
+```python
+metadata = api.cdb_get_user_metadata_document_for_rest_uid(rest_uid)
+components = api.cdb_get_document_component(instance=metadata['instance'])
+```
+
+The list of full paths of the output files produced by each components will then
+be available using the `files` key. We can access it for component `0` as such:
+
+```python
+component_0_files=components[0]['files']
+```
+
+### Retrieving outputs via the ST4SD Datastore APIs
+
+To retrieve outputs we use the `cdb_get_file_from_instance_uri` function.
+
+<InlineNotification>
+
+In this example we reference variables that we retrieved in the previous section
+([Listing outputs produced by virtual experiment components](#listing-outputs-produced-by-virtual-experiment-components))
+
+</InlineNotification>
+
+This function, however, expects to receive relative paths instead of full ones.
+We can change our list of paths with this list comprehension:
+
+```python
+component_0_files_relative = [component_file[component_file.index('/stages/'):] for component_file in component_0_files]
+```
+
+Here we show how to retrieve the first file produced by component `0` from the
+previous example:
+
+```python
+data = api.cdb_get_file_from_instance_uri(document[0]['instance'], component_0_files_relative[0])
+```
+
+## Stopping a virtual experiment instance
+
+The API call to cancel and delete a virtual experiment instance is
+`api_rest_uid_delete`. Use this if you want to stop a run for any reason.
+
+The `api_rest_uid_delete()` method _does not affect the files_ that the run has
+already generated. However, it does cause the run, and any components that are
+still running, to terminate. It also deletes any Kubernetes objects that have
+been created by the run.
+
+You may also use this to delete Kubernetes objects created for running this
+virtual experiment instance. Note that deleting the virtual experiment instance
+**does not** affect the files that it has produced.
+
+```python
+# put here the rest_uid of the virtual experiment instance
+rest_uid = "toxicity-predictions-trol7a"
+
+api.api_rest_uid_delete(rest_uid)
+```
+
+## More options when starting an experiment
+
+### Providing inputs via S3
+
+If your input file is in an s3 bucket or a Datashim dataset you use the `s3`
+top-level key of the payload dictionary to provides details for accessing the
+bucket/dataset.
+
+<InlineNotification>
+
+- If the filenames in the bucket do not match the names expected by the experiment you can ask ST4SD to map the S3 files to the input files by suffixing the S3 uri with the name of the input file: e.g. you can map the file `s3://my-bucket/path/my-file` to the input `my-input` with the following filename definition: `"filename": "s3://my-bucket/path/my-file:my-input"`
+- Only one bucket/dataset can be specified in the payload i.e. all files you
+  want to pass an experiment from s3 must be in the same bucket
+- The value of the `filename` key should be the path inside the bucket to find
+  the file.
+
+</InlineNotification>
+
+Example: Using s3. Fill the `s3` parameters with the required values. In this
+case `input_filename.csv` is in the top-level of the bucket.
+
+```python
+payload = {
+    "inputs": [{
+       "filename": "input_filename.csv"
+   }],
+  "s3": {
+      "accessKeyID": "$S3_AccessKeyID",
+      "secretAccessKey": "$S3_SecretAccessKey",
+      "bucket": "$S3_BUCKET_NAME",
+      "endpoint": "$S3_ENDPOINT",
+      "region": "$S3_Region"
+  }
+}
+```
+
+### Providing inputs using Datashim
+
+
+[Datashim](https://github.com/datashim-io/datashim) is a Kubernetes Framework that presents S3 and NFS storage
+to pods in the form of PersistentVolumeClaim (PVC) resources. Datashims introduces a custom resource
+called Dataset which acts as a proxy to the S3 and NFS storage. The framework orchestrates the provisioning
+of Persistent Volume Claims and ConfigMaps needed for each Dataset. To enable support for using Datasets to
+provide your input and data files to experiments there is a a one-time step for the
+entire cluster. A cluster-administrator must follow the installation instructions for Datashim in
+https://github.com/datashim-io/datashim#quickstart.
+
+Following that, users can create Datasets in a namespace that holds the ST4SD deployment following the
+instructions in <https://github.com/datashim-io/datashim>.
+
+
+<InlineNotification>
+
+- If the filenames in the bucket do not match the names expected by the experiment you can ask ST4SD to map
+  the files in the Dataset to the input files by suffixing the S3 uri with the name of the input file:
+  e.g. you can map the file `path/my-file` to the input `my-input` with the following filename definition:
+  `"filename": "path/my-file:my-input"`
+- Only one dataset can be specified in the payload i.e. all files you
+  want to pass an experiment must be in the same Dataset
+- The value of the `filename` key should be the path inside the Dataset to find the file.
+
+</InlineNotification>
+
+In the below example, the experiment will load the input `input_filename.csv` from the path
+`data/input_filename.csv` in the dataset `$MYDATASET_NAME`.
+
+```python
+
+payload = {
+    "inputs": [{
+       "filename": "data/input_filename.csv"
+   }],
+  "s3": {
+      "dataset": "$MYDATASET_NAME"
+  }
+}
+```
+
+## The status of an experiment instance
+
+Use the following python code to get the status of an experiment instance:
+
+```python
+# put here the rest_uid of the virtual experiment instance
+rest_uid = "toxicity-predictions-trol7a"
+
+status = api.api_rest_uid_status(rest_uid)
+```
 
 <InlineNotification kind="warning">
 
@@ -547,7 +827,7 @@ Here is an example of the status dictionary
 }
 ```
 
-This reports that:
+In the above example:
 
 1. The orchestrator observed that the virtual experiment instance terminated
    (`experiment-state` = `finished`)
@@ -564,205 +844,6 @@ This reports that:
 6. The virtual experiment instance did not raise any errors (`error-description`
    = `""`)
 
-## Inspect the metadata of a virtual experiment instance
-
-In addition to the execution status information the `status` key also contains
-metadata on the experiment. To see it:
-
-```python
-import json
-print(json.dumps(status['status']['meta'], indent=2))
-```
-
-This will print a dictionary with the following keys
-
-- `arguments`: The command-line of the orchestrator
-- `data`: The list of files that override data files
-- `input`: The list of input files
-- `pid`: The process ID of the st4sd orchestrator
-- `platform`: The name of the platform that the virtual experiment instance
-  executes
-- `userVariables`: User provided variables, the schema is
-  `{'global':{name:value}, 'stages':{index:{name:value}}}`
-- `variables`: Global and stage variables active in the `platform`-scope that
-  the virtual experiment executes. The schema is
-  `{'global':{name:value}, 'stages':{index:{name:value}}}`
-- `hybridPlatform`: Name of hybrid-platform for communicating with LSF (can be
-  None),
-- `userMetadata`: A dictionary with `key(str): Any` value pairs that users can
-  provide
-- `instanceName`: The name of the directory containing the virtual experiment
-  instance.
-- `version`: The version of the st4sd orchestrator
-
-## Retrieving the outputs of a virtual experiment instance
-
-There are multiple ways to retrieve outputs of virtual experiments: via a
-virtual experiment interface, key-outputs, the Datastore APIs, and by leveraging
-ST4SD's automated upload to S3.
-
-<AnchorLinks small>
-  <AnchorLink>Retrieving the properties measured by an experiment</AnchorLink>
-  <AnchorLink>Retrieving key-outputs</AnchorLink>
-  <AnchorLink>Automatically uploading key-outputs to S3</AnchorLink>
-  <AnchorLink>
-    Listing outputs produced by virtual experiment components
-  </AnchorLink>
-  <AnchorLink>Retrieving outputs via the ST4SD Datastore APIs</AnchorLink>
-</AnchorLinks>
-
-### Retrieving the properties measured by an experiment
-
-Some virtual experiments define interfaces which make it simple for users to
-retrieve the input systems and measured properties from runs of that virtual
-experiment.
-
-Learn how to use virtual experiment interfaces [here](/using-a-virtual-experiment-interface/#getting-the-properties).
-
-### Retrieving key-outputs
-
-Key-Outputs are files produced by an experiment that the developer has flagged
-as being of special interest. Since the names of the file can be generic the
-developer gives the key-output a descriptive label to better explain what it is.
-
-Information on the key-outputs of a virtual experiment instance are stored in
-the dictionary returned by `api_rest_uid_status`
-
-```python
-status = api.api_rest_uid_status(restUID)
-pprint.pprint(instance_status['outputs'])
-```
-
-An example of the output of this is
-
-```python
-{'OptimisationResults': {'creationtime': '1669584128.077387',
-                         'description': '',
-                         'filename': 'energies.csv',
-                         'filepath': 'stages/stage1/ExtractEnergies/energies.csv',
-                         'final': 'yes',
-                         'production': 'yes',
-                         'type': '',
-                         'version': '1'}}
-```
-
-This says the experiment has one key-output called **OptimisationResults**. This
-refers to a file `energies.csv` produced by the component `ExtractEnergies` in
-the given experiment.
-
-To retrieve a key-output we can use `api_rest_uid_output`. This method returns
-the contents as bytes so it needs to be converted to a string. Note: replace
-`OptimisationResults` with the name of a key-output relevant to an experiment
-you have run.
-
-```python
-filename, contents = api.api_rest_uid_output(rest_uid, 'OptimisationResults')
-contents = contents.decode('utf-8', 'ignore')
-# read it into a pandas dataframe
-df = pd.read_csv(io.StringIO(contents), sep=",", skipinitialspace=True)
-```
-
-### Automatically uploading key-outputs to S3
-
-ST4SD supports automatically uploading key-outputs to S3. To enable this feature
-include the following values in the `payload` you provide to
-`api.api_experiment_start(experimentId, payload)` (see
-[Running a virtual experiment](#running-a-virtual-experiment) for more
-information):
-
-<InlineNotification>
-
-See the [Cloud Object Store](/UsingCloudObjectStore) page for examples of
-getting the values to populate the `credentials` section.
-
-</InlineNotification>
-
-<InlineNotification>
-
-Note that `bucketPath` is optional and it defaults to `/`.
-
-</InlineNotification>
-
-The following example stores the key-outputs under `run1_output` in an bucket
-called`my-bucket`
-
-```json
-"s3Store":{
-      "credentials": {
-        "accessKeyID": "$S3_AccessKeyID",
-        "secretAccessKey": "$S3_SecretAccessKey",
-        "endpoint": "$S3_ENDPOINT",
-        "region": "$S3_Region",
-        "bucket": "my-bucket"
-      },
-      "bucketPath": "/run1_output/"
-    },
-```
-
-### Listing outputs produced by virtual experiment components
-
-Before being able to retrieve the contents of the outputs files produced by the
-virtual experiment components we need to know their paths. We start by
-retrieving the list of components that were part of our experiment through these
-two calls:
-
-```python
-metadata = api.cdb_get_user_metadata_document_for_rest_uid(rest_uid)
-components = api.cdb_get_document_component(instance=metadata['instance'])
-```
-
-The list of full paths of the output files produced by each components will then
-be available using the `files` key. We can access it for component `0` as such:
-
-```python
-component_0_files=components[0]['files']
-```
-
-### Retrieving outputs via the ST4SD Datastore APIs
-
-To retrieve outputs we use the `cdb_get_file_from_instance_uri` function.
-
-<InlineNotification>
-
-In this example we reference variables that we retrieved in the previous section
-([Listing outputs produced by virtual experiment components](#listing-outputs-produced-by-virtual-experiment-components))
-
-</InlineNotification>
-
-This function, however, expects to receive relative paths instead of full ones.
-We can change our list of paths with this list comprehension:
-
-```python
-component_0_files_relative = [component_file[component_file.index('/stages/'):] for component_file in component_0_files]
-```
-
-Here we show how to retrieve the first file produced by component `0` from the
-previous example:
-
-```python
-data = api.cdb_get_file_from_instance_uri(document[0]['instance'], component_0_files_relative[0])
-```
-
-## Stopping a virtual experiment instance
-
-The API call to cancel and delete a virtual experiment instance is
-`api_rest_uid_delete`. Use this if you want to stop a run for any reason.
-
-The `api_rest_uid_delete()` method _does not affect the files_ that the run has
-already generated. However, it does cause the run, and any components that are
-still running, to terminate. It also deletes any Kubernetes objects that have
-been created by the run.
-
-You may also use this to delete Kubernetes objects created for running this
-virtual experiment instance. Note that deleting the virtual experiment instance
-**does not** affect the files that it has produced.
-
-```python
-# put here the rest_uid of the virtual experiment instance
-rest_uid = "toxicity-predictions-trol7a"
-
-api.api_rest_uid_delete(rest_uid)
-```
 
 ## Learn more
 

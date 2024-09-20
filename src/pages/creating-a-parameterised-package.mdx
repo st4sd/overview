@@ -84,12 +84,13 @@ definition = {
 
 The naming schema of a parameterised virtual experiment package (PVEP) is similar to that of container images.
 
-The identifier of a PVEP is the name of the PVEP followed by either a `@${digest hash} or a `:${tag name}`.
-The latest pushed version of a PVEP is always accessible via `${name of PVEP}:latest` or simply `${name of PVEP}`. If the PVEP definition also contains a tag `foo` then the identifier `${name of pvep}:foo` will also point to this version of the PVEP. When pushing a PVEP with a tag `foo` if a prior version of this same PVEP (i.e. with the same `name of pvep`) exists on the ST4SD registry then the tag `foo` will be removed from the old version and assigned to the just now pushed version.
+The identifier of a PVEP is the name of the PVEP followed by either a `@${digest hash}` or a `:${tag name}`.
+The latest pushed version of a PVEP is always accessible via `${name of PVEP}:latest` or simply `${name of PVEP}`.
 
-For example when this PVEP is pushed (only relevant fields shown below):
+For the identifier `${name}:${tag name}` to point to a version of a PVEP, the PVEP should specify the `${tag name}` under the field `metadata.package.tags`.
+Below, is an example of a PVEP called `my-experiment` which specifies 2 tags: `foo` and `bar`:
 
-```
+```python
 {
     "base": {...},
     "metadata": {
@@ -100,17 +101,28 @@ For example when this PVEP is pushed (only relevant fields shown below):
             ]
         }
     },
-    "parameterisation": {...}
+    ...
 }
 ```
 
-After the ST4SD accepts `my-experiment`, the following PVEP identifiers will all point to this version of the `my-experiment` PVEP:
+When pushing the above PVEP to the ST4SD registry the following identifiers will automatically point to this version of the PVEP:
 
 - `my-experiment`
 - `my-experiment:latest`
 - `my-experiment:foo`
 - `my-experiment:bar`
 - `my-experiment@sha256x60de8e469c486ddd3bd4d2c521518e932964a36296b08758a94b9a4f` (the ST4SD registry auto-generates the digest hash and stores it under the metadata field [metadata.registry.digest](#the-metadata.registry-section)).
+
+
+<InlineNotification kind="info">
+
+Notice that `my-experiment` and `my-experiment:latest` are automaticaly configured to point to this version of the PVEP regardless of whether `latest` exists in `metadata.package.tags` or not.
+
+</InlineNotification>
+
+Any pre-existing versions of the `my-experiment` PVEP which have any of the tags in this version of the PVEP will be automatically modified such that the tags point to this new version of the experiment instead. This operation is similar to pushing a new container image `my-image:foo` that overrides an existing container image tagged `my-image:foo`.
+
+
 
 See the [metadata.package](#the-metadata.package-section) section for more information on configuring the name and tags of PVEPs.
 
@@ -514,7 +526,7 @@ By convention the registry assumes  parameterised packages with the same package
 
 Parameterized packages can have  *tags*  applied to them. A tag is a shorthand for referencing the package. For example by adding the tag `1.0` to the package `my-experiment@sha256x16092ca4bb13955b1397bf38cfba45ef11c9933bf796454a81de4f86` you can reference it as `my-experiment:1.0` in various operations.
 
-Developers can specify tags when pushing a package using the  `metadata.package.tags` field of the package payload. Tagging a parameterised package with a tag removes the tag from any other parameterised package with the same name. This guarantees that if `$packageName:$tag` exists, it points to exactly one `$packageName@$digest`. The API call `api_experiment_update_tags(packageIdentifier, tags)` can also be used add or remove a tag to a package at any time. Note, this call requires `tags` to include **all** tags you want associated with the package. If an existing tag is not in this list then it will be removed.
+Developers can specify tags when pushing a package using the  `metadata.package.tags` field of the package payload. Tagging a parameterised package with a tag removes the tag from any other parameterised package with the same name. This guarantees that if `$packageName:$tag` exists, it points to exactly one `$packageName@$digest`. The API call `api_experiment_update_tags(packageIdentifier, tags)` can also be used add or remove a tag to a package at any time. Note, this call requires `tags` to include **all** tags you want associated with the package. If an older version of this experiment has a tag which is not contained in this tag list then the tag will remain pointing to the older version of the experiment.
 
 The current tags associated with a package can be found by inspecting the `metadata.package.tags` element of the package definition in the registry.
 
