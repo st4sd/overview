@@ -1,5 +1,5 @@
 ---
-title: Write Advanced Experiments
+title: Adding an interface to experiments
 ---
 
 import { CarbonForIbmDotcom } from "@carbon/pictograms-react";
@@ -14,9 +14,16 @@ import { ArtTools_01 } from "@carbon/pictograms-react";
 
 <PageDescription>
 
-Spend up to 60 minutes learning how to write experiments that utilize some of the advanced features of ST4SD. This page assumes you are familiar with writing basic experiments and running them locally using the elaunch.py command line tool. If you need a refresher take a moment to read our [docs](/write-experiments) before continuing any further.
+This page assumes you are familiar with writing basic experiments and running them locally using the elaunch.py command line tool. If you need a refresher take a moment to read our [docs](/write-experiments) before continuing any further.
 
 </PageDescription>
+
+
+<InlineNotification kind="info">
+
+Here, we are using DSL 2.0, if you need to understand the previous syntax check out the [FlowIR docs](/workflow-specification) and [FlowIR tutorial](/tutorial).
+
+</InlineNotification>
 
 
 <AnchorLinks>
@@ -42,7 +49,7 @@ Spend up to 60 minutes learning how to write experiments that utilize some of th
     ```
 - A local copy of https://github.com/st4sd/st4sd-examples
 
-    Clone the github repository and then cd into its sub-directory `tutorials/2-write-advanced-experiments`
+    Clone the github repository and then cd into its sub-directory `tutorials/2-experiments-with-interface`
 
     ```bash
     git clone https://github.com/st4sd/st4sd-examples.git
@@ -54,7 +61,7 @@ All experiments produce files, but not all generated files are equally important
 
 <InlineNotification kind="info">
 
-Make sure your working directory is the sub-directory `tutorials/2-write-experiments` of the directory you stored https://github.com/st4sd/st4sd-examples in.
+Make sure your working directory is the sub-directory `tutorials/2-experiments-with-interface` of the directory you stored https://github.com/st4sd/st4sd-examples in.
 
 </InlineNotification>
 
@@ -340,4 +347,4 @@ If you are running experiments on the cloud and are instructing the runtime syst
 - More information on running experiments directly, i.e. via `elaunch.py` [here](https://st4sd.github.io/overview/direct-run)
 - More information on the DSL of ST4SD i.e. how to write experiments [here](https://st4sd.github.io/overview/workflow-specification-dsl)
 - More information on how to structure and test your experiments [here](https://st4sd.github.io/overview/packaging-workflows/)
-- More information on writing experiments with interfaces [here](/writing-a-virtual-experiment-interface).
+- More information on writing experiments with interfaces [here](/writing-a-virtual-experiment-interface)

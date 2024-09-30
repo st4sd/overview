@@ -18,26 +18,26 @@
       path: /st4sd-core-getting-started
     - title: The elaunch.py command line tool
       path: /direct-run
-    - title: Write experiments
+    - title: Writing experiments
       path: /write-experiments
-    - title: Write advanced experiments
-      path: /write-advanced-experiments
+    - title: Adding an interface to experiments
+      path: /add-interface-to-experiments
     - title: Restarting
       path: /restart
-    - title: Tutorial
-      path: /tutorial
+#    - title: Tutorial
+#      path: /tutorial
     - title: Project Structure
       path: /packaging-workflows
     - title: Getting Application Images
       path: /application-images
     - title: Best Practices
       path: /virtual-experiment-developer-best-practices
-    - title: Workflow Specification
-      path: /workflow-specification
-    - title: Workflow Specification 2.0
+#    - title: Workflow Specification
+#      path: /workflow-specification
+    - title: DSL 2.0 Specification
       path: /workflow-specification-dsl
-    - title: Virtual Experiment Interfaces
-      path: /writing-a-virtual-experiment-interface
+#    - title: Virtual Experiment Interfaces
+#      path: /writing-a-virtual-experiment-interface
 - title: ST4SD Cloud
   pages:
     - title: Getting Started
@@ -52,13 +52,13 @@
   pages:
     - title: Getting Started
       path: /st4sd-registry-getting-started
-    - title: Virtual Experiment Registry
+    - title: Using the Registry
       path: /using-the-virtual-experiments-registry-ui
     - title: The stp command line tool
       path: /stp
-    - title: Build experiments
-      path: /build-experiments-registry-ui
-    - title: Parameterized Packages
+    - title: The Build Canvas
+      path: /build-canvas
+    - title: Creating parameterised packages
       path: /creating-a-parameterised-package
 - title: ST4SD Services
   pages:
