@@ -33,6 +33,7 @@ Here, we are using DSL 2.0, if you need to understand the previous syntax check 
   <AnchorLink>Working with input files</AnchorLink>
   <AnchorLink>Read a file that a different part of the experiment produced</AnchorLink>
   <AnchorLink>Replicate parts of your experiment</AnchorLink>
+  <AnchorLink>Configure the execution backend</AnchorLink>
   <AnchorLink>Test what you've learned</AnchorLink>
 
 </AnchorLinks>
@@ -664,6 +665,85 @@ In this example, the parameter `numbers` of `calculate-product` starts with a va
 The references to 3 the replicated outputs are separated by a space.
 
 </InlineNotification>
+
+## Configure the execution backend
+
+ST4SD supports pluggable execution backends for components to use. An execution backend being as simple as a POSIX process or as advanced as a Kubernetes Job definition. By default, components execute their tasks using the `local` backend which maps tasks to POSIX processes. Typically, a workflow developer defines which backends a component is compatible with and users, depending on which platform they launch their workflow on, select which of the available backends to use.
+
+Let's take a look at a simple example:
+
+```yaml
+entrypoint:
+  entry-instance: hello
+  execute:
+  - target: <entry-instance>
+    args:
+      message: Hello world
+
+components:
+- signature:
+    name: hello
+    parameters:
+      - name: message
+      - name: backend-kind
+        default: local
+      - name: lsf-queue-name
+        default: normal
+  command:
+    executable: echo
+    arguments: "%(message)s"
+  resourceManager:
+    config:
+      backend: "%(backend-kind)s"
+    kubernetes:
+      image: quay.io/st4sd/community-applications/rdkit-st4sd
+    docker:
+      image: quay.io/st4sd/community-applications/rdkit-st4sd
+    lsf:
+      queue: "%(lsf-queue-name)s"
+```
+
+File: `6-configurable-backends.yaml`
+
+The component `hello` can potentially execute with 4 different backends. The component controls which of the backends to use based on the value of the field `resourceManager.config.backend`. That field receives the value of the parameter `backend-kind` (which defaults to `local` that happens to be the default value of `resourceManager.config.backend` too.).
+
+<InlineNotification kind="info">
+
+Much like the name of all parameters in your components and workflows, the name of the parameter that you use to set the value of the field `resourceManager.config.backend` is totally up to you, it does not have to be `backend-kind`.
+
+</InlineNotification>
+
+Here are the 4 possible values:
+
+1. `local`: as a regular POSIX process - this is the backend you have been using thus far for all the components above
+2. `kubernetes`: as a Kubernetes Job - assumes you are executing this workflow on a ST4SD Cloud deployment
+3. `docker`: as a container image running locally - assumes that the `docker` executable is available on your system (there are `elaunch.py` options to provide the path to a docker-like executable)
+4. `lsf`: as a LSF Job - assumes you are executing this workflow on the login node of a LSF cluster
+
+Notice that the `local` backend does not have any parameters but other backends do. You can find the full spec of the `resourceManager` field in the [workflow specification](/workflow-specification#description-of-basic-flowir-component-fields) docs.
+
+Furthermore, some backends (like Kubernetes and LSF) support resource requests and setting a maximum walltime via the field `resourceRequest`:
+
+```yaml
+signature: ...
+command: ...
+resourceManager: ...
+resourceRequest: # same level as signature, command, and resourceManager
+  # The first 4 are useful for setting the resources of MPI programs
+  numberProcesses: integer, defaults to 1
+  numberThreads: float, defaults to 1 (e.g. on kubernetes you can ask for half a thread)
+  ranksPerNode: integer, defaults to 1
+  threadsPerCore: integer, defaults to 1
+  memory: In Bytes or as Mi/Gi (e.g. 128Mi, 16Gi)
+  gpus: Only used by tasks that use the kubernetes or lsf backend
+```
+
+If you define the above fields but select a backend that cannot use them (e.g. `local` or `docker`) they will have no effect.
+
+## Exercises
+
+- Run the experiment and look at the files that component instances produced.
+- Run the experiment, but this time configure it to use the `docker` backend. Recall, that you will have to provide a variables file that sets the value of the parameter `backend-kind`.
 
 ## Test what you've learned
 

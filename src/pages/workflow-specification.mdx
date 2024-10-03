@@ -111,7 +111,7 @@ In this case on platform `bigmem` this component would still ask for 16 cores bu
   - executable: path to executable. It can be absolute, relative to the instance directory by prefixing the path with `bin/` or `<application>/`. It can also be just the name of a binary. If the path is not absolute the `st4sd-runtime` will look for the executable in the folders specified under `$PATH`.
   - arguments: arguments to binary
   - environment: Name of the `environment` to use. The definition will be searched in the top level `environments` field of FlowIR.
-  - expandArguments: one of ["double-quote", "none"] (default is "double-quote"). When set to "double-quote" ST4SD envelops commandline in double-quotes and perform bash expansion by feeding the resulting string to `echo` before using them to submit the task to the backned.
+  - expandArguments: one of ["double-quote", "none"] (default is "double-quote"). When set to "double-quote" ST4SD envelops commandline in double-quotes and perform bash expansion by feeding the resulting string to `echo` before using them to submit the task to the backend.
 - references: Each string in this list is a string representation of a [DataReference](#datareference) to either a reference to a file, a folder, or a component. References to components and files produced by a component (i.e. under the working directory of a component) indicate a data dependency which the `st4sd-runtime` respects when scheduling the tasks for components. There are several `reference methods`, but these are the most commonly used:
   - `:output`: the `st4sd-runtime` will replace `<component name>:output` references with the `stdout` output of the referenced component
   - `:ref`: the `st4sd-runtime` will replace `<component name or file>:ref` references with the absolute path to the component or file on the filesystem.
@@ -120,12 +120,12 @@ In this case on platform `bigmem` this component would still ask for 16 cores bu
   - replicate: If set to a positive number `N` the `st4sd-runtime` will replicate this component and its downstream tree `N` times (see `aggregate` below before you use this option).
   - aggregate: If this option is set to `True` and the component belongs in the downstream sub-tree of a `replicate` component the `st4sd-runtime` will stop replicating just before the `aggregate` component. Each reference of the `aggregate` component to the `replicate` component will be expanded to `N` references (one for each upstream replicated component).
 - resourceRequest: provides hints to the backend about the resource requirements of this component tasks
-  - numberProcesses
-  - numberThreads
-  - ranksPerNode
-  - threadsPerCore
+  - numberProcesses: integer, defaults to 1
+  - numberThreads: float, defaults to 1 (e.g. on kubernetes you can ask for half a thread)
+  - ranksPerNode: integer, defaults to 1
+  - threadsPerCore: integer, defaults to 1
   - memory: In Bytes or as Mi/Gi (e.g. 128Mi, 16Gi)
-  - gpus: Only used by tasks that execute on the Kubernetes or LSF backend
+  - gpus: Only used by tasks that use the kubernetes or lsf backend
 - resourceManager:
   - config:
     - backend: Which backend to use. Valid options are:
