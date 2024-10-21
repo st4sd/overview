@@ -50,6 +50,10 @@ Gatsby supports a local development mode with hot reload functionalities which m
 gatsby develop
 ```
 
+If you want to refresh your local installation run `gatsby clean`.
+
+You can also try `gatsby clean`
+
 ## Production builds
 
 As the website is served on GitHub from a sub-path, we need to use a flag when building with Gatsby to correctly support this.

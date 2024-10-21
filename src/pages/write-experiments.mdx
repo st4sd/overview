@@ -60,14 +60,43 @@ Here, we are using DSL 2.0, if you need to understand the previous syntax check 
     ```
 
 
-
 ## ST4SD experiments
 
-ST4SD experiments consist of 2 parts, the templates of the experiment and the entrypoint section which references the starting point. There are 2 types of templates: workflows and components.
+ST4SD experiments consist of two parts: the experiment template and the entrypoint section. There are two types of templates: workflows and components.
 
-A component describes how to execute a task. A workflow describes how to execute its children steps which they themselves can be instances of other workflows or components.
+A component describes how to execute a single task. A workflow describes how to execute its child steps, which can themselves be instances of other workflows or components.
 
-Let's see a couple of experiment examples.
+Before diving into writing workflows, let's review the best practices. They all share a common theme:
+
+> Develop workflows in a way that aligns with how you would develop software.
+
+### Keep tasks simple
+
+Prioritize simplicity and reusability when creating tasks. Complex tasks with multiple functions are difficult to maintain and reuse. Furthermore, if your tasks perform a single function it's easier to swap them out for different implementations.
+
+### Document workflows and tasks
+
+When writing a workflow, provide clear documentation that includes:
+
+1. Inputs: Explain the parameters and required files.
+2. Outputs: Describe the important files produced and how to extract valuable information.
+3. Environment: Specify the hardware and software requirements.
+
+Documenting tasks (components) also helps maximize the chances of reusing workflows. Your future self, colleagues, and the open-source community (should you opt to open-source your workflows) will appreciate it.
+
+### Version control workflows
+
+Keep a versioned history of your workflows to track changes and ensure reproducibility.
+
+### Test workflows
+
+Regularly test workflows and identify issues early.
+
+1. Use [`etest.py`](/packaging-workflows#testing-projects) to check workflow syntax. If you use a Continuous Integration Continuous Development pipeline for your workflow, include a step that runs `etest.py` on every commit.
+2. Design inputs for your workflow and the expected outputs. Use these inputs to test your workflow.
+3. If testing the entire workflow is too complex then test individual components.
+
+Now, let's look at example experiments.
 
 <InlineNotification kind="info">
 
