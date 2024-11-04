@@ -43,16 +43,20 @@ pip install "st4sd-runtime-core[develop]"
 
 With elaunch.py you can run experiments - sets of files describing computational workflows - given their path: simply run `elaunch.py <path to experiment>`.
 
+Note, running experiments locally with requires using either Linux or MacOS.
+Windows users should either use a Virtual Machine (e.g. [VirtualBox](https://www.virtualbox.org) etc) or the Windows Subsystem for Linux ([WSL](https://learn.microsoft.com/en-us/windows/wsl/install)).
+
+Some experiments, like the below example, also require you to install `docker` on your machine too.
+
 For example, you can run the workflow [`nanopore-geometry-experiment`](https://github.com/st4sd/nanopore-geometry-experiment) like so:
 
 ```bash
-: # Get the directory that provides input to the next command
+: # Get the directory containing the virtual experiment and cd into it
 git clone https://github.com/st4sd/nanopore-geometry-experiment.git
-
 cd nanopore-geometry-experiment
 
 : # Run elaunch.py specifying certain files in the directory created above
-elaunch.py --nostamp -l 40 --input docker-example/cif_files.dat \
+elaunch.py -i docker-example/cif_files.dat -l 40 --nostamp\
       --applicationDependencySource="nanopore-database=cif:copy" \
       nanopore-geometry-experiment.package
 ```
