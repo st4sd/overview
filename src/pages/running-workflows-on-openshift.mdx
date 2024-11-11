@@ -663,11 +663,11 @@ bucket/dataset.
 
 <InlineNotification>
 
-- If the filenames in the bucket do not match the names expected by the experiment you can ask ST4SD to map the S3 files to the input files by suffixing the S3 uri with the name of the input file: e.g. you can map the file `s3://my-bucket/path/my-file` to the input `my-input` with the following filename definition: `"filename": "s3://my-bucket/path/my-file:my-input"`
 - Only one bucket/dataset can be specified in the payload i.e. all files you
-  want to pass an experiment from s3 must be in the same bucket
-- The value of the `filename` key should be the path inside the bucket to find
+  want to pass an experiment from s3 must be in the same bucket/dataset
+- The value of the `filename` key should be the path inside the bucket/dataset to find
   the file.
+- If the filenames in the bucket/dataset do not match the names expected by the experiment you can ask ST4SD to map the S3 files to the input files by suffixing the S3 uri with the name of the input file: e.g. you can map the file `/path/my-file` to the input `my-input` with the following filename definition: `"filename": "path/my-file:my-input"`
 
 </InlineNotification>
 
