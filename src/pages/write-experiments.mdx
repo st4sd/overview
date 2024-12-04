@@ -386,7 +386,7 @@ Workflow steps can also reference the outputs of other steps. Let's take a look 
 ```yaml
 - target: <bar>
     args:
-    message: "from my producer: <bar>:output"
+    message: "from my producer: <foo>:output"
 ```
 
 See how it references the `<foo>` step? It actually uses the `:output` output of the `<foo>` step which instructs the ST4SD runtime to replace the `<foo>:output` string with the contents of the contents of the `stdout` stream from the `<foo>` step. Referencing steps in the arguments of other steps also defines the execution order of the steps. There are other reference methods, like for example `:ref` which you can use to reference a file or a directory that a component produces. We have a link to the DataReference documentation at the bottom of this document.
