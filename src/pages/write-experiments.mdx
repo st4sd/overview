@@ -389,7 +389,7 @@ Workflow steps can also reference the outputs of other steps. Let's take a look 
     message: "from my producer: <foo>:output"
 ```
 
-See how it references the `<foo>` step? It actually uses the `:output` output of the `<foo>` step which instructs the ST4SD runtime to replace the `<foo>:output` string with the contents of the contents of the `stdout` stream from the `<foo>` step. Referencing steps in the arguments of other steps also defines the execution order of the steps. There are other reference methods, like for example `:ref` which you can use to reference a file or a directory that a component produces. We have a link to the DataReference documentation at the bottom of this document.
+See how it references the `<foo>` step? It actually uses the `:output` output of the `<foo>` step which instructs the ST4SD runtime to replace `<foo>:output` with the contents of the `stdout` stream from the `<foo>` step. Referencing steps in the arguments of other steps also defines the execution order of the steps. There are other reference methods, like for example `:ref` which you can use to reference a file or a directory that a component produces. We have a link to the DataReference documentation at the bottom of this document.
 
 In this example, the runtime system will execute the `<foo>` component first because it needs its output before it can launch the `<bar>` component.
 
