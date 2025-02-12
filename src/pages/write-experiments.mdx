@@ -618,7 +618,7 @@ workflows:
         file: <generate-random-pairs>/pair.yaml:ref
     - target: <calculate-product>
       args:
-        numbers: <sum>:output
+        numbers: <sum>/sum:output
 
 components:
 - signature:
@@ -686,7 +686,7 @@ Here's how that component looks like:
 
 When an aggregating component has a parameter whose value points to a replicating component, the runtime system automatically rewrites the value in way that it "aggregates" that specific output of all the referenced replicated components.
 
-In this example, the parameter `numbers` of `calculate-product` starts with a value of `<sum>:output`. The runtime system detects that `sum` is a replicated component and rewrites the  `<sum>:output` output reference. The value of the `numbers` parameter becomes `<sum0>:output <sum1>:output <sum2>:output`.
+In this example, the parameter `numbers` of `calculate-product` starts with a value of `<sum>/sum:output`. The runtime system detects that `sum` is a replicated component and rewrites the  `<sum>/sum:output` output reference. The value of the `numbers` parameter becomes `<sum0>/sum:output <sum1>/sum:output <sum2>/sum:output`.
 
 
 <InlineNotification kind="info">

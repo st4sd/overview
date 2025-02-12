@@ -16,7 +16,7 @@ This is the documentation website for the Simulation Toolkit for Scientific Disc
 
 #### Node.js
 
-Running and developing this website requires an up-to-date Node.js version. You can check what Node.js version you have currently installed with
+Running and developing this website requires Node.js version 18. You can check what Node.js version you have currently installed with
 
 ```bash
 node -v
