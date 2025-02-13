@@ -19,8 +19,8 @@ Use this page to learn what parameterised virtual experiment packages are and ho
   <AnchorLink>What is a parameterised virtual experiment package?</AnchorLink>
   <AnchorLink>Structure of a parameterised virtual experiment package</AnchorLink>
   <AnchorLink>The Base section</AnchorLink>
-  <AnchorLink>The Parameterisation section</AnchorLink>
   <AnchorLink>The Metadata section</AnchorLink>
+  <AnchorLink>The Parameterisation section</AnchorLink>
   <AnchorLink>Adding a parameterised package to a registry</AnchorLink>
   <AnchorLink>Example</AnchorLink>
 </AnchorLinks>
@@ -54,27 +54,27 @@ In this way the same base virtual experiment can be configured in many ways and 
 
 A parameterised package has three main sections:
 
-1. The base packages (i.e. workflow definitions) that the virtual experiment consists of.
+1. (Required) The base packages (i.e. workflow definitions) that the virtual experiment consists of.
    - Where they are located, what version to get, and how to get them. Often there will be just one.
-2. The parameterisation information:
+2. (Required) Metadata:
+   - Various other information about the package e.g. description, license, maintainer and keywords.
+3. (Optional) The parameterisation information:
    - Presets: options that  users cannot change.
    - Execution options: options that users can change potential with some restrictions.
-3. Metadata:
-   - Various other information about the package e.g. description, license, maintainer and keywords.
 
 Each of these is a top-level key in the package description.
 The following snippet shows this top-level structure:
 
 ```python
-definition = {
+{
     "base": {
         # Required: Base package information ...
     }
     "metadata": {
-    		# Required: Various info about the package  ...
+        # Required: Various info about the package  ...
     },
     "parameterisation": {
-      # Optional: What values are set and what can be changed ..
+        # Optional: What values are set and what can be changed ..
     }
 }
 ```
@@ -191,12 +191,14 @@ git:
   security:
     oauth:
       # You must use exactly ONE of `value` or `valueFrom`.
-      # "value" if automatically converted to "valueFrom.secretKeyRef` when you push the package
+      # "value" if automatically converted to "valueFrom.secretKeyRef`
+      # when you push the package
       valueFrom:
         secretKeyRef:
           name: name of secret containing oauthSecret key
           key: name of key holding the token, defaults to "oauth-token"
-      value: an oauth api key for authenticating to git with HTTPS basic auth
+      value: an oauth api key for authenticating to git with
+             HTTPS basic auth
 ```
 
 <InlineNotification kind="info">
@@ -205,15 +207,26 @@ ST4SD will use the oauth-token you provide to `git clone https://${oauth-token}@
 
 If you are using [Github](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic) to host your git repository you can generate a Personal Access Token with just read-access to your git repository.
 
-If you are using [Gitlab](https://docs.gitlab.com/ee/user/project/deploy_tokens/#create-a-deploy-token), you can generate a Deploy Token with read acces to your project.
+If you are using Gitlab, use either a [project access token](https://docs.gitlab.com/ee/user/project/settings/project_access_tokens.html#create-a-project-access-token) or a [deploy token](https://docs.gitlab.com/ee/user/project/deploy_tokens/#create-a-deploy-token) with read access permissions to your Gitlab project. Make sure you create a token with the "Developer" role that has "read_repository" permissions.
 
 </InlineNotification>
 
 <InlineNotification kind="warning">
 
-For [Github](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#using-a-personal-access-token-on-the-command-line) and [Gitlab](https://docs.gitlab.com/ee/user/project/deploy_tokens/#clone-a-repository) you should prefix the Personal Access Token with your username like so: `${Username}:${PersonalAccessToken}`.
+Remember to prefix your Token with your Username followed by a ":" character
 
 </InlineNotification>
+
+
+Example:
+```yaml
+security:
+  oauth:
+     value: "${Username}:${PersonalAccessToken}"
+```
+
+
+
 
 #### Datashim source
 
@@ -281,6 +294,69 @@ dependencies:
           password: ...
 
 ```
+
+## The Metadata section
+
+The `metadata` section contains 2 fields: `package` and `registry`. The first is used to provide various other information about the parameterised virtual experiment.
+The latter contains metadata that the registry automatically populates.
+
+### The metadata.package section
+
+Populate `metadata.package` to set information about your parameterised virtual experiment package that you would like your users to know:
+
+```yaml
+metadata:
+  package: #All the maintainer metadata. Can decide exact structure at implementation time.
+    name: the package name
+    tags: # Optional
+    - latest # On Push, auto insert latest if missing
+    maintainer: email (optional)
+    license: some string (optional)
+    keywords: # optional
+    - keyword 1
+    - keyword 2
+
+```
+
+### The metadata.registry section
+
+Read the `metadata.registry` section to get information that the ST4SD registry automatically extracts from your parameterised virtual experiment package:
+
+```yaml
+digest: A uid of this parameterised virtual experiment package (PVEP)
+        (see PVEP identifier)
+createdOn: UTC time that this digest was created,
+           format is %Y-%m-%dT%H%M%S.%f%z
+tags: The tags associated with this PVEP. This is a SUBSET
+      of metadata.package.tags. It can be EMPTY if no tag points to
+      this digest anymore (see PVEP identifier)
+timesExecuted: int - automatically increased every time a user launches this
+      virtual experiment entry in the ST4SD deployment the registry is attached to
+interface: {} # ST4SD injects the Virtual experiment interface if it exists
+data: #The list of filenames under the `data` directory
+      #(just top-level files, NO directories)
+- name: $DATA_FILE_NAME
+inputs: #The list of files under the `input` directory. These are files
+        #that users must provide when launching this virtual experiment
+- name: $INPUT_FILE_NAME
+output: #A list of dictionaries each of which contains the key "name"
+        #for each of the named key-outputs of this experiment
+- name: the name of a key-output
+containerImages: #A list of the names of the container images that
+                 #could be used by this virtual experiment.
+- name: the name of a container image (e.g. a URL)
+executionOptionsDefaults:
+    variables:
+        - name: The name of the variable
+          valueFrom:
+            - platform: The name of the platform
+              value: The default value of the variable when using this platform
+platforms: A list of all the known platform names for this experiment
+
+```
+
+Note that the ST4SD registry manages all fields under the `metadata.registry` section, developers cannot directly modify this dictionary.
+
 
 ## The Parameterisation section
 
@@ -386,68 +462,6 @@ Use execution options to allow user to choose values for parameters if they want
 
 ```
 
-
-## The Metadata section
-
-The `metadata` section contains 2 fields: `package` and `registry`. The first is used to provide various other information about the parameterised virtual experiment.
-The latter contains metadata that the registry automatically populates.
-
-### The metadata.package section
-
-Populate `metadata.package` to set information about your parameterised virtual experiment package that you would like your users to know:
-
-```yaml
-metadata:
-  package: #All the maintainer metadata. Can decide exact structure at implementation time.
-    name: the package name
-    tags: # Optional
-    - latest # On Push, auto insert latest if missing
-    maintainer: email (optional)
-    license: some string (optional)
-    keywords: # optional
-    - keyword 1
-    - keyword 2
-
-```
-
-### The metadata.registry section
-
-Read the `metadata.registry` section to get information that the ST4SD registry automatically extracts from your parameterised virtual experiment package:
-
-```yaml
-digest: A uid of this parameterised virtual experiment package (PVEP)
-        (see PVEP identifier)
-createdOn: UTC time that this digest was created,
-           format is %Y-%m-%dT%H%M%S.%f%z
-tags: The tags associated with this PVEP. This is a SUBSET
-      of metadata.package.tags. It can be EMPTY if no tag points to
-      this digest anymore (see PVEP identifier)
-timesExecuted: int - automatically increased every time a user launches this
-      virtual experiment entry in the ST4SD deployment the registry is attached to
-interface: {} # ST4SD injects the Virtual experiment interface if it exists
-data: #The list of filenames under the `data` directory
-      #(just top-level files, NO directories)
-- name: $DATA_FILE_NAME
-inputs: #The list of files under the `input` directory. These are files
-        #that users must provide when launching this virtual experiment
-- name: $INPUT_FILE_NAME
-output: #A list of dictionaries each of which contains the key "name"
-        #for each of the named key-outputs of this experiment
-- name: the name of a key-output
-containerImages: #A list of the names of the container images that
-                 #could be used by this virtual experiment.
-- name: the name of a container image (e.g. a URL)
-executionOptionsDefaults:
-    variables:
-        - name: The name of the variable
-          valueFrom:
-            - platform: The name of the platform
-              value: The default value of the variable when using this platform
-platforms: A list of all the known platform names for this experiment
-
-```
-
-Note that the ST4SD registry manages all fields under the `metadata.registry` section, developers cannot directly modify this dictionary.
 
 ## Adding a parameterised package to a registry
 
