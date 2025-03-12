@@ -75,11 +75,58 @@ stp package download https://registry.st4sd.res.ibm.com/registry-ui/experiment/n
 ```
 
 If you have an ST4SD Cloud instance, you can log in to your ST4SD Registry via
-`stp` and push the package to it:
+`stp` and push the package to it.
+
+The first step is finding the URL to your ST4SD Cloud instance:
+
+<Tabs>
+
+<Tab label="Use the oc command-line utility">
+
+If you have the [oc](https://docs.openshift.com/container-platform/4.18/cli_reference/openshift_cli/getting-started-cli.html) command line utility installed, you can use it as follows:
+
+<br />
 
 ```bash
-ST4SD_AUTHENTICATION_ROUTE=$(oc get route st4sd-authentication -o=jsonpath={.spec.host})
-stp login $ST4SD_AUTHENTICATION_ROUTE
+: First, login to your OpenShift cluster
+oc login ...
+
+: Next, switch to the namespace that ST4SD Cloud is installed in
+oc project your-project-name-here
+
+: Finally, export the ST4SD_AUTH_URL environment variable for
+: subsequent calls to stp
+export ST4SD_AUTH_URL=$(oc get route st4sd-authentication -o=jsonpath={.spec.host})
+```
+
+</Tab>
+
+<Tab label="Ask your cluster administrator">
+
+To access ST4SD Cloud, you'll need the URL of the `st4sd-authentication` route. You can ask your cluster administrator for this information, as it's specific to your namespace. The default URL format is `https://my-st4sd.${your cluster ingress URL}`, where the cluster ingress domain is the base domain for exposing services on your cluster.
+
+<br />
+
+For example, if your cluster ingress URL is `apps.example.com`, the default URL would be `https://my-st4sd.apps.example.com`.
+
+<br />
+
+Then, export the `ST4SD_AUTH_URL` environment variable like so:
+
+<br />
+
+```bash
+export ST4SD_AUTH_URL="the https:// URL that your cluster admin gives to you"
+```
+
+</Tab>
+
+</Tabs>
+
+Nex, you use the `stp` command to login to your ST4SD Cloud instance and push your package.
+
+```bash
+stp login $ST4SD_AUTH_URL
 stp package push nanopore-geometry-experiment.json
 ```
 

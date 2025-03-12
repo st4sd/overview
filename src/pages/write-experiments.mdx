@@ -43,13 +43,13 @@ Here, we are using DSL 2.0, if you need to understand the previous syntax check 
 ### Requirements
 
 - An understanding of [how to run a ST4SD workflow locally](/direct-run).
-- A python 3.9+ interpreter
+- A python 3.9+ interpreter, [git](https://git-scm.com/downloads) to clone code from Git servers, and an understanding of the syntax & structure of [YAML](https://www.redhat.com/en/topics/automation/what-is-yaml)
 - A virtual environment with the `st4sd-runtime-core` python module
 
     ```bash
     python -m venv venv
     . ./venv/bin/activate
-    pip install "st4sd-runtime-core[develop]"
+    pip pip install "st4sd-runtime-core[develop]">=2.2.0"
     ```
 - A local copy of https://github.com/st4sd/st4sd-examples
 
@@ -58,6 +58,13 @@ Here, we are using DSL 2.0, if you need to understand the previous syntax check 
     ```bash
     git clone https://github.com/st4sd/st4sd-examples.git
     ```
+
+
+<InlineNotification kind="warning">
+
+Before you continue any further, please make sure you are comfortable with [running ST4SD workflows locally](/direct-run)..
+
+</InlineNotification>
 
 
 ## ST4SD experiments
