@@ -196,7 +196,30 @@ In `execute[].args` you:
 * **may** use `%(input.$filename)s`to propagate an input file reference from a parent to a step. 
   - Eventually a step must apply a [DataReferences](/workflow-specification/#datareference) `:$method` to the parameter to indicates it wishes to consume the input file
 
-Wanna find out more? Check out our [example](#example).
+### Environments
+
+The environment that components run in is defined in the `command.environment` field. If you don't define anything in this section ST4SD will create a default environment containing all the environment variables of the runtime system process.
+
+Example:
+
+```yaml
+command:
+  environment:
+    ENV-VAR1: value/for/env-var1
+    ENV-VAR2: value/for/env-var2
+    DEFAULTS: ENV-VAR3:ENV-VAR4
+```
+
+The above defines an environment with 4 environment variables:
+
+- `ENV-VAR1` whose value is `value/for/env-var1`
+- `ENV-VAR2` whose value is `value/for/env-var2`
+- `ENV-VAR3` whose value is inherited from the environment variable `ENV-VAR3` of the process running the runtime system
+- `ENV-VAR4` whose value is inherited from the environment variable `ENV-VAR4` of the process running the runtime system
+
+In the above example, we use the `DEFAULTS` directive to inherit the values for a list of environment variables from the environment variables of the runtime system process. The value of the special "DEFAULTS" key is a list of environment variable name separated with ":".
+
+Want to find out more? Check out our [example](#example).
 
 ### OutputReference
 

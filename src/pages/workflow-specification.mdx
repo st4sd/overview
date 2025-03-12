@@ -34,6 +34,7 @@ Here, we are introducing the old workflow syntax FlowIR, if you need to understa
   <AnchorLink>FlowIR options/variable inheritance sequence</AnchorLink>
   <AnchorLink>Key-outputs</AnchorLink>
   <AnchorLink>Interface and Properties</AnchorLink>
+  <AnchorLink>Application dependencies</AnchorLink>
 </AnchorLinks>
 
 ## Component
@@ -212,7 +213,7 @@ The `relative` representation of a `DataReference` is just syntax sugar for the 
 
 ## Environments
 
-The environment that components run in is defined within the `environments` section of the FlowIR YAML. If you don't define anything in this section ST4SD will create a default environment. 
+The environment that components run in is defined within the `environments` section of the FlowIR YAML. If you don't define anything in this section ST4SD will create a default environment containing all the environment variables of the runtime system process.
 
 Example:
 
@@ -222,7 +223,17 @@ environments:
     myDefinedEnvironment:
       ENV-VAR1: value/for/env-var1
       ENV-VAR2: value/for/env-var2
+      DEFAULTS: ENV-VAR3:ENV-VAR4
 ```
+
+The above defines an environment with 4 environment variables:
+
+- `ENV-VAR1` whose value is `value/for/env-var1`
+- `ENV-VAR2` whose value is `value/for/env-var2`
+- `ENV-VAR3` whose value is inherited from the environment variable `ENV-VAR3` of the process running the runtime system
+- `ENV-VAR4` whose value is inherited from the environment variable `ENV-VAR4` of the process running the runtime system
+
+In the above example, we use the `DEFAULTS` directive to inherit the values for a list of environment variables from the environment variables of the runtime system process. The value of the special "DEFAULTS" key is a list of environment variable name separated with ":".
 
 A component uses a defined environment by setting `command.environment` to the environment name. For example:
 
@@ -543,6 +554,7 @@ The DataReference in "data-in" can use one of the following reference methods: :
 If "data-in" does not contain a "stage$index." prefix then you can list stages to use as the "stage" prefix. If you provide multiple stages then later stages will override the path.
 </InlineNotification>
 
+
 ## Interface and Properties
 
 The `interface` of a virtual experiment (e.g. workflow) defines:
@@ -552,3 +564,30 @@ The `interface` of a virtual experiment (e.g. workflow) defines:
 - Instructions to extract the values of `properties` that the virtual experiment computes
 
 You can find more information about writing an interface [here](/writing-a-virtual-experiment-interface) and a tutorial on how to use an interface [here](/using-a-virtual-experiment-interface)
+
+
+## Application dependencies
+
+Application dependencies are directories that appear in the root directory of your virtual experiment instance. The data source for these dependencies is specified at the point of launching your virtual experiment using the `--applicationDependencySource=$appDepName:/path/to/source` command-line argument of `elaunch.py`.
+
+You can use an application dependency in your workflows in the same way that you use `data` and `input` files, by utilizing a [DataReference](#datareference).
+
+To define application dependencies in your virtual experiment, use the top-level field application-dependencies in your configuration file. The following example illustrates how to define application dependencies for different platforms:
+
+```yaml
+application-dependencies:
+  default:
+    - foo    # an application dependency called foo
+  custom-platform:
+    - bar
+````
+
+In this example, when you execute the experiment using the default platform, a directory called `foo` will be created. If you switch to the `custom-platform`, a directory for a different application dependency called `bar` will be created instead. Note that platforms that do not override their application-dependencies will inherit them from the  `default` platform.
+
+
+<InlineNotification kind="info">
+
+The application-dependencies field is used to specify the application dependencies for each platform, allowing you to customize the dependencies based on the platform being used.
+
+
+</InlineNotification>
