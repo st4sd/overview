@@ -322,38 +322,31 @@ metadata:
 
 Read the `metadata.registry` section to get information that the ST4SD registry automatically extracts from your parameterised virtual experiment package:
 
-```yaml
-digest: A uid of this parameterised virtual experiment package (PVEP)
-        (see PVEP identifier)
-createdOn: UTC time that this digest was created,
-           format is %Y-%m-%dT%H%M%S.%f%z
-tags: The tags associated with this PVEP. This is a SUBSET
-      of metadata.package.tags. It can be EMPTY if no tag points to
-      this digest anymore (see PVEP identifier)
-timesExecuted: int - automatically increased every time a user launches this
-      virtual experiment entry in the ST4SD deployment the registry is attached to
-interface: {} # ST4SD injects the Virtual experiment interface if it exists
-data: #The list of filenames under the `data` directory
-      #(just top-level files, NO directories)
-- name: $DATA_FILE_NAME
-inputs: #The list of files under the `input` directory. These are files
-        #that users must provide when launching this virtual experiment
-- name: $INPUT_FILE_NAME
-output: #A list of dictionaries each of which contains the key "name"
-        #for each of the named key-outputs of this experiment
-- name: the name of a key-output
-containerImages: #A list of the names of the container images that
-                 #could be used by this virtual experiment.
-- name: the name of a container image (e.g. a URL)
-executionOptionsDefaults:
-    variables:
-        - name: The name of the variable
-          valueFrom:
-            - platform: The name of the platform
-              value: The default value of the variable when using this platform
-platforms: A list of all the known platform names for this experiment
 
-```
+* digest: (str) A uid of this parameterised virtual experiment package. See [PVEP identifier](#the-parameterised-virtual-experiment-package-identifier-(pvep-identifier))
+* createdOn: (str) UTC time that this digest was created, format is `%Y-%m-%dT%H%M%S.%f%z`
+* tags: The tags associated with this PVEP. This is a **subset** of `metadata.package.tags`. It can be **empty** if no tag points to this digest anymore. See [PVEP identifier](#the-parameterised-virtual-experiment-package-identifier-(pvep-identifier))
+* timesExecuted: (int) - automatically increased every time a user launches this virtual experiment entry
+* interface: (dictionary)  ST4SD injects the Virtual experiment interface if it exists
+* data: (array of object) Information about the filenames under the `data` directory
+  * name: (str) the name of the data file
+* inputs: (array of objects) Information about the files that users must provide when launching this virtual experiment
+  * name: (str) the name of the input file
+* output: (array of objects) A list containing the named key-outputs of this experiment
+  * name: (str) the name of a key-output
+* containerImages: (array of objects)  A list of the container images that this virtual experiment references
+  * name: (str) the name of a container image (e.g. a URL)
+* executionOptionsDefaults: (object) Describing the default values of experiment parameters for the different platforms of the experiment
+    * variables: (array of objects) One entry per experiment parameter
+      * name: (str) The name of the variable
+      * valueFrom: (object) One entry per platform
+        * platform: (str) The name of the platform
+        * value: (str, int, bool) The default value of the variable when using this platform
+* platforms: (array of strings) A list of all the known platform names for this experiment
+* applicationDependencies: (dictionary) A key-value dictionary containing information about the application dependencies of this experiment for each platform. See [Application Dependencies](/workflow-specification#application-dependencies) for more.
+  * $platformNameAsAString: (array of objects) A platform name pointing to an array of objects containing one application dependency each
+    * name: (str) the name of the application dependency
+
 
 Note that the ST4SD registry manages all fields under the `metadata.registry` section, developers cannot directly modify this dictionary.
 
@@ -469,7 +462,6 @@ Use execution options to allow user to choose values for parameters if they want
   <AnchorLink>Pushing the package</AnchorLink>
   <AnchorLink>Parameterised Package Identifier</AnchorLink>
   <AnchorLink>Package Tags</AnchorLink>
-  <AnchorLink>Registry metadata</AnchorLink>
 </AnchorLinks>
 
 ### Pushing the package
@@ -524,7 +516,7 @@ On pushing a parameterised virtual experiment package, the registry:
 * Generates a unique Id for the entry  see [Parameterised Packaged Identifier](#parameterised-package-identifier)
 * Applies and updates tags - see [Package Tags](#package-tags)
 * Stores any credentials as Kubernetes secrets and converts the relevant fields in the parameterised package to `secretKeyRef` and `secretS3KeyRef` types.
-* Adds additional data to the parameterised package - see [registry metadata](#registry-metadata)
+* Adds additional data to the parameterised package - see [registry metadata](#the-metadata.registry-section)
 
 
 ### Parameterised Package Identifier
@@ -575,17 +567,12 @@ api.api_experiment_start("my-experiment:latest", payload={})
 api.api_experiment_start("my-experiment@sha256x16092ca4bb13955b1397bf38cfba45ef11c9933bf796454a81de4f86", payload={})
 ```
 
-
-
 #### Package tag update rules
 
 If a tag is requested for a digest and that tag is already associated with another digest with the same package-name,  then the registry updates `$packageName:$tag` to point to the new package. This ensures that `$packageName:$tag` points to a unique digest even if the workflow developers pushed the `$tag` in the past.
 
 In general this operation involves updating the `metadata.registry.tags` fields of all parameterised packages with the same `package-name`.
 
-### Registry metadata
-
-The registry adds various information it discovers to the `metadata` section of the package under the [`registry` key](). This includes the id of the package.
 
 ## Example
 
