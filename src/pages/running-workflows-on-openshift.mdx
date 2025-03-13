@@ -332,85 +332,77 @@ payload = {
 
 The format of the `data` dictionary is identical to the `input` dictionary.
 
-Providing data files via S3/Datashim or providing their content directly follows
+Providing data files via S3, Datashim, Volumes or providing their content directly follows
 same process as described for inputs. See those sections for details.
 
 ### Payload Details
 
-The following is the complete structure of the `api_experiment_start()` payload
-(in `YAML`). This includes some advanced options not discussed here.
+The bullet points below show the complete structure of the `api_experiment_start()`. This includes some advanced options not discussed here.
 
-```yaml
-platform: name of platform (optional - see parameterisation notes)
-inputs: # optional (parameterised packages may have no inputs)
-  # see notes for interaction with Dataset/S3
+
+* platform: (str) name of platform (optional - see parameterisation notes)
+* inputs: (array of objects) each object represents one input file to the experiment (optional - experiments may not have inputs). The "input" files support S3, Datashim, and Volumes. See notes.
+  * filename: (str) mutually exclusive with (sourceFilename and targetFilename), one must be set. See Renaming notes.
+  * content: (str) optional, mutually exclusive with volume. See S3 and Volume notes.
+  * volume: (str)  optional, mutually exclusive with content. See Volume notes.
+  * sourceFilename: (str) mutually exclusive with filename, one must be set. If set, targetFilename must also be set, see Renaming notes.
+  * targetFilename: (str) mutually exclusive with filename, one must be set. If set, sourceFilename must also be set, see Renaming notes.
+* data: (array of objects) each object specifies an override for one data file. See parmeterisation notes. Similar to "input" files, "data" files support S3, Datashim, and Volumes. See notes.
   - filename: str # required
-    content: str # optional - see S3 notes
-data: # optional (parameterised packages may have no overiddable data files)
-  # see notes for interaction with Dataset/S3
-  - filename: str # required
-    content: str # optional - see S3 notes
-volumes: # optional
-  - type:
-      # children fields are mutually exclusive - there must be exactly 1
-      persistentVolumeClaim: name of PVC object
-      dataset: name of Datashim dataset (see notes)
-      configMap: name of ConfigMap object
-      secret: name of Secret object
-    applicationDependency: name of appDep to bind to volume (optional)
-    # subPath applies only to pvc and dataset types
-    subPath: path inside volume to mount (optional, defaults to root of object)
-variables: # optional - must adhere to parameterisation rules (see notes)
-  $name: $value
-additionalOptions: # optional runtime arguments to elaunch.py
-  # they cannot override runtime arguments in the package parameterisation
-  - "--someArgument=value"
-environmentVariables: # optional
-  # creates environment variable in the pod that hosts elaunch.py
-  $name: $value
-metadata: # optional
-  # custom metadata to insert into the "user-metadata" MongoDB document of run
-  $name: $value
-s3: # optional - used to read inputs/data with no "content" field
-  # dataset is mutually exclusive with any other sibling fields
-  dataset: name of Datashim dataset # optional
-  # can only provide fields below if dataset is unset
-  accessKeyID: S3 accessKeyID # optional
-  secretAccessKey: S3 secretAccessKey # optional
-  bucket: name of S3 bucket # optional
-  endpoint: the s3 endpoint # optional
-  region: the s3 region # optional
-# s3Store and datasetStoreURI are mutually exclusive and both optional
-# when one is provided, orchestrator uploads key-outputs to S3 after Run terminates
-s3Store: # optional
-  bucketPath:
-    path under bucket to store key-outputs files (default is
-    "workflow_instances/")
-  credentials: (same as s3 field)
-datasetStoreURI: a "dataset/$bucketPath" URI (optional)
-runtimePolicy: # optional
-  name: the name of the runtime policy (required)
-  config: # optional
-    $key: Any # each runtime-policy has its own config-schema
-```
+    content: str # optional, mutually exclusive with volume - see S3 and Volume notes
+    volume: str  # optional, mutually exclusive with content - see Volume notes
+* volumes: (array of objects) This is an optional field defining
+  * type: (object) children fields are mutually exclusive - there must be exactly 1
+    * persistentVolumeClaim: (str) name of PVC object
+    * dataset: (str) name of Datashim dataset (see Datashim notes)
+    * configMap: (str) name of ConfigMap object
+    * secret: (str) name of Secret object
+  * applicationDependency: (str) name of the application dependency to bind to the volume. See the [Application Dependencies](/workflow-specification#application-dependencies) docs for more information.
+  * subPath: (str) path inside volume to mount (optional, defaults to root of object). Applies only to pvc and dataset types
+* variables: (dictionary) This is an optional key-value dictionary with custom values for parameters to the experiment. They must adhere to parameterisation rules (see notes)
+  * theParameterName: The value of the parameter which can be a string, number, or boolean
+* additionalOptions: (array of strings) Optional runtime arguments to elaunch.py. They cannot override runtime arguments in the package parameterisation
+  * --someArgument=value
+  * --orYouCanSplitOneArgumentOverTwoLines
+  * like this
+* environmentVariables: (dictionary) An optional key-value dictionary for injecting environment variables in the pod that runs the elaunch.py process.
+  * $environmentVariableName: The value of the environment variable which can be a string or number
+metadata: (dictionary) An optional key-value dictionary of custom metadata. These will be inserted into the "user-metadata" MongoDB document representing the run under the ST4SD Datastore.
+  * $keyName: The value which can be a string, number, or boolean
+* s3: (object) An optional description of how to read inputs/data from S3 (for entries without a content or volume field)
+  * dataset: (str) name of Datashim dataset. Optional and mutually exclusive with all other sibling fields
+  * accessKeyID: (str) S3 accessKeyID, optional and mutually exclusive with "dataset"
+  * secretAccessKey: (str) S3 secretAccessKey, optional and mutually exclusive with "dataset"
+  * bucket: (str) name of S3 bucket, optional and mutually exclusive with "dataset"
+  * endpoint: (str) the s3 endpoint, optional and mutually exclusive with "dataset"
+  * region: (str) the s3 region, optional and mutually exclusive with "dataset"
+* s3Store: (object) When set, elaunch.py will upload the key outputs of your experiment to S3 after it finishes. Mutually exclusive with datasetStoreURI
+  * bucketPath: Oath under bucket to store key-outputs files (default is "workflow_instances/")
+  * credentials:
+    * accessKeyID: (str) S3 accessKeyID, optional
+    * secretAccessKey: (str) S3 secretAccessKey, optional
+    * bucket: (str) name of S3 bucket, optional
+    * endpoint: (str) the s3 endpoint, optional
+    * region: (str) the s3 region, optional
+* datasetStoreURI: (str) A `dataset://$pathInDataset` URI. When set, elaunch.py will copy the key outputs of your experiment into the Dataset after it finishes. Mutually exclusive with s3Store
+* runtimePolicy: (object) Configures the runtime policy to run your experiment with. See [Using Runtime Policies](/using-runtime-policies) for a list of runtime policies and their options.
+  * name: (str) the name of the runtime policy (required)
+  * config: (dictionary) Optional key-value dictionary that configures the Runtime policy. The structure of this dictionary depends on the name of the runtime policy
+    * $theNameOfTheRuntimePolicyConfiguration: the value for the configuration
+
+
 
 <InlineNotification kind="info">
 
-The schema above is in YAML format. If you are using python (i.e. an instance of
-`experiment.service.db.ExperimentRestAPI`) you should either create an
-equivalent python dictionary OR a python string that contains the yaml
-definition and then convert the string into a dictionary using
-`yaml.loads(the_string)`.
+If you are using python (i.e. an instance of `experiment.service.db.ExperimentRestAPI`) you should either create an
+equivalent python dictionary OR a python string that contains the yaml definition and then convert the string into a dictionary using `yaml.loads(the_string)`.
 
 </InlineNotification>
 
 **Notes**
 
-1. `inputs` and `data` file-specifications have an optional `content` field. If
-   this field is missing then the contents of the files are expected to exist on
-   S3 or in a Dataset. When `s3` exists then the `filename` field acts as the
-   path inside the S3 bucket (or dataset) to use for reading the content of the
-   input/data file.
+1. (Volumes) `inputs` and `data` file-specifications can be fed from files that exist in a volume (PVC, ConfigMap, Secret). This is an alternative to setting the value of the fields directly in the payload or loading the contents of the file from a S3 bucket or Datashim Dataset.
+1. (S3) `inputs` and `data` file-specifications have an optional `content` field. If this field is missing, and the `volume` field is also missing then the contents of  the files are expected to exist on S3 or in a Dataset. When `s3` exists then the `filename` field acts as the path inside the S3 bucket (or dataset) to use for reading the content of the input/data file.
 1. Dataset objects are only available if a cluster-admin has installed
    [Datashim](https://github.com/datashim-io/datashim) on the cluster.
 1. The fields `additionalOptions`, `data`, `inputs`, `platform`, and `variables`
