@@ -30,6 +30,8 @@ Here, we are using DSL 2.0, if you need to understand the previous syntax check 
     <AnchorLink>Assigning values to parameters</AnchorLink>
     <AnchorLink>OutputReference</AnchorLink>
     <AnchorLink>Example</AnchorLink>
+    <AnchorLink>Key outputs</AnchorLink>
+    <AnchorLink>Interface</AnchorLink>
     <AnchorLink>Differences between DSL 2.0 and FlowIR</AnchorLink>
 </AnchorLinks>
 
@@ -279,7 +281,7 @@ components:
 To try it out, store the above DSL in a file called `dsl-params.yaml` and run
 
 ```
-pip install "st4sd-runtime-core[develop]"
+pip install "st4sd-runtime-core[develop]">=2.4.0
 ```
 
 which installs the command-line-tool elaunch.py, followed by:
@@ -289,12 +291,243 @@ echo "hello world" >my-input.db
 elaunch.py -i my-input.db --failSafeDelays=no -l40 dsl-params.yaml
 ```
 
+## Key outputs
+
+All experiments produce files, but not all generated files are equally important. To this end ST4SD has the concept of key-outputs. These are files, and directories, that an experiment produces which the developers of the experiment consider important.
+
+
+Here is a an example of an experiment with a key-output:
+
+
+```yaml
+entrypoint:
+  entry-instance: hello
+  execute:
+  - target: <entry-instance>
+    args:
+      message: Hello world
+  output:
+    - name: greeting
+      data-in: <entry-instance>:output
+      description: just a friendly greeting
+
+components:
+- signature:
+    name: hello
+    parameters:
+      - name: message
+  command:
+    executable: echo
+    arguments: "%(message)s"
+
+```
+
+The `output` field in the `entrypoint` dictionary defines the key-outputs of this experiment:
+
+```yaml
+entrypoint:
+  # ... other fields ...
+  output:
+    - name: greeting
+      data-in: <entry-instance>:output
+```
+
+This experiment has a single key-output called `greeting`. The data associated with this key-output is actually the `stdout` of the `<entry-instance>` step which is an instance of the `hello` component. As the experiment finishes producing this key-output the `$INSTANCE_DIR/output/output.json` file is updated to reflect the state of this experiment.
+
+Here's an how the `output.json` file will look like for the above key outputs:
+
+```json
+{
+    "greeting": {
+        "creationtime": "1725374555.6836693",
+        "description": "just a friendly greeting",
+        "filename": "out.stdout",
+        "filepath": "stages/stage0/entry-instance/out.stdout",
+        "final": "yes",
+        "production": "yes",
+        "type": "",
+        "version": "1"
+    }
+}
+```
+
+While the experiment is running, the runtime system asynchronously updates this file with metadata about the generated key-outputs of the experiment. In this example, there is just one key-output called `greeting`. For more information on key-outputs check out our [documentation](/workflow-specification#key-outputs).
+
+If you are running experiments on the cloud and are instructing the runtime system to register them into the ST4SD datastore you may also use the ST4SD python API to [download](/running-workflows-on-openshift#retrieving-the-outputs-of-a-virtual-experiment-instance) the key-outputs of your experiment instances.
+
+## Interface
+
+Key outputs are not always immediately parseable without deep understanding of their format. To address this, ST4SD supports the **interface** feature. This feature allows workflow developers to extract measured properties and store them in a CSV file, making the data easier to consume.
+
+
+Some virtual experiments define interfaces which make it simpler for users to retrieve the input systems and measured properties from executions of that virtual experiment.
+
+The `interface` of a virtual experiment defines:
+
+- The specification used to describe `input` systems it processes e.g. SMILEs for small molecules
+- Instructions to extract the `input` systems from input data
+- Instructions to extract the values of `properties` that the virtual experiment computes
+
+Once a virtual experiment has an `interface`  ST4SD can return a `pandas.DataFrame`  containing the properties calculated by instances of the virtual experiment, as well as the ids of the `input` systems that an instance processed. This functionality is provided via the `st4sd-datastore` API and the `st4sd-runtime-service` API. See [using a virtual experiment interface](/using-a-virtual-experiment-interface) for further information.
+
+
+In this example we will work with a virtual experiment which:
+1. extracts the IDs of its input systems
+2. has 2 key-outputs that correspond to 2 measured properties of the interface
+3. uses builtin hooks to extract the measured properties from the key-outputs
+
+The DSL of the experiment is :
+
+```yaml
+entrypoint:
+  interface:
+    description: Counts vowels in words
+    inputSpec:
+      namingScheme: words
+      inputExtractionMethod:
+        csvColumn:
+          source:
+            path: input/words.csv
+          args:
+            column: word
+    propertiesSpec:
+    - name: Vowels
+      propertyExtractionMethod:
+        csvDataFrame:
+          source:
+            keyOutput: vowels
+          args:
+            renameColumns:
+              word: input-id
+            usecols:
+            - word
+            - vowels
+    - name: Letters
+      propertyExtractionMethod:
+        csvDataFrame:
+          source:
+            keyOutput: letters
+          args:
+            renameColumns:
+              word: input-id
+            usecols:
+            - word
+            - letters
+  output:
+    - name: vowels
+      data-in: <entry-instance/count-vowels>/vowels.csv:ref
+    - name: letters
+      data-in: <entry-instance/count-letters>/letters.csv:ref
+
+  entry-instance: main
+  execute:
+    - target: <entry-instance>
+      args:
+        words_file: input/words.csv:ref
+
+workflows:
+  - signature:
+      name: main
+      parameters:
+        - name: words_file
+    steps:
+      count-vowels: count-vowels
+      count-letters: count-letters
+    execute:
+      - target: <count-vowels>
+        args:
+          words: "%(words_file)s"
+      - target: <count-letters>
+        args:
+          words: "%(words_file)s"
+
+components:
+- signature:
+    name: count-vowels
+    parameters:
+    - name: words
+  command:
+    executable: bin/count_vowels.py
+    arguments: "%(words)s"
+
+- signature:
+    name: count-letters
+    parameters:
+      - name: words
+  command:
+    executable: bin/count_letters.py
+    arguments: "%(words)s"
+```
+
+
+The interface contains a human readable description of the experiment under `entrypoint.interface.description`.
+
+```yaml
+entrypoint:
+  interface:
+    description: Counts vowels in words
+```
+
+Then, in `entrypoint.interface.inputspec` it uses the builtin input extraction method `csvColumn` to extract the ids of the systems it processes:
+
+```yaml
+entrypoint:
+  interface:
+    inputSpec:
+      namingScheme: words
+      inputExtractionMethod:
+        csvColumn:
+          source:
+            path: input/words.csv
+          args:
+            column: word
+```
+
+It instructs the method to read the CSV file `input/words.csv` (i.e. the input file) and treat every row of the CSV as one input system whose identifier lies in the column `word`.
+
+Following that, it uses the builtin property extraction method `csvDataFrame` twice to measure its 2 properties `Vowels` and `Letters` from the key-outputs `vowels` and `letters` respectively.
+
+```yaml
+entrypoint:
+  interface:
+    propertiesSpec:
+    - name: Vowels
+      propertyExtractionMethod:
+        csvDataFrame:
+          source:
+            keyOutput: vowels
+          args:
+            renameColumns:
+              word: input-id
+            usecols:
+            - word
+            - vowels
+    - name: Letters
+      propertyExtractionMethod:
+        csvDataFrame:
+          source:
+            keyOutput: letters
+          args:
+            renameColumns:
+              word: input-id
+            usecols:
+            - word
+            - letters
+```
+
+The [`csvDataFrame`](/writing-a-virtual-experiment-interface#csvdataframe) property extraction method expects a CSV file which has the columns `input-id` and `${the property name}`. One of the requirements for using a ST4SD interface is that the property names start with a capital letter. One of the requirements of the `csvDataFrame` is that there should be a column with the same name as the property name that is being extracted. Another is that there should be a column called `input-id`.
+
+In this example the components happen to produce key-output CSV files which contain a properly named column for the values of properties but instead of using the `input-id` column they use the column `word`. To account for this inconsistency, the developers of the workflow use the `renameColumns` argument of the `csvDataFrame` property extraction method. Via `renameColumns` they instruct `csvDataFrame` to treat the column `word` as if it were called `input-id`.
+
+This means that you have to create a CSV file called `words.csv` and use it as an input for (via the `-i` arg) to the workflow.
+
+You can find more information on this in the [creating an interface documentation](/writing-a-virtual-experiment-interface). Just keep in mind that this documentation was originally written with the FlowIR syntax in mind.
 
 ## Differences between DSL 2.0 and FlowIR
 
 There are some differences between DSL 2.0 and [FlowIR](/workflow-specification).
 
-In the current version (0.2.x) of DSL 2.0:
+In the current version (0.3.x) of DSL 2.0:
 
 * we offer support for natural composition of Computational Graphs using Workflow and Component templates
 * the `signature` field replaces the `stage`, `name`, `references`, and `override` fields of the component specification in FlowIR
@@ -302,8 +535,8 @@ In the current version (0.2.x) of DSL 2.0:
 * the fields of components can contain `%(parameter)s` references as well as component `%(variable)s`
 * dependencies between components are defined by referencing the output of a producer component in one parameter of the consumer component - [DataReferences](/workflow-specification/#datareference) are reserved for referencing input files only
     * the equivalent of a DataReference for Template instances is an OutputReference
-* key-outputs and interface
 * data files and manifests
+* key outputs and interface
 
 DSL 2.0 will eventually contain a superset of the FlowIR features. However, the current beta version of DSL 2.0 does not support:
 

@@ -45,7 +45,7 @@ Here, we are using DSL 2.0, if you need to understand the previous syntax check 
     ```bash
     python -m venv venv
     . ./venv/bin/activate
-    pip install "st4sd-runtime-core[develop]"
+    pip install "st4sd-runtime-core[develop]">=2.4.0
     ```
 - A local copy of https://github.com/st4sd/st4sd-examples
 
@@ -137,12 +137,12 @@ If you are running experiments on the cloud and are instructing the runtime syst
 ### Exercises
 
 - Use `elaunch.py` to run `0-key-outputs.yaml` and look at the file containing the key-output metadata.
-- Write a new experiment that has a single component called nested inside a workflow. See the example on [nested workflows](/write-experiments#your-first-multi-step-experiment) to refresh your memory on how to write experiments that contain both Workflow and Component templates. Add a key-output which points to the stdout of your component (use an [OutputReference](/workflow-specification-dsl#outputreference) that points to the `:output` of your component's instance).
+- Write a new experiment that has a single component called nested inside a workflow. See the example on [nested workflows](/write-more-experiments#your-first-multi-step-experiment) to refresh your memory on how to write experiments that contain both Workflow and Component templates. Add a key-output which points to the stdout of your component (use an [OutputReference](/workflow-specification-dsl#outputreference) that points to the `:output` of your component's instance).
 
 
 ## An experiment that has an interface
 
-Some virtual experiments define interfaces which make it simpler for users to retrieve the input systems and measured properties from executions of that virtual experiment
+Some virtual experiments define interfaces which make it simpler for users to retrieve the input systems and measured properties from executions of that virtual experiment.
 
 The `interface` of a virtual experiment defines:
 

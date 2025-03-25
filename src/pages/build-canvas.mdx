@@ -275,7 +275,7 @@ RUN pip install -r requirements.txt
 COPY sum.py /app/sum.py
 
 # Make the sum.py file executable
-chmod +x /app/sum.py
+RUN chmod +x /app/sum.py
 ```
 
 <br />
@@ -287,7 +287,7 @@ in a terminal inside that directory execute:
 
 ```
 podman build --platform linux/amd64 -f Dockerfile -t <your registry>/sum:latest
-podman push <your registry>/sum:latest
+podman push <your registry>/sum:latest .
 ```
 
 </details>

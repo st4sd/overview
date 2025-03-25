@@ -4,6 +4,8 @@ title: The elaunch.py command line tool
 
 import { CarbonForIbmDotcom } from "@carbon/pictograms-react";
 import { ArtTools_01 } from "@carbon/pictograms-react";
+import { FileBackup } from "@carbon/pictograms-react";
+import { Tools } from "@carbon/pictograms-react";
 
 <!--
 
@@ -22,12 +24,10 @@ The `elaunch.py` command line tool executes and monitors virtual experiments. Yo
 <AnchorLinks>
 
   <AnchorLink>Running experiments with elaunch.py</AnchorLink>
+  <AnchorLink>Providing the inputs to the experiment</AnchorLink>
   <AnchorLink>Checking if your experiment worked</AnchorLink>
   <AnchorLink>What is the output of my experiment ?</AnchorLink>
-  <AnchorLink>What is the status of my experiment ?</AnchorLink>
   <AnchorLink>Troubleshooting</AnchorLink>
-  <AnchorLink>How do I select an execution platform ?</AnchorLink>
-  <AnchorLink>How to restart an experiment ?</AnchorLink>
 </AnchorLinks>
 
 
@@ -36,17 +36,17 @@ The `elaunch.py` command line tool executes and monitors virtual experiments. Yo
 If you haven't already, install the `st4sd-runtime-core` python package:
 
 ```
-pip install "st4sd-runtime-core[develop]"
+pip install "st4sd-runtime-core[develop]">=2.4.0
 ```
 
 ## Running experiments with elaunch.py
 
-With elaunch.py you can run experiments - sets of files describing computational workflows - given their path: simply run `elaunch.py <path to experiment>`.
+Use elaunch.py to run virtual experiments: `elaunch.py <path to experiment>`.
 
-Note, running experiments locally with requires using either Linux or MacOS.
+Note, running experiments locally requires using either Linux or MacOS.
 Windows users should either use a Virtual Machine (e.g. [VirtualBox](https://www.virtualbox.org) etc) or the Windows Subsystem for Linux ([WSL](https://learn.microsoft.com/en-us/windows/wsl/install)).
 
-Some experiments, like the below example, also require you to install `docker` on your machine too.
+Some experiments, like the below example, also require you to install one of [docker](https://docs.docker.com/engine/install/), [podman](https://podman.io/docs/installation), or [Rancher Desktop](https://docs.rancherdesktop.io/getting-started/installation/) too.
 
 For example, you can run the workflow [`nanopore-geometry-experiment`](https://github.com/st4sd/nanopore-geometry-experiment) like so:
 
@@ -78,233 +78,138 @@ updated=2024-03-15 14:39:33.804727
 updated-on=2024-03-15 14:39:33.804727
 ```
 
-Running an experiment creates a directory which contains the outputs. In this example we set the argument `--nostamp` which instructs ST4SD to not include a timestamp in the directory it creates for the experiment. As such it creates the directory `nanopore-geometry-experiment.instance`. If you run the same command a second time elaunch.py will complain that the experiment instance already exists. Either remove the `--nostamp` argument or delete the directory and retry `elaunch.py`. See Section [What is the output of my experiment?](#what-is-the-output-of-my-experiment) for more information.
+<InlineNotification kind="info">
 
-### Experiment project types
+If you run the same command a second time elaunch.py will complain that the experiment instance already exists. Either remove the `--nostamp` argument or delete the directory and retry `elaunch.py`. See Section [What is the output of my experiment?](#what-is-the-output-of-my-experiment) for more information.
 
-Experiments can be packaged in two different ways. One way is the `standalone` project which is the example we show above. This type of experiments only support a single virtual experiment and are best suited for workflows with many artifacts or resources that are actively changing (i.e., they have multiple commits).
-
-Standalone projects contain:
-
-* a `conf` directory with the experiment definition files
-* (optional) a `data` directory with data files that the workflow steps can reference and the users may override at execution time
-* (optional) additional custom directories that the workflow developers include for the workflow steps to reference
-
-Another type is the `standard` project. These are flexible, allowing for multiple virtual experiment definitions to be bundled together and share files, like scripts and restart hooks. They consist of
-
-* a YAML file that contains the experiment definition
-* (optional) manifest YAML file listing the directories that the virtual experiment needs and where they will be accessible from when it is running.
-
-### Providing input files
-
-Experiments typically require inputs to function properly. To view them, you can use the command `einputs.py <path to experiment>`. Refer to the documentation of the experiment you're trying to run to find out more about the necessary inputs. 
-
-To pass inputs to your experiment, you can use the `-i ${path to input file}` option in `elaunch.py`. In the above example we provide the input file `cif_files.dat` which is located in the directory `docker-example`.
-
-If you want to use an input file whose name **is not the same** as the one the experiment expects, you must map them explicitly with `--input $local_path:$input_name`. For example, to use the contents of the file `/tmp/my-file.dat` as the input file `cif_files.dat` above you would specify `--input /tmp/my-file.dat:cif_files.dat`.
-
-### Setting configuration options
-
-Experiments may also come with configuration options that you can optionally override. We call these options `variables` and you can use `einputs.py` to get the list of variables (and their default) values for an experiment.
-
-For example, here is the relevant section from the output of `einputs.py nanopore-geometry-experiment.package`:
+</InlineNotification>
 
 
-```yaml
-optional:
-  variables:
-    global:
-      numberOfNanopores: 1
-      probeRadius_A: 1.4
-      zeo_memory: 2Gi
-```
+## Providing the inputs to the experiment
 
-Typically the experiment documentation explains what these variables control. To configure their values, put together a `variables` file using the format:
+The experiment requires two types of inputs:
+the **cif_files.dat** input file, which contains a list of filenames, and
+the **nanopore-database** application dependency, a directory containing the files listed in **cif_files.dat**.
 
-```yaml
-global:
-  parameterName: value
-```
+Note that application dependencies are directories located in the root of the virtual experiment instance. These directories are populated by the runtime system using the `--applicationDependencySource=$appDepName:/path/to/source` command-line argument in `elaunch.py`.
 
-Use this variables file with your experiment by specifying the `elaunch.py` argument `-a ${path to variables file}`. Take care when formatting the `variables.yaml` file, it should follow the indentation and syntax of YAML files.
+For more details, refer to the [application-dependencies documentation](/workflow-specification#application-dependencies).
 
 ## Checking if your experiment worked
 
 If the experiment works `elaunch.py` prints `exit-status=Success` before it terminates and then exits with return code 0. You can find more information about the status of your experiment under the file `${package_name}-${timestamp}.instance/output/status.txt`. For example, here's a `status.txt` for a successful run of an experiment:
 
 ```
-completed-on=2024-03-15 14:39:29.909105
+completed-on=2025-03-21 13:15:19.790371
 cost=0
-created-on=2024-03-15 14:38:04.402969
-current-stage=stage3
+created-on=2025-03-21 13:14:30.088069
+current-stage=stage2
 exit-status=Success
 experiment-state=finished
 stage-progress=1.0
 stage-state=finished
-stages=['stage0', 'stage1', 'stage2', 'stage3']
+stages=['stage0', 'stage1', 'stage2']
 total-progress=1.0
-updated=2024-03-15 14:39:33.804727
-updated-on=2024-03-15 14:39:33.804727
+updated=2025-03-21 13:15:19.799143
+updated-on=2025-03-21 13:15:19.799143
 ```
 
 If the experiment fails you will see the line `exit-status=Failed` in the logs of `elaunch.py` and it will exit with a return code other than `0`. If the experiment failed after the instance directory was created you will see this information in the `output/status.txt` file too. Common reasons for failures are invalid syntax, missing input files, or requesting a compute resource that is not available. For more information and dealing with these errors see our [Troubleshooting](#troubleshooting) section.
 
+
 ## What is the output of my experiment ?
 
-All outputs of the experiment are placed in the experiment instance directory. By default, this directory is`${package-name}-${timestamp}.instance` and you will find it under the directory you were in when you ran `elaunch.py`. If you specify the `--nostamp` argument then elaunch.py will not omit the `-${timestamp}` part.
-
-The experiment instance directory contains several nested directories, of which the most noteworthy are `output` and `stages`. Here is the full list of directories and their description:
-
-* `stages`: contains one directory per stage of your experiment. Each stage directory contains one directory for each of the working directories of the components in that stage. Components store any files their produce, as well as text they print to the terminal under their working directory
-* `output`: contains the runtime logs and files with metadata about the outputs and status of your experiment
-* `inputs`: contains the input files you provided, including any variable files
-* `data`: (optional) contains files that the workflow definition bundles and the workflow steps can reference. Users may optionally override those files when they launch an experiment
-* `conf`: contains the experiment definition
-
-### The output directory
-
-It contains the following files:
-
-* experiment.log: the logs of the `elaunch.py` process
-* status.txt: the final status of the experiment (see the status printout above for an example)
-* status_details.json: Similar to above but easier to consume programmatically
-* output.txt: contains metadata about key files that your experiments produce i.e. key-outputs. This file gets updated when when the key named files that one of your tasks produced. It contains information such as their path relative to the root of the instance directory, modification time, etc.
-* output.json: Similar to above but easier to consume programmatically
-* properties.csv: (optional) If your experiment defines its [interface](/using-a-virtual-experiment-interface), then this file contains the measured properties of your experiment,
-* input-ids.json: (optional) If your experiment defines its [interface](/using-a-virtual-experiment-interface), then this file contains an array with the input ids that your experiment processed
-* additional_input_data.json: (optional) If your experiment defines its interface, then this file contains dictionary whose keys are input ids and values are additional input data (e.g. absolute paths) associated with the corresponding input id
-
-### The stages directory
-
-A virtual experiment is a computational workflow that executes tasks. Task outputs are organized under the `stages` directory like so: `stages/stage{$index}/${task-name}`. To find out the tasks that are in your experiment read the  experiment definition or look at the file structure of the `stages` directory.
-
-Components specify which stage they belong to and by default they are all part of stage `0`. Generally, stages help you create logical groups of components. They do not really play a role in scheduling decisions, except for some special cases which are outside the scope of the information in this document
-
-### Understanding an experiment's execution requirements
-
-The experiment documentation should explain what is required to execute it. For example, an experiment contains a set of tasks and elaunch.py submits those tasks to the backends that the tasks select. This means that if the machine on which you run elaunch.py does not support the backend that a task selects then elaunch.py cannot run that task.
-
-### How to run elaunch with LSF ?
-
-Some experiments can launch tasks on using the batch scheduler LSF (IBM Spectrum). If an experiment supports execution on LSF it should say so in its documentation and explain how to launch using it.
-
-<!--NOTE maybe something you can run that tells you which backend tasks need (and whether they're available???)-->
-
-To launch an experiment that supports LSF you need to also install the official [`lsf-python-api`](https://github.com/IBMSpectrumComputing/lsf-python-api) python module:
-
-```bash
-. /path/to/profile.lsf
-git clone https://github.com/IBMSpectrumComputing/lsf-python-api.git
-cd lsf-python-api
-python3 setup.py build
-python3 setup.py install
-```
-
-Check the homepage of [`lsf-python-api`](https://github.com/IBMSpectrumComputing/lsf-python-api) for more information.
-
-### How to override experiment configuration data files
-
-Experiments may optionally bundle data files which you may override. The experiment documentation should explain what these files are and what your options are for overriding. Additionally `einputs.py` displays the names of the data files that an experiment references.
-
-
-### Store outputs to S3
-
-Experiments may optionally upload their [`key-outputs`](/tutorial#key-outputs) to S3 after termination. You can instruct `elaunch.py` to upload these files to S3 using the `--s3StoreToURI` parameter. When using this parameter, you must also specify exactly one of the parameters `--s3AuthWithEnvVars` or `--s3AuthBearer64`.
-
-### Example:
-
-
-```bash
-export bucket="a-bucket"
-export path_in_bucket="optional/path"
-
-export S3_ACCESS_KEY_ID="s3 access key id"
-export S3_SECRET_ACCESS_KEY="s3 secret access key"
-export S3_END_POINT="s3 end point"
-
-elaunch.py --s3StoreToURI s3://${bucket}/${path_in_bucket} \
-  --s3AuthWithEnvVars path/to/experiment
-```
-
-When `--s3StoreToURI` is set, after the experiment terminates, `elaunch.py` will start uploading the `key-outputs` to the S3 bucket you provided under the specified `${path_in_bucket}`. `elaunch.py` replaces occurrences of the `%(instanceDir)s` literal in `--s3StoreToURI` with the name of the experiment instance. For example, you can use this to store the `key-outputs` of multiple workflow instances in the same bucket.
-
-Alternatively, you can base64-encode the JSON representation of the dictionary `{"S3_ACCESS_KEY_ID": "val", "S3_SECRET_ACCESS_KEY": "val", "S3_END_POINT": "val"}` and use the `--s3AuthBearer64` parameter instead:
-
-```bash
-export bucket="a-bucket"
-export path_in_bucket="optional/path"
-export json="{\"S3_ACCESS_KEY_ID\": \"val\", \"S3_SECRET_ACCESS_KEY\": \"val\", \"S3_END_POINT\": \"val\"}"
-export s3_auth=`echo "${json}" | base64`
-
-elaunch.py --s3StoreToURI s3://${bucket}/${path_in_bucket} \
-  --s3AuthBearer64 path/to/experiment
-```
-
-
-## What is the status of my experiment ?
-
-The `elaunch.py` script will periodically store information about the status of your experiment instance under its `$instanceDir` directory. You can use `einspect.py` to see the current status of tasks in your experiment instance.
-
-Here is an example output of running `einspect.py` after a [`sum-numbers`](https://github.com/st4sd/sum-numbers) experiment terminates.
-
+Looking inside the instance directory created for the experiment, we see the following:
 
 ```
-cd sum-numbers-2024-03-15T143804.402969.instance
-einspect.py -f all
-
-
-WARNING   MainThread                     root                          : <module>             2024-03-15 14:39:50,782: No instance given - checking if inside one
-
-========== STAGE 0 ==========
-
-Components using engine-type: engine
-reference, state, backend, isWaitingOnOutput, engineExitReason, lastTaskRunTime, lastTaskRunState
-stage0.GenerateInput, finished, local, True, Success, 0:00:00.241827, finished
-
-========== STAGE 1 ==========
-
-Components using engine-type: engine
-reference, state, backend, isWaitingOnOutput, engineExitReason, lastTaskRunTime, lastTaskRunState
-stage1.ExtractRow0, finished, local, True, Success, 0:01:00.197737, finished
-stage1.ExtractRow1, finished, local, True, Success, 0:01:00.227356, finished
-stage1.ExtractRow2, finished, local, True, Success, 0:01:00.208578, finished
-stage1.PartialSum0, finished, local, True, Success, 0:00:00.368524, finished
-stage1.PartialSum1, finished, local, True, Success, 0:00:00.385971, finished
-stage1.PartialSum2, finished, local, True, Success, 0:00:00.410082, finished
-
-========== STAGE 2 ==========
-
-Components using engine-type: engine
-reference, state, backend, isWaitingOnOutput, engineExitReason, lastTaskRunTime, lastTaskRunState
-stage2.Sum, finished, local, True, Success, 0:00:00.061634, finished
-
-========== STAGE 3 ==========
-
-Components using engine-type: engine
-reference, state, backend, isWaitingOnOutput, engineExitReason, lastTaskRunTime, lastTaskRunState
-stage3.Cat, finished, local, True, Success, 0:00:00.013691, finished
+ls -lth nanopore-geometry-experiment.instance
+total 64
+drwxrwxr-x@ 10 user  wheel   320B 21 Mar 13:15 output/
+-rw-r--r--@  1 user  wheel    28K 21 Mar 13:15 status.db
+-rw-rw-r--@  1 user  wheel   536B 21 Mar 13:14 elaunch.yaml
+drwxr-xr-x@  5 user  wheel   160B 21 Mar 13:14 hooks/
+drwxrwxr-x@  5 user  wheel   160B 21 Mar 13:14 stages/
+drwxr-xr-x@  5 user  wheel   160B 21 Mar 13:14 conf/
+lrwxrwxr-x@  1 user  wheel    31B 21 Mar 13:14 python@ -> /Users/user/venvs/st4sd
+drwxrwxr-x@  3 user  wheel    96B 21 Mar 13:14 input/
+drwxr-xr-x@  4 user  wheel   128B 21 Mar 13:03 nanopore-database/
 ```
 
-You may also see a summary of your status in the `$instanceDir/output/status.txt` file:
+In order of importance:
+
+* **output**: This directory contains metadata about the key outputs of the experiment as well as the measured properties of the input systems the experiment processed. You can find more information about the contents of this directory in our detailed [breakdown of the output directory](/direct-run-advanced#the-output-directory).
+* **stages**: This directory holds all the working directories of all the steps that were executed during this experiment instance
+* **input**: The input files and variable parameterisation files we provided to the `elaunch.py` command earlier
+* **nanopore-database**: This is an application-dependency that the experiment for reading information about the nanoporous materials it simulates
+* **conf**: The experiment definition
+* **hooks**: This contains code used to produce the interface properties. In general, it may also contain code that checks whether tasks finished successfully or not, however then `nanopore-geometry-experiment` does not use this feature.
+* **python**: A link to the virtual environment that was used during the execution of the experiment
+* **elaunch.yaml**: A YAML file containing metadata about the execution of the experiment
+* **status.db**: A SQLITE database containing metadata about execution of the experiment
+
+
+### Key outputs
+
+All experiments produce files, but not all generated files are equally important. To this end ST4SD has the concept of key-outputs. These are files, and directories, that an experiment produces which the developers of the experiment consider important.
+
+The file `$instanceDirectory/output/output.json` contains metadata about the key outputs of the experiment. Here's how tha file looks like for the experiment we just ran:
 
 ```
-completed-on=2024-03-15 14:39:29.909105
-cost=0
-created-on=2024-03-15 14:38:04.402969
-current-stage=stage3
-exit-status=Success
-experiment-state=finished
-stage-progress=1.0
-stage-state=finished
-stages=['stage0', 'stage1', 'stage2', 'stage3']
-total-progress=1.0
-updated=2024-03-15 14:39:33.804727
-updated-on=2024-03-15 14:39:33.804727
+{
+    "geometricalProperties": {
+        "creationtime": "1742562196.4740903",
+        "description": "",
+        "filename": "geometry.tgz",
+        "filepath": "stages/stage2/AggregateGeometry/geometry.tgz",
+        "final": "yes",
+        "production": "yes",
+        "type": "",
+        "version": "1"
+    }
+}
 ```
 
-The current status of your experiment is the value of `exit-status`.
+The experiment generates a single key output, **geometricalProperties**, which is a tar file named `geometry.tgz`. This file is created by the `stage2.AggregateGeometry` step.
+
+
+### Measured properties
+
+Key outputs are not always immediately parseable without deep understanding of their format. To address this, ST4SD supports the **interface** feature. This feature allows workflow developers to extract measured properties and store them in a CSV file, making the data easier to consume.
+
+Experiments that implement an `interface` will produce a file under `${instance-directory}/output/properties.csv`. Here is the file that the `nanopore-geometry-experiment` produced above:
+
+```
+input-id;d_is;d_fs;d_isfs;asa_m^2/cm^3;asa_m^2/g;nasa_m^2/cm^3;nasa_m^2/g;unitcell_volume;density;av_volume_fraction;av_cm^3/g;nav_volume_fraction;nav_cm^3/g;n_pockets
+CoRE2019/GUJVOX_clean;3.98106;2.74095;3.93078;0.0;0.0;760.654;564.703;1164.59;1.347;0.0;0.0;0.016015;0.0118894;1.0
+```
+
+The CSV file will always contain the `input-id` column. Its values are the identifiers of the input system ids for which the virtual experiment measured properties. The remaining columns contain the measured properties for the input systems.
 
 ## Troubleshooting
+
+### Unable to create instance directory at specified location Error
+
+If you run the same command a second time elaunch.py will complain that the experiment instance already exists:
+
+```
+completed-on=N/A
+cost=0
+created-on=N/A
+current-stage=None
+error-description=ExperimentSetupError Error encountered while setting up experiment.\\nPackage validation failed - cannot deploy\\nUnderlying error: Unable to create instance directory at specified location.\\nUnderlying error: [Errno 17] File exists: '/private/tmp/test/nanopore-geometry-experiment/nanopore-geometry-experiment/nanopore-geometry-experiment/nanopore-geometry-experiment.instance'
+exit-status=Failed
+experiment-state=failed
+stage-progress=0
+stage-state=Initialising
+stages=[]
+total-progress=0
+updated=2025-03-21 13:25:21.950382
+updated-on=2025-03-21 13:25:21.950382
+```
+
+To fix this problem, either remove the `--nostamp` argument or delete the directory and retry `elaunch.py`.
+
+### Investigating a Failed experiment
 
 If the `exit-status` of your experiment instance is `Failed` then this means that at least one of your components was unable to terminate successfully. You can find the name of the component that caused the experiment to fail in the `status` file and printout.
 
@@ -365,25 +270,12 @@ After you spot a `Failed` component, try looking at the files it produced, inclu
 
 Sometimes, a component fails because one of its predecessors (direct, or indirect) produced unexpected output. To find the predecessors of a component, look at the `$INSTANCE_DIR/conf/flowir_instance.yaml`, locate the component you are investigating and then follow its predecessors by looking at the `references` of the component. You can then investigate the output files and stdout/stderr of those components to see if you can spot why the downstream component failed.
 
-Advanced experiments may also use [Restart Hooks](/restart#customizing-the-restart-process) to customize the restart logic of components. Additionally, a restart hook may print logs to the terminal using a logger that is associated with the execution engine of the component it controls. These logs will contain the text `eng.${lowercase of the component reference}`. For example, the logger of the component `Foo` in stage `0` will contain the text `eng.stage0.foo` in its logs. You can find the logs of the restart hooks in the terminal output of the `elaunch.py` process (which is also archived under `$INSTANCE_DIR/output/experiment.log`).
 
-## How do I select an execution platform ?
-
-Often, workflows have support for multiple execution environments such as Cloud (e.g. Kubernetes/OpenShift), HPC, or even personal devices like laptops.
-ST4SD uses the concept of execution platform to help workflow developers define how their workflows should execute under different execution environments.
-Platforms are designed to assist in implementing generic components which are specialized for different purposes when specifying different platforms. This is particularly useful when working with packages that can utilize various kinds of HPC resources (e.g. a cluster fitted with LSF, a kubernetes installation, etc). For example, a component can be configured to utilize a certain amount of GPUs when it targets platform A but exclusively use CPUs on platform B. You can find more information about platforms [in our docs](/workflow-specification#platforms).
-
-Use `einputs.py <path to package>` to find a list of the platforms that an experiment supports. The experiment documentation should explain the requirements for executing the experiment with any of the platforms. To select a platform use the `--platform` commandline argument of `elaunch.py`. If you don't provide the commandline parameter `--platform` then `elaunch.py` will select the platform called `default` which is the default platform of experiments.
-
-## How to restart an experiment ?
-
-Sometimes it's useful to restart a previously completed experiment instance instead of starting a brand new instance. For example, you can modify a script that a component in the instance used and then restart all components starting from a specific stage index and onwards.
-
-To restart an existing instance from a given stage index use `elaunch.py --restart <stageindex> ... path/to/dir.instance`. All components from stage `<stageindex>` and onwards will be restarted. This means that `elaunch.py` will run the logic of their `restart hook` and may re-run a component depending on the output of the restart method. Use the `--noRestartHooks` option with `--restart` to skip the restart hook logic and re-run the components. Find out more information about `restart` hooks in [our docs](/restart).
-
-
+## The experiment outputs
 
 ## Learn more
+
+<div className="expressive-content-list-group">
 
 <ExpressiveList
     title="Write experiments"
@@ -394,7 +286,14 @@ Get an introduction to [writing virtual experiment](/write-experiments) with ST4
 
   </ExpressiveList>
 
-<div className="expressive-content-list-group">
+<ExpressiveList
+    title="Advanced usage of elaunch.py"
+    background="true"
+    pictogram={<Tools />}>
+
+This example only scratches the surface of how you can use elaunch.py. See [elaunch.py for advanced users](/direct-run-advanced) for more information about using `elaunch.py` including running on High Performance Computing clusters.
+
+  </ExpressiveList>
 
   <ExpressiveList
     title="Exploring the Registry UI"
