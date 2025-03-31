@@ -28,7 +28,8 @@ Here, we are using DSL 2.0, if you need to understand the previous syntax check 
 <AnchorLinks>
 
   <AnchorLink>Wrapping a python script for native execution</AnchorLink>
-  <AnchorLink>Sharing your virtual experiments with others</AnchorLink>
+  <AnchorLink>Packaging your virtual experiment</AnchorLink>
+  <AnchorLink>Using containers for shareable virtual experiments</AnchorLink>
   <AnchorLink>Your first Simulation experiment with GAMESS US</AnchorLink>
 
 </AnchorLinks>
@@ -44,7 +45,7 @@ Here, we are using DSL 2.0, if you need to understand the previous syntax check 
     ```bash
     python -m venv venv
     . ./venv/bin/activate
-    pip pip install "st4sd-runtime-core[develop]">=2.4.0"
+    pip pip install "st4sd-runtime-core[develop]>=2.5.0"
     ```
 - A Container Runtime system: install one of [docker](https://docs.docker.com/engine/install/), [podman](https://podman.io/docs/installation), or [Rancher Desktop](https://docs.rancherdesktop.io/getting-started/installation/)
 
@@ -56,28 +57,48 @@ Before you continue any further, please make sure you are comfortable with [runn
 
 ## Wrapping a python script for native execution
 
-For your first virtual experiment, we will start with a Python script and use a virtual environment where **st4sd-runtime-core** is installed. This is a great way to quickly prototype virtual experiments without worrying about making them shareable with others. Check out [Sharing your virtual experiments with others](#sharing-your-virtual-experiments-with-others) for an example.
+For your first virtual experiment, we will start with a Python script and use a virtual environment where **st4sd-runtime-core** is installed. This is a great way to quickly prototype virtual experiments without worrying about making them shareable with others. Check out [Using containers for shareable virtual experiments](#using-containers-for-shareable-virtual-experiments) for an example.
 
-Begin by creating a directory called `python-native.package`. In it, create 2 directories: `bin` and `conf`. Next, we'll define the definition of the virtual experiment.
+Begin by creating the directory `/tmp/hello-world` and navigating into it. We are going to store all files relevant to the virtual experiment of this example in this directory.
+
+<InlineNotification kind="info">
+
+Double check you have created a directory with the path `/tmp/hello-world` - this examples assumes you are using this exact path.
+
+</InlineNotification>
 
 
-ST4SD virtual experiments are structured as follows:
+A good way to become familiar with ST4SD is to wrap a simple python script in a virtual experiment and execute it. So, let's build a **hello world** experiment using python. Create the file **printer.py** with the following contents:
+
+```python
+import sys
+print(" ".join(sys.argv[1:]))
+```
+
+This Python script is straightforward and does not rely on any external Python packages. If it did, you would need to install the required dependencies using `pip install` within the virtual environment where **st4sd-runtime-core** is installed. Since this script has no external dependencies, no additional Python modules need to be installed.
+
+
+To create a ST4SD virtual experiment based on this script, we will define it using a YAML file. The structure of a ST4SD virtual experiment definition is as follows:
 
 
 ```yaml
 entrypoint:
     # Instructions of the entry point to your experiment
 components:
-    # Templates for executing a single task
+    # Templates each of which execute a single task
 workflows:
-    # Templates for executing multiple steps which can be
-    # Workflows or Components
+    # Templates each of which pipelines of tasks which themselves
+    # are either instances of Workflows or Components templates
 ```
 
 
-Developers build experiments by connecting **Components** and **Workflows**. Components represent individual tasks, while Workflows represent graphs of nested Workflows and Components. The example provided demonstrates the execution of a single task. A helpful way to understand virtual experiments is to think of them as **programs** written in a programming language. In this analogy, Workflows and Components serve as functions, and the **entrypoint** is similar to declaring a **main()** function, specifying which function to execute and what arguments to pass to it.
+Developers build experiments by connecting together **Components** and **Workflows** and identifying the entry point of the virtual experiment.
 
-Place the following in the file `conf/dsl.yaml`:
+Components represent individual tasks, while Workflows represent pipelines (i.e. graphs) of Workflows and Components. The example provided demonstrates the execution of a single task. A helpful way to understand virtual experiments is to think of them as **programs** written in a programming language. In this analogy, Workflows and Components serve as functions, and the **entrypoint** is similar to declaring a **main()** function, specifying which function to execute and what arguments to pass to it.
+
+Let's put together a simple experiment consisting of a single step that prints a message to its standard output.
+
+Place the following in the file `hello-world.yaml`:
 
 ```yaml
 entrypoint:
@@ -93,54 +114,39 @@ components:
     parameters:
       - name: message
   command:
-    executable: bin/printer.py
-    arguments: "%(message)s"
+    executable: python
+    arguments: /tmp/hello-world/printer.py "%(message)s"
 ```
 
-In this example, the experiment's entrypoint, instantiates the printer component and sets its **message** parameter to "Hello world".
+In this example, the **entrypoint** to the experiment is an instance of the **printer** component which sets its message parameter to the value **"Hello world"**.
 
-The **printer** component template has a single parameter, message, which does not have a default value. This component runs the executable "bin/printer.py", passing the message value as an argument.
-
-
-Next, create the "bin/printer.py" file using this very simple python code:
-
-
-```python
-#!/usr/bin/env python
-
-import sys
-print(" ".join(sys.argv[1:]))
-```
-
-
-After creating the file, navigate to the **python-native.package** directory and run the command chmod +x bin/printer.py to make the file executable. This step is necessary to allow the file to be executed as a script.
+Moving on to the **Components** template section we observe that there is a single template called **printer**. The **printer** component template has a single parameter called **message**, which does not have a default value. Instances of this template, run the executable **python**, passing the absolute path to the **printer.py** script and the **message** value as arguments. In the next example we will show you a better way to package experiments alleviating the need to use absolute paths for your scripts.
 
 
 <InlineNotification kind="warning">
 
-At this point, double check that you have used the exact names as above, that your python file starts with the shebang line `#!/usr/bin/env python`, and that it's executable.
+At this point, double check that you have used the exact names as above.
 
-The expected file structure is the following:
+The expected file structure in **/tmp/hello-world** is as follows:
 
 ```
-python-native.package
-├── bin
-│   └── printer.py
-└── conf
-    └── dsl.yaml
+/tmp/hello-world
+├── hello-world.yaml
+└── printer.py
 ```
-
-If you want to produce similar tree outputs for your directories use the [tree](https://oldmanprogrammer.net/source.php?dir=projects/tree) commandline utility which is also available via [brew](https://formulae.brew.sh/formula/tree).
-
 
 </InlineNotification>
 
 
-Let's run the experiment using `elaunch.py`. After a few seconds you should see the following printout:
+Let's run the experiment using `elaunch.py`. Run the following command from inside the **/tmp/hello-world** directory
 
 ```
-$ elaunch.py --nostamp -l40 python-native.package
+elaunch.py --nostamp hello-world.yaml
+```
 
+After a few seconds you should see:
+
+```
 completed-on=2025-03-22 12:39:13.806401
 cost=0
 created-on=2025-03-22 12:39:07.382235
@@ -155,32 +161,30 @@ updated=2025-03-22 12:39:17.417956
 updated-on=2025-03-22 12:39:17.417956
 ```
 
-The experiment will create the directory **python-native.instance** and store all files it generated in it.
+The experiment will create the directory **hello-world.instance** and store all files it generated in it.
 
 ```
-python-native.instance
-├── bin
-│   └── printer.py
-├── conf (For now focus on just the dsl.yaml file)
-│   ├── dsl.yaml
-│   ├── flowir_instance.yaml
-│   ├── flowir_package.yaml
-│   └── manifest.yaml
-├── stages
-│   └── stage0
-│       └── entry-instance
-│           ├── component_performance.csv
-│           ├── out.stderr
-│           └── out.stdout
+hello-world.instance
+├── conf
+│   ├── dsl.yaml               # your virtual experiment definition
+│   ├── flowir_instance.yaml   # ignore this file
+│   ├── flowir_package.yaml    # ignore this file
+│   └── manifest.yaml          # ignore this file
+├── elaunch.yaml
+├── input
 ├── output
 │   ├── experiment.log
 │   ├── output.json
 │   ├── output.txt
 │   ├── status.txt
 │   └── status_details.json
-├── input
 ├── python
-├── elaunch.yaml
+├── stages
+│   └── stage0
+│       └── entry-instance
+│           ├── component_performance.csv
+│           ├── out.stderr
+│           └── out.stdout
 └── status.db
 
 ```
@@ -188,7 +192,7 @@ python-native.instance
 If you encountered any issues during the process, please refer to the [troubleshooting](/direct-run#troubleshooting) section of the documentation for guidance on launching experiments locally.
 
 Now that you have ran the experiment, take a moment to **explore its outputs**. You can find the output files following directory:
-`python-native.instance/stages/stage0/entry-instance`.
+`hello-world.instance/stages/stage0/entry-instance`.
 
 
 ### Exercise
@@ -203,35 +207,151 @@ global:
   message: my custom message
 ```
 
-Then remove the `python-native.instance` directory and run the experiment again but this time use load the `my-variables.yaml` file:
+Then remove the `hello-world.instance` directory and run the experiment again but this time use load the `my-variables.yaml` file:
 
 ```bash
-rm -rf python-native.instance
-elaunch.py -l40 --nostamp -a my-variables.yaml python-native.package
+rm -rf hello-world.instance
+elaunch.py --nostamp -a my-variables.yaml hello-world.yaml
 ```
 
 The **stdout** of the `hello` component can be found in the following file:
-`0-hello-world.instance/stages/stage0/entry-instance/out.stdout`.
+`hello-world.instance/stages/stage0/entry-instance/out.stdout`.
 
-## Sharing your virtual experiments with others
 
-To make experiments shareable, they must include the following key information:
+## Packaging your virtual experiment
+
+When automating simulation codes with custom bash scripts, you may have experienced difficulties with absolute paths when relocating your codes to different directories or execution environments. ST4SD provides a solution to this issue. It offers two methods for [packaging multiple files](#packaging-workflows), with the most convenient approach being the use of the [Standard](/packaging-workflows#standard-project) project structure. This structure consists of a virtual experiment definition, defined in a YAML file, and an optional **manifest** file, which specifies additional directories to be included with the virtual experiment. The **manifest** file has the following format:
+
+
+
+The **manifest** file has the following format:
+
+```yaml
+destinationDirectoryName: sourceDirectory
+```
+
+This instructs the runtime system to create a directory called **destinationDirectoryName** using the files from the path **sourceDirectory**. If the **sourceDirectory** is not an absolute path then it is considered relative to the location of the experiment definition YAML file.
+
+
+To convert the above example to use the **Standard** project structure, first create the directory `/tmp/hello-world/bin` and move the **printer.py** script into it. Next, create the file **manifest.yaml** under the directory `/tmp/hello-world/` with the following content:
+
+```yaml
+bin: bin
+```
+
+Now, let's update the virtual definition to use the **bin/printer.py** file. You just need to change the last line in the **components** section of your **hello-world.yaml** file:
+```yaml
+...
+components:
+- signature:
+    name: printer
+    parameters:
+      - name: message
+  command:
+    executable: python
+    arguments: /tmp/hello-world/printer.py "%(message)s" # HERE
+```
+
+Replace the absolute path **/tmp/hello-world/printer.py** with **bin/printer.py:ref**. The **:ref** suffix indicates that this is a reference to a file, rather than a direct path. At runtime, the system will use the **manifest.yaml** file to resolve this reference, enabling you to include additional files with your virtual experiment definition in a flexible and portable way.
+
+Your updated **hello-world.yaml** file should now look like this:
+
+```yaml
+entrypoint:
+  entry-instance: printer
+  execute:
+  - target: <entry-instance>
+    args:
+      message: Hello world
+
+components:
+- signature:
+    name: printer
+    parameters:
+      - name: message
+  command:
+    executable: python
+    arguments: bin/printer.py:ref "%(message)s"
+```
+
+
+You should end up with the following files:
+
+```
+/tmp/hello-world
+├── bin
+│   └── printer.py
+├── hello-world.yaml
+└── manifest.yaml
+```
+
+Finally, let's run this experiment:
+
+```
+elaunch.py --nostamp --manifest manifest.yaml hello-world.yaml
+```
+
+<InlineNotification kind="info">
+
+The **--manifest manifest.yaml** argument is used to specify the **manifest.yaml** file as the source of manifest information for your virtual experiment, allowing the runtime to access the necessary configuration details.
+
+
+</InlineNotification>
+
+
+After a few seconds you should see this output on your terminal:
+
+```
+completed-on=2025-03-31 10:19:45.271792
+cost=0
+created-on=2025-03-31 10:19:39.121168
+current-stage=stage0
+exit-status=Success
+experiment-state=finished
+stage-progress=1.0
+stage-state=finished
+stages=['stage0']
+total-progress=1.0
+updated=2025-03-31 10:19:49.192388
+updated-on=2025-03-31 10:19:49.192388
+```
+
+Congratulations! You have successfully packaged your virtual experiment!
+
+### Exercise
+
+Modify your **printer.py** script to import a Python package, such as **transformers**. To ensure successful execution, make sure to install **transformers** within the same virtual environment where **st4sd-runtime-core** is installed.
+
+Next, run it elaunch.py:
+
+```
+rm -rf hello-world.instance
+elaunch.py --nostamp --manifest manifest.yaml hello-world.yaml
+```
+
+Double check that it runs to completion.
+
+## Using containers for shareable virtual experiments
+
+To make experiments truly shareable, they must include the following key information:
 
 1. All executables that they run, along with their software dependencies
 2. How to map the executables to specific steps
 3. How to connect inputs to these steps
 
-In the [example](#wrapping-a-python-script-for-native-execution) above, we demonstrated how to wrap a single-step executable into a virtual experiment, covering the second and third requirements for a single-step experiment. In this example, we will utilize a container to share the software dependencies of the "printer.py" executable, addressing the first requirement.
+In the [above example](#packaging-your-virtual-experiment) we wrapped a single-step executable into a virtual experiment, covering the second and third requirements for a single-step experiment. In this example, we will utilize a container to share the software dependencies of the **printer.py** python script, addressing the first requirement.
+
+Create a new directory in `/tmp/docker-package` and cd into it, we will use it for the files of this virtual experiment.
 
 ### Containerize your python application
 
 In a **requirements.txt** file place the python dependencies of your script.
-The **printer.py** python script that we use here does not have any python requirements but we'll just include **numpy** to demonstrate the method:
+The **printer.py** python script that we use here does not have any python requirements but we'll just install **transformers** in the container we use to execute the script just to demonstrate the method:
 
 The contents of the  `requirements.txt` file are:
 
 ```
-numpy==2.2.4
+transformers==4.50.3
 ```
 
 Next, create a file called `Dockerfile` with the following contexts:
@@ -252,26 +372,24 @@ COPY requirements.txt /app/requirements.txt
 
 RUN pip install -r requirements.txt
 
+# Place the printer.py file inside the container
 COPY printer.py /app/printer.py
-
-# Make the printer.py file executable
-RUN chmod +x /app/printer.py
 ```
 
 Make sure you have the following files in the directory you are currently in:
 
 ```
-.
+/tmp/docker-package
 ├── Dockerfile
 ├── printer.py
 └── requirements.txt
 ```
 
-To build your container, run docker:
+To build your container, run **docker build**:
 
 
 ```
-docker build --platform linux/amd64 -f Dockerfile -t my-printer:latest
+docker build --platform linux/amd64 -f Dockerfile -t my-printer:latest .
 ```
 
 <InlineNotification kind="info">
@@ -312,9 +430,7 @@ The remainder of this example will assume that you do not have access to a conta
 
 ### Create a virtual experiment that uses the container
 
-Create a new directory called `python-docker.package`, in it create a directory called `conf`.
-
-Next, create the file **cpython-docker.package/onf/dsl.yaml** using the following contents:
+Create the file **docker-package.yaml** in the `/tmp/docker-package` directory with the following contents:
 
 ```yaml
 entrypoint:
@@ -330,8 +446,8 @@ components:
     parameters:
       - name: message
   command:
-    executable: printer.py
-    arguments: "%(message)s"
+    executable: python
+    arguments: /app/printer.py "%(message)s"
     environment:
         PATH: /usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/app
   resourceManager:
@@ -343,10 +459,10 @@ components:
 ```
 
 
-The differences between this experiment and **python-native.package** are all about the **printer** `component`:
+The differences between this experiment and above **hello-world.yaml** experiment are all about the **printer** `component`:
 
-1. The **bin/printer.py** file is no longer used.
-    - We set `command.executable` to `printer.py`
+1. The **bin/printer.py:ref** Reference is replaced by the direct path `/app/printer.py`
+    - The file is now located inside the container so using a direct path is perfectly fine
     - The runtime system will search for this executable in the `$PATH` environment variable of the component
 1. We set `command.environment.PATH` to include the path to the `printer.py` script
     - By default, components receive the virtual environment of the runtime process which is not guaranteed to be compatible with the environment variables that enable the execution of commands inside the container
@@ -356,12 +472,14 @@ The differences between this experiment and **python-native.package** are all ab
    - Set `resourceManager.docker.imagePullPolicy` to `IfNotPresent`
       - This setting instructs the runtime to only attempt to pull the image if it's not already present on the local machine
 
-The resulting file tree of your experiment should look like this:
+The resulting file tree in `/tmp/docker-package` should be:
 
 ```
-python-docker.package
-└── conf
-    └── dsl.yaml
+/tmp/docker-package
+├── Dockerfile            # To build image
+├── requirements.txt      # To build image
+├── printer.py            # To build image
+└── docker-package.yaml   # To execute experiment
 ```
 
 <InlineNotification kind="info">
@@ -375,25 +493,24 @@ ST4SD supports multiple different backends for your components however these fea
 Run your virtual experiment using **elaunch.py**:
 
 ```
-elaunch.py --nostamp -l40 python-docker.package
+elaunch.py --nostamp docker-package.yaml
 ```
 
 If you encountered any issues during the process, please refer to the [troubleshooting](/direct-run#troubleshooting) section of the documentation for guidance on launching experiments locally.
 
 Now that you have ran the experiment, take a moment to **explore its outputs**. You can find the output files following directory:
-`python-native.instance/stages/stage0/entry-instance`.
+`docker-package.instance/stages/stage0/entry-instance`.
 
 
 ## Your first Simulation experiment with GAMESS US
 
 In this example, we will create a virtual experiment that performs the Parameterized Model 3 (PM3) method in GAMESS US. PM3 is a semi-empirical quantum chemistry method. Scientists use it to calculate the molecular properties and energies when computational efficiency is a priority as an alternative to high accuracy but slow to run high-level quantum methods like Hartree-Fock or Density Functional Theory (DFT).
 
-Start by creating a new directory called `gamess-us-pm3.package` containing 3 directories: `bin`, `conf`, and `hooks` like so:
+Start by creating a new directory in `/tmp/gamess-us-pm3` containing 2 directories: `bin` and `hooks` like so:
 
 ```
-gamess-us-pm3.package
+/tmp/gamess-us-pm3
 ├── bin
-├── conf
 └── hooks
 ```
 
@@ -440,11 +557,11 @@ chmod +x ${PATH_MY_GAMESS}/run-gamess.sh
 
 Then download the [extract_gmsout.py script](https://github.com/st4sd/band-gap-gamess/blob/main/component-scripts/extract_gmsout.py) and store it in the `bin` directory.
 
-Next, make the both the **run-gamess.sh** and **extract_gmsout.py** scripts executable by running `chmod +x bin/*` inside the `gamess-us-pm3.package` directory.
+Next, make the **run-gamess.sh** script executable by running `chmod +x bin/run-gamess.sh` from inside the `/tmp/gamess-us-pm3` directory.
 
-Download the [RestartHook example](https://github.com/st4sd/band-gap-gamess/blob/main/hooks/semi_empirical_restart.py) and save it in the **hooks** directory. This script checks if the PM3 method in GAMESS US has converged. If not, it triggers a task restart.
+Download the [RestartHook example](https://github.com/st4sd/band-gap-gamess/blob/main/hooks/semi_empirical_restart.py) and save it under **hooks/semi_empirical_restart.py**. This script checks if the PM3 method in GAMESS US has converged. If not, it triggers a task restart. You can find more information on **RestartHooks** in our documentation about [restarting tasks](/restart).
 
-Next, prepare the definition of the experiment by pasting the following into the **conf/dsl.yaml** file:
+Next, prepare the definition of the experiment by pasting the following into the **gamess-us-pm3.yaml** file:
 
 ```yaml
 entrypoint:
@@ -455,7 +572,7 @@ entrypoint:
       input.molecule.inp: input/molecule.inp
       gamess-number-processors: 1
       gamess-memory: "4096Mi"
-      # gamess-gpus is only relevant for executon on Kubernetes
+      # gamess-gpus is only relevant for execution on Kubernetes
       gamess-gpus: 0
       backend: docker
 
@@ -505,7 +622,8 @@ components:
     arguments: "%(molecule)s %(gamess-number-processors)s"
     environment:
       PATH: /usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-    executable: bin/run-gamess.sh
+    executable: bin/run-gamess.sh  # the runtime resolves relative paths in the executable field
+                                   # using the manifest file
   workflowAttributes:
     restartHookFile: semi_empirical_restart.py
     restartHookOn:
@@ -539,8 +657,8 @@ components:
     - name: docker-platform
       default: "linux/amd64"
   command:
-    arguments: "%(gamess-working-directory)s"
-    executable: bin/extract_gmsout.py
+    executable: python
+    arguments: "bin/extract_gmsout.py:ref %(gamess-working-directory)s"
   resourceManager:
     config:
       backend: '%(backend)s'
@@ -551,26 +669,31 @@ components:
       platform: "%(docker-platform)s"
 ```
 
+Finally create your **manifest.yaml** file:
+
+```yaml
+bin: bin
+hooks: hooks
+```
+
 You should now have the following file structure:
 
 ```
-gamess-us-pm3.package
+/tmp/gamess-us-pm3
 ├── bin
 │   ├── extract_gmsout.py
 │   └── run-gamess.sh
-├── conf
-│   └── dsl.yaml
-└── hooks
-    └── semi_empirical_restart.py
+├── hooks
+│   └── semi_empirical_restart.pyf
+├── manifest.yaml
+└── gamess-us-pm3.yaml
 ```
 
 ### Exercise
 
 Try starting your experiment now using a container runtime.
 
-In the parent directory of **gamess-us-pm3.package** create your input **molecule.inp** file.
-
-You can use this:
+Create your GAMESS-US input **molecule.inp** file in the directory `/tmp/gamess-us-pm3`.  You can use this example input file:
 
 ```
  $CONTRL COORD=UNIQUE SCFTYP=RHF RUNTYP=OPTIMIZE MULT=1
@@ -601,30 +724,29 @@ To use your own GAMESS US input file, carefully review the configuration options
 You should now have this structure:
 
 ```
-.
-├── molecule.inp
-└── gamess-us-pm3.package
-    ├── bin
-    │   └── run-gamess.sh
-    │   └── extract_gmsout.py
-    ├── conf
-    │   └── dsl.yaml
-    └── hooks
-        └── semi_empirical_restart.py
+/tmp/gamess-us-pm3
+├── bin
+│   ├── extract_gmsout.py
+│   └── run-gamess.sh
+├── gamess-us-pm3.yaml
+├── hooks
+│   └── semi_empirical_restart.py
+├── manifest.yaml
+└── molecule.inp
 ```
 
-The command to launch the experiment is:
+Launch your experiment providing the input file **molecule.inp** and the manifest file **manifest.yaml**.
 
 ```
-$ elaunch.py -l40 --nostamp -i molecule.inp gamess-us-pm3.package
+elaunch.py --nostamp --manifest manifest.yaml -i molecule.inp gamess-us-pm3.yaml
 ```
 
 After a couple of minutes you should see:
 
 ```
-completed-on=2025-03-24 15:44:58.212321
+completed-on=2025-03-31 11:37:49.301663
 cost=0
-created-on=2025-03-24 15:44:34.036279
+created-on=2025-03-31 11:35:46.527619
 current-stage=stage0
 exit-status=Success
 experiment-state=finished
@@ -632,8 +754,8 @@ stage-progress=1.0
 stage-state=finished
 stages=['stage0']
 total-progress=1.0
-updated=2025-03-24 15:45:00.865704
-updated-on=2025-03-24 15:45:00.865704
+updated=2025-03-31 11:37:51.780640
+updated-on=2025-03-31 11:37:51.780640
 ```
 
 The **gamess-us-pm3.instance** directory will have the following structure:
@@ -641,51 +763,50 @@ The **gamess-us-pm3.instance** directory will have the following structure:
 ```
 gamess-us-pm3.instance
 ├── bin
-│   ├── extract_gmsout.py
-│   └── run-gamess.sh
+│     ├── extract_gmsout.py
+│     └── run-gamess.sh
 ├── conf
-│   ├── dsl.yaml
-│   ├── flowir_instance.yaml
-│   ├── flowir_package.yaml
-│   └── manifest.yaml
+│     ├── dsl.yaml
+│     ├── flowir_instance.yaml
+│     ├── flowir_package.yaml
+│     └── manifest.yaml
 ├── elaunch.yaml
 ├── hooks
-│   ├── __pycache__
-│   │   └── semi_empirical_restart.cpython-310.pyc
-│   └── semi_empirical_restart.py
+│     ├── __pycache__
+│     │     └── semi_empirical_restart.cpython-310.pyc
+│     └── semi_empirical_restart.py
 ├── input
-│   └── molecule.inp
+│     └── molecule.inp
 ├── output
-│   ├── experiment.log
-│   ├── output.json
-│   ├── output.txt
-│   ├── status.txt
-│   └── status_details.json
+│     ├── experiment.log
+│     ├── output.json
+│     ├── output.txt
+│     ├── status.txt
+│     └── status_details.json
 ├── python
 ├── stages
-│   └── stage0
-│       ├── optimise
-│       │   ├── Run1
-│       │   │   ├── component_performance.csv
-│       │   │   ├── molecule.dat
-│       │   │   ├── molecule.inp
-│       │   │   ├── molecule.rst
-│       │   │   ├── out.stderr
-│       │   │   └── out.stdout
-│       │   ├── component_performance.csv
-│       │   ├── molecule.dat
-│       │   ├── molecule.inp
-│       │   ├── molecule.rst
-│       │   ├── out.stderr
-│       │   └── out.stdout
-│       └── parse-gamess
-│           ├── component_performance.csv
-│           ├── csv2inp.log
-│           ├── energies.csv
-│           ├── out.stderr
-│           └── out.stdout
+│     └── stage0
+│         ├── optimise
+│         │     ├── Run1
+│         │     │     ├── component_performance.csv
+│         │     │     ├── molecule.dat
+│         │     │     ├── molecule.inp
+│         │     │     ├── molecule.rst
+│         │     │     ├── out.stderr
+│         │     │     └── out.stdout
+│         │     ├── component_performance.csv
+│         │     ├── molecule.dat
+│         │     ├── molecule.inp
+│         │     ├── molecule.rst
+│         │     ├── out.stderr
+│         │     └── out.stdout
+│         └── parse-gamess
+│             ├── component_performance.csv
+│             ├── csv2inp.log
+│             ├── energies.csv
+│             ├── out.stderr
+│             └── out.stdout
 └── status.db
-
 ```
 
 
@@ -697,8 +818,6 @@ These were the contents of **stages/stage0/parse-gamess/energies.csv** for the e
 label,completed,total-energy,homo,lumo,gap,electric-moments,total-time,total-time-per-core
 molecule,OK,-180.53313527498008,-13.641,4.245,17.886,0.000050,0.1,0.10
 ```
-
-
 
 ## What's next?
 
