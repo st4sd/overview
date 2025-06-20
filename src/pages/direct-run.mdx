@@ -135,17 +135,25 @@ drwxrwxr-x@  3 user  wheel    96B 21 Mar 13:14 input/
 drwxr-xr-x@  4 user  wheel   128B 21 Mar 13:03 nanopore-database/
 ```
 
-In order of importance:
+#### Where can I see what steps were executed during the experiment?
+The **`stages`** directory holds the working directories for each step that was executed during this experiment instance. It’s useful for debugging or understanding the experiment’s workflow.
 
-* **output**: This directory contains metadata about the key outputs of the experiment as well as the measured properties of the input systems the experiment processed. You can find more information about the contents of this directory in our detailed [breakdown of the output directory](/direct-run-advanced#the-output-directory).
-* **stages**: This directory holds all the working directories of all the steps that were executed during this experiment instance
-* **input**: The input files and variable parameterisation files we provided to the `elaunch.py` command earlier
-* **nanopore-database**: This is an application-dependency that the experiment for reading information about the nanoporous materials it simulates
-* **conf**: The experiment definition
-* **hooks**: This contains code used to produce the interface properties. In general, it may also contain code that checks whether tasks finished successfully or not, however then `nanopore-geometry-experiment` does not use this feature.
-* **python**: A link to the virtual environment that was used during the execution of the experiment
-* **elaunch.yaml**: A YAML file containing metadata about the execution of the experiment
-* **status.db**: A SQLITE database containing metadata about execution of the experiment
+#### Where can I find the properties that my experiment measured ?
+The **`output`** directory contains the measured properties of the input systems that were processed. It also contains metadata about the key outputs of your experiment.<br/>
+🔗 [Learn more about the output directory](/direct-run-advanced#the-output-directory)
+
+#### Where does the experiment get information about nanoporous materials?
+The **`nanopore-database`** directory is an application dependency used by the experiment to read data about the nanoporous materials it simulates.<br/>
+🔗 [Learn more about Application Dependencies](/workflow-specification#application-dependencies)
+
+#### Where can I find the input files and parameters used in the experiment?
+The **`input`** directory contains the input files and variable parameterization files that were provided to the `elaunch.py` command.
+
+#### Where is the experiment definition defined?
+The **`conf`** directory contains the experiment definition that describes how the steps of the experiment should run.
+
+#### Where is the code that generates interface properties or checks task completion?
+The **`hooks`** directory contains code used to produce interface properties. It may also include scripts for verifying task completion, although this feature is not used in the `nanopore-geometry-experiment`.
 
 
 ### Key outputs
