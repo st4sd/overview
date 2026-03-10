@@ -128,7 +128,7 @@ from __future__ import typing
 import json
 def relationship_push(api: experiment.service.db.ExperimentRestAPI):
     """Creates a Transformation relationship between 2 parameterised
-    packages from the ST4SD global registry
+    packages
 
     Arguments:
       api: An instance of ExperimentRestAPI that has connected to your
@@ -137,11 +137,15 @@ def relationship_push(api: experiment.service.db.ExperimentRestAPI):
     Notes:
 
       The method expects that you have already imported 2 parameterised
-      packages from the ST4SD global registry into your private registry.
+      packages into your private registry.
       The parameterised packages are: ::
 
         1. configuration-generator-ani (contains the inputGraph)
+           - Get it with:
+             `wget https://st4sd.github.io/overview/pvep/configuration-generator-ani.json`
         2. band-gap-dft-gamess-us (contains the outputGraph)
+           - Get it with:
+             `wget https://st4sd.github.io/overview/pvep/band-gap-dft-gamess-us.json`
     """
 
     relationship = {

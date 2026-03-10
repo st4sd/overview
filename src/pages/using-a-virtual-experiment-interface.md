@@ -29,7 +29,6 @@ Some virtual experiments define interfaces which make it simpler for users to re
 ## Checking if a Virtual Experiment has an interface
 
 <AnchorLinks small>
-  <AnchorLink>Check the global registry</AnchorLink>
   <AnchorLink>Check your local registry from a iPython notebook</AnchorLink>
   <AnchorLink>Check the return value of api_rest_uid_status</AnchorLink>
 </AnchorLinks>
