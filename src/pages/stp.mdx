@@ -96,14 +96,12 @@ details, logs, and the results of their runs. Additionally, users can download
 experiments by scrolling to the bottom of the page and clicking the "Download
 JSON" button. There may be instances, however, where they want to perform these
 actions programmatically. With `stp` this is trivial: let us imagine we want to
-download the
-[band-gap-dft-gamess-us](https://registry.st4sd.res.ibm.com/registry-ui/experiment/band-gap-dft-gamess-us)
-experiment that is available on our public registry.
+download the band-gap-dft-gamess-us experiment that is available on a public registry.
 
 We can simply copy the link and run:
 
 ```commandline
-stp package download https://registry.st4sd.res.ibm.com/registry-ui/experiment/band-gap-dft-gamess-us
+stp package download https://<base-url>/registry-ui/experiment/band-gap-dft-gamess-us
 ```
 
 For the experiment JSON to be downloaded to our currently active directory.
@@ -156,7 +154,7 @@ another command, `import`, that can accomplish this task efficiently.
 Copy the link to the experiment you want to import and run:
 
 ```commandline
-stp package import https://registry.st4sd.res.ibm.com/registry-ui/experiment/band-gap-dft-gamess-us
+stp package import https://<registry-url>/registry-ui/experiment/band-gap-dft-gamess-us
 ```
 
 To automatically add it to your Registry instance.
@@ -475,8 +473,7 @@ in your shell history).
 
 Learn about all the features of
 [our web interface](/using-the-virtual-experiments-registry-ui) for browsing and
-examining virtual experiments packages and runs. You can visit the
-[ST4SD Global Registry](https://registry.st4sd.res.ibm.com/) for a first look.
+examining virtual experiments packages and runs.
 
   </ExpressiveList>
 

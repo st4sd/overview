@@ -1,0 +1,95 @@
+{
+  "base": {
+    "packages": [
+      {
+        "config": {
+          "manifestPath": "semi-empirical/manifest.yaml",
+          "path": "semi-empirical/excitation-energy-se-gamess-us.yaml"
+        },
+        "dependencies": {
+          "imageRegistries": []
+        },
+        "name": "main",
+        "source": {
+          "git": {
+            "location": {
+              "tag": "1.2.0",
+              "url": "https://github.com/st4sd/excitation-energy-gamess.git"
+            },
+            "version": "fa41da23cab469d4d5487698cf044602a0dc961c"
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "package": {
+      "description": "Uses the PM6 semi empirical method to perform geometry optimization and calculate the band-gap and related properties. This is followed by a TD-DFT calculation to calculate the excitation energy. Both calculations are performed with GAMESS-US. Functional/Basis-Set for the TD-DFT calculation is B3LYP/KTZVP + D3. Number of states for TD-DFT is 10.",
+      "keywords": [
+        "smiles",
+        "computational chemistry",
+        "semi-empirical",
+        "td-dft",
+        "homo",
+        "lumo",
+        "band-gap",
+        "excitation-energy",
+        "electric-moments",
+        "oscillator-strength",
+        "gamess-us"
+      ],
+      "license": "Apache 2.0",
+      "maintainer": "https://github.com/michael-johnston",
+      "name": "excitation-energy-pm6-gamess-us",
+      "tags": [
+        "latest",
+        "1.2.0"
+      ]
+    }
+  },
+  "parameterisation": {
+    "executionOptions": {
+      "data": [],
+      "platform": [
+        "openshift",
+        "openshift-kubeflux"
+      ],
+      "runtime": {
+        "args": [],
+        "resources": {}
+      },
+      "variables": [
+        {
+          "name": "numberMolecules"
+        },
+        {
+          "name": "startIndex"
+        },
+        {
+          "name": "gamess-number-processors"
+        },
+        {
+          "name": "gamess-memory"
+        },
+        {
+          "name": "gamess-walltime-minutes"
+        },
+        {
+          "name": "gamess-grace-period-seconds"
+        }
+      ]
+    },
+    "presets": {
+      "data": [],
+      "environmentVariables": [],
+      "runtime": {
+        "args": [
+          "--failSafeDelays=no",
+          "--registerWorkflow=yes"
+        ],
+        "resources": {}
+      },
+      "variables": []
+    }
+  }
+}
