@@ -56,11 +56,6 @@ There are two main ways to contribute to the community - with [**images**](/appl
 
 If you have an application image e.g. for a simulation program, you want to make available we can add it to our [quay.io organization](https://quay.io/organization/st4sd) so others in the community can see it and access it. You can find more information about the guidelines for this process [here](/application-images/). When you are ready to begin contributing images, click on the **Contribute an image** card above to start this process.
 
-### Virtual Experiments
-
-If you have a virtual experiment that you would like to advertise we can add it to the [ST4SD Global Registry](https://registry.st4sd.res.ibm.com/) page. This way, others in the community will be able to see it and access it. Click on the **Contribute a virtual experiment** card above to start this process.
-
-
 ## Contributing to Core
 
 If you want to add new features to any ST4SD component follow this process

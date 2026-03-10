@@ -40,10 +40,6 @@ Check the [accompanying python notebook](https://github.com/st4sd/st4sd-examples
 
 </InlineNotification>
 
-### Check the global registry
-
-If you got the virtual experiment package from the [global registry](https://registry.st4sd.res.ibm.com/), go to the global registry entry and check if it has a *Virtual Experiment Interface* section.
-
 ### Check your local registry from a iPython notebook
 
 If you know the id of the virtual experiment package execute the following - it will print `True` if the experiment has an `interface`.

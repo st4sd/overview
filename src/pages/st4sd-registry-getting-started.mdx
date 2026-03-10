@@ -66,12 +66,17 @@ critical in scientific research.
 
 ## Try it yourself
 
-Download a package from the ST4SD Global Registry via `stp`.
+Before you start, make sure you have ST4SD and wget installed:
 
-`pip install "st4sd-runtime-core[develop]>=2.5.1"` then execute:
+```commandline
+which wget
+pip install "st4sd-runtime-core[develop]>=2.5.1"
+```
+
+Download the package definition for the Nanopore Geometry Experiment:
 
 ```bash
-stp package download https://registry.st4sd.res.ibm.com/registry-ui/experiment/nanopore-geometry-experiment
+wget https://st4sd.github.io/overview/pvep/nanopore-geometry-experiment.json
 ```
 
 If you have an ST4SD Cloud instance, you can log in to your ST4SD Registry via
@@ -144,8 +149,7 @@ UI.
 
 Learn about all the features of
 [our web interface](/using-the-virtual-experiments-registry-ui) for browsing and
-examining virtual experiments packages and runs. You can visit the
-[ST4SD Global Registry](https://registry.st4sd.res.ibm.com/) for a first look.
+examining virtual experiments packages and runs.
 
   </ExpressiveList>
 

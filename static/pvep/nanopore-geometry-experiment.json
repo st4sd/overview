@@ -1,0 +1,73 @@
+{
+  "base": {
+    "packages": [
+      {
+        "config": {
+          "path": "nanopore-geometry-experiment.package"
+        },
+        "dependencies": {
+          "imageRegistries": []
+        },
+        "name": "nanopore-geometry-experiment",
+        "source": {
+          "git": {
+            "location": {
+              "tag": "1.1.0",
+              "url": "https://github.com/st4sd/nanopore-geometry-experiment.git"
+            },
+            "version": "95d1518c0c827190ca464b0dbdb509f2d59da8a0"
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "package": {
+      "description": "Uses the Zeo++ software package to calculate geometric properties of nanoporous materials.",
+      "keywords": [
+        "climate",
+        "openshift"
+      ],
+      "license": "Apache 2.0",
+      "maintainer": "rneumann@br.ibm.com",
+      "name": "nanopore-geometry-experiment",
+      "tags": [
+        "latest",
+        "1.1.0"
+      ]
+    }
+  },
+  "parameterisation": {
+    "executionOptions": {
+      "data": [],
+      "platform": [],
+      "runtime": {
+        "args": [],
+        "resources": {}
+      },
+      "variables": [
+        {
+          "name": "numberOfNanopores"
+        },
+        {
+          "name": "probeRadius_A"
+        },
+        {
+          "name": "zeo_memory"
+        }
+      ]
+    },
+    "presets": {
+      "data": [],
+      "environmentVariables": [],
+      "platform": "openshift",
+      "runtime": {
+        "args": [
+          "--registerWorkflow=yes"
+        ],
+        "resources": {}
+      },
+      "variables": []
+    }
+  }
+}
