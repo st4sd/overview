@@ -1,0 +1,92 @@
+{
+  "base": {
+    "packages": [
+      {
+        "config": {
+          "manifestPath": "manifest.yaml",
+          "path": "ani-surrogate.yaml"
+        },
+        "dependencies": {
+          "imageRegistries": []
+        },
+        "name": "main",
+        "source": {
+          "git": {
+            "location": {
+              "tag": "1.1.0",
+              "url": "https://github.com/st4sd/configuration-generator-ani.git"
+            },
+            "version": "9517e9ff76cb2e50cdfd7018c7ecde3576136050"
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "package": {
+      "description": "Surrogate that optimizes the geometry of a molecule using the ANI neural potential (ani2x, functional: vWB97x) and adds it to a GAMESS molecule.inp file",
+      "keywords": [
+        "smiles",
+        "computational chemistry",
+        "geometry-optimization",
+        "gamess",
+        "surrogate"
+      ],
+      "license": "Apache 2.0",
+      "maintainer": "https://github.com/Jammyzx1",
+      "name": "configuration-generator-ani",
+      "tags": [
+        "latest",
+        "1.1.0"
+      ]
+    }
+  },
+  "parameterisation": {
+    "executionOptions": {
+      "data": [],
+      "platform": [],
+      "runtime": {
+        "args": [],
+        "resources": {}
+      },
+      "variables": [
+        {
+          "name": "ani-walltime"
+        },
+        {
+          "name": "ani-grace-period"
+        },
+        {
+          "name": "force-tol"
+        },
+        {
+          "name": "iterations"
+        },
+        {
+          "name": "thermo-chem-T"
+        },
+        {
+          "name": "thermo-chem-P"
+        }
+      ]
+    },
+    "presets": {
+      "data": [],
+      "environmentVariables": [],
+      "platform": "openshift",
+      "runtime": {
+        "args": [
+          "--registerWorkflow=yes",
+          "--failSafeDelays=no"
+        ],
+        "resources": {}
+      },
+      "variables": [
+        {
+          "name": "ani-model",
+          "value": "ani2x"
+        }
+      ]
+    }
+  }
+}

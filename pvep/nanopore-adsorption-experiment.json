@@ -1,0 +1,102 @@
+{
+  "base": {
+    "packages": [
+      {
+        "config": {
+          "manifestPath": "manifest.yaml",
+          "path": "workflow_definitions/adsorption.yaml"
+        },
+        "dependencies": {
+          "imageRegistries": []
+        },
+        "name": "nanopore-adsorption-experiment",
+        "source": {
+          "git": {
+            "location": {
+              "tag": "1.1.0",
+              "url": "https://github.com/st4sd/nanopore-adsorption-experiment.git"
+            },
+            "version": "9348fe0383d2ad2d01c2c3af28484afaa5b21264"
+          }
+        }
+      }
+    ]
+  },
+  "metadata": {
+    "package": {
+      "description": "Uses the RASPA software package to simulate adsorption isotherms on nanoporous materials.",
+      "keywords": [
+        "climate",
+        "openshift"
+      ],
+      "license": "Apache 2.0",
+      "maintainer": "rneumann@br.ibm.com",
+      "name": "nanopore-adsorption-experiment",
+      "tags": [
+        "latest",
+        "1.1.0"
+      ]
+    }
+  },
+  "parameterisation": {
+    "executionOptions": {
+      "data": [],
+      "platform": [],
+      "runtime": {
+        "args": [],
+        "resources": {}
+      },
+      "variables": [
+        {
+          "name": "numberOfNanopores"
+        },
+        {
+          "name": "raspa_memory"
+        },
+        {
+          "name": "externalTemperature_K"
+        },
+        {
+          "name": "externalPressure_Pa"
+        },
+        {
+          "name": "gasComposition"
+        },
+        {
+          "name": "use_grid",
+          "valueFrom": [
+            {
+              "value": "0"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "name": "atomic_charges_method",
+          "valueFrom": [
+            {
+              "value": "eqeq"
+            },
+            {
+              "value": "existing"
+            }
+          ]
+        }
+      ]
+    },
+    "presets": {
+      "data": [],
+      "environmentVariables": [],
+      "platform": "openshift",
+      "runtime": {
+        "args": [
+          "--registerWorkflow=yes"
+        ],
+        "resources": {}
+      },
+      "variables": []
+    }
+  }
+}
