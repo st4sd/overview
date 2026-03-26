@@ -28,6 +28,7 @@ experiments
   <AnchorLink>Get the details of a virtual experiment instance</AnchorLink>
   <AnchorLink>Retrieving the outputs of a virtual experiment instance</AnchorLink>
   <AnchorLink>Stopping a virtual experiment instance</AnchorLink>
+  <AnchorLink>Common Recipes and Examples</AnchorLink>
 </AnchorLinks>
 
 <InlineNotification>
@@ -253,6 +254,12 @@ payload = {
 This specifies that the content of the input file `input_filename.csv` comes
 from the pandas DataFrame `data`.
 
+<InlineNotification kind="warning">
+
+**Important Size Limit**: The combined size of all `content` fields in `inputs` and `data` must be less than **1 MB**. For larger files, use S3, Datashim datasets, or PersistentVolumeClaims instead.
+
+</InlineNotification>
+
 ### Specifying experiment variables
 
 _variables_ are optional parameters controlling the behaviour of the experiment,
@@ -350,14 +357,16 @@ The bullet points below show the complete structure of the `api_experiment_start
   - filename: str # required
     content: str # optional, mutually exclusive with volume - see S3 and Volume notes
     volume: str  # optional, mutually exclusive with content - see Volume notes
-* volumes: (array of objects) This is an optional field defining
+* volumes: (array of objects) This is an optional field defining volumes to mount
   * type: (object) children fields are mutually exclusive - there must be exactly 1
     * persistentVolumeClaim: (str) name of PVC object
     * dataset: (str) name of Datashim dataset (see Datashim notes)
     * configMap: (str) name of ConfigMap object
     * secret: (str) name of Secret object
-  * applicationDependency: (str) name of the application dependency to bind to the volume. See the [Application Dependencies](/workflow-specification#application-dependencies) docs for more information.
-  * subPath: (str) path inside volume to mount (optional, defaults to root of object). Applies only to pvc and dataset types
+  * applicationDependency: (str) optional, name of the application dependency to bind to the volume. See the [Application Dependencies](/workflow-specification#application-dependencies) docs for more information.
+  * subPath: (str) optional, path inside volume to mount (defaults to root of object). Applies only to persistentVolumeClaim and dataset types
+  * readOnly: (bool) optional, whether to mount the volume as read-only (defaults to true)
+  * identifier: (str) optional, a unique identifier for this volume that can be referenced in input/data file specifications via the `volume` field
 * variables: (dictionary) This is an optional key-value dictionary with custom values for parameters to the experiment. They must adhere to parameterisation rules (see notes)
   * theParameterName: The value of the parameter which can be a string, number, or boolean
 * additionalOptions: (array of strings) Optional runtime arguments to elaunch.py. They cannot override runtime arguments in the package parameterisation
@@ -400,7 +409,10 @@ equivalent python dictionary OR a python string that contains the yaml definitio
 
 **Notes**
 
-1. (Volumes) `inputs` and `data` file-specifications can be fed from files that exist in a volume (PVC, ConfigMap, Secret). This is an alternative to setting the value of the fields directly in the payload or loading the contents of the file from a S3 bucket or Datashim Dataset.
+1. (Volumes) `inputs` and `data` file-specifications can be fed from files that exist in a volume (PVC, ConfigMap, Secret). This is an alternative to setting the value of the fields directly in the payload or loading the contents of the file from a S3 bucket or Datashim Dataset. When using volumes, you must:
+   - Define the volume in the `volumes` array with a unique `identifier`
+   - Reference that `identifier` in the `volume` field of your input/data file specification
+   - Specify the path to the file within the volume using the `filename` field
 1. (S3) `inputs` and `data` file-specifications have an optional `content` field. If this field is missing, and the `volume` field is also missing then the contents of  the files are expected to exist on S3 or in a Dataset. When `s3` exists then the `filename` field acts as the path inside the S3 bucket (or dataset) to use for reading the content of the input/data file.
 1. Dataset objects are only available if a cluster-admin has installed
    [Datashim](https://github.com/datashim-io/datashim) on the cluster.
@@ -644,7 +656,343 @@ rest_uid = "toxicity-predictions-trol7a"
 api.api_rest_uid_delete(rest_uid)
 ```
 
-## More options when starting an experiment
+## Common Recipes and Examples
+
+This section provides ready-to-use code snippets and examples for common scenarios when starting experiments programmatically.
+
+### Recipe 1: Start experiment with inline input content
+
+Use this when you have small input data in memory (e.g., from a pandas DataFrame or string):
+
+```python
+import pandas as pd
+
+# Prepare your data
+df = pd.read_csv('local_file.csv')
+
+# Start the experiment
+payload = {
+    "inputs": [{
+        "filename": "input_data.csv",
+        "content": df.to_csv(index=False)
+    }],
+    "variables": {
+        "numberOfProcessors": 4,
+        "memoryLimit": "8Gi"
+    }
+}
+
+rest_uid = api.api_experiment_start("my-experiment", payload=payload)
+print(f"Started experiment: {rest_uid}")
+```
+
+<InlineNotification kind="warning">
+
+Remember: The combined size of all `content` fields must be less than 1 MB. For larger files, use PVC, S3, or Datashim (see recipes below).
+
+</InlineNotification>
+
+### Recipe 2: Start experiment with inputs from PVC
+
+Use this when your input files are already stored in a PersistentVolumeClaim:
+
+```python
+payload = {
+    "inputs": [
+        {
+            "filename": "molecules.sdf",
+            "volume": "input-data"
+        },
+        {
+            "filename": "config.yaml",
+            "volume": "input-data"
+        }
+    ],
+    "volumes": [{
+        "identifier": "input-data",
+        "type": {
+            "persistentVolumeClaim": "my-data-pvc"
+        },
+        "subPath": "experiment-inputs",
+        "readOnly": True
+    }],
+    "variables": {
+        "batchSize": 100
+    }
+}
+
+rest_uid = api.api_experiment_start("my-experiment", payload=payload)
+print(f"Started experiment: {rest_uid}")
+```
+
+### Recipe 3: Start experiment with S3 inputs and auto-upload outputs
+
+Use this when inputs are in S3 and you want outputs automatically uploaded back to S3:
+
+```python
+payload = {
+    "inputs": [{
+        "filename": "data/input.csv"
+    }],
+    "s3": {
+        "accessKeyID": "YOUR_ACCESS_KEY",
+        "secretAccessKey": "YOUR_SECRET_KEY",
+        "bucket": "my-input-bucket",
+        "endpoint": "https://s3.amazonaws.com",
+        "region": "us-east-1"
+    },
+    "s3Store": {
+        "bucketPath": "/experiment-outputs/run-001/",
+        "credentials": {
+            "accessKeyID": "YOUR_ACCESS_KEY",
+            "secretAccessKey": "YOUR_SECRET_KEY",
+            "bucket": "my-output-bucket",
+            "endpoint": "https://s3.amazonaws.com",
+            "region": "us-east-1"
+        }
+    }
+}
+
+rest_uid = api.api_experiment_start("my-experiment", payload=payload)
+print(f"Started experiment: {rest_uid}")
+```
+
+### Recipe 4: Start experiment and wait for completion
+
+Use this to start an experiment and wait for it to finish:
+
+```python
+import time
+
+# Start the experiment
+payload = {
+    "inputs": [{
+        "filename": "input.csv",
+        "content": "col1,col2\n1,2\n3,4"
+    }]
+}
+
+rest_uid = api.api_experiment_start("my-experiment", payload=payload)
+print(f"Started experiment: {rest_uid}")
+
+# Poll for completion
+while True:
+    status = api.api_rest_uid_status(rest_uid)
+    state = status['status']['experiment-state']
+    exit_status = status['status'].get('exit-status', 'N/A')
+    
+    print(f"State: {state}, Exit Status: {exit_status}")
+    
+    if state == 'finished':
+        if exit_status == 'Success':
+            print("Experiment completed successfully!")
+            break
+        else:
+            print(f"Experiment failed: {status['status'].get('error-description', 'Unknown error')}")
+            break
+    elif state == 'failed':
+        print(f"Experiment failed to start: {status['status'].get('error-description', 'Unknown error')}")
+        break
+    
+    time.sleep(10)  # Wait 10 seconds before checking again
+```
+
+### Recipe 5: Start experiment with custom metadata and environment variables
+
+Use this to add custom tracking metadata and inject environment variables:
+
+```python
+payload = {
+    "inputs": [{
+        "filename": "data.csv",
+        "content": "value1,value2\n10,20"
+    }],
+    "metadata": {
+        "user": "researcher-name",
+        "project": "project-alpha",
+        "experiment-batch": "batch-42",
+        "cost-center": "CC-1234"
+    },
+    "environmentVariables": {
+        "LOG_LEVEL": "DEBUG",
+        "CACHE_SIZE": "1024",
+        "ENABLE_PROFILING": "true"
+    },
+    "variables": {
+        "iterations": 1000
+    }
+}
+
+rest_uid = api.api_experiment_start("my-experiment", payload=payload)
+print(f"Started experiment: {rest_uid}")
+
+# Later, retrieve the metadata
+status = api.api_rest_uid_status(rest_uid)
+user_metadata = status['status']['meta'].get('userMetadata', {})
+print(f"Experiment metadata: {user_metadata}")
+```
+
+### Recipe 6: Start experiment with multiple volumes (PVC + ConfigMap)
+
+Use this when you need to mount both data from a PVC and configuration from a ConfigMap:
+
+```python
+payload = {
+    "inputs": [
+        {
+            "filename": "training_data.csv",
+            "volume": "data-volume"
+        }
+    ],
+    "data": [
+        {
+            "filename": "model_config.yaml",
+            "volume": "config-volume"
+        }
+    ],
+    "volumes": [
+        {
+            "identifier": "data-volume",
+            "type": {
+                "persistentVolumeClaim": "training-data-pvc"
+            },
+            "readOnly": True
+        },
+        {
+            "identifier": "config-volume",
+            "type": {
+                "configMap": "model-configs"
+            },
+            "readOnly": True
+        }
+    ],
+    "variables": {
+        "modelType": "neural-network"
+    }
+}
+
+rest_uid = api.api_experiment_start("my-ml-experiment", payload=payload)
+print(f"Started experiment: {rest_uid}")
+```
+
+#### Recipe 7: Wait for datastore consistency after experiment completion
+
+After an experiment completes, there may be a delay before the experiment document is fully registered in the datastore. This recipe shows how to poll for the experiment document to ensure it's available before attempting to access its data.
+
+```python
+import experiment.service.db
+import time
+
+# Assume you already have the rest_uid from Recipe 4
+# rest_uid = api.api_experiment_start(...)
+
+# Wait for experiment to complete (see Recipe 4)
+# ...
+
+# Get the instance ID from the datastore using the rest_uid
+user_metadata = api.cdb_get_document_user_metadata_for_rest_uid(rest_uid)
+instance = user_metadata['instance']
+print(f"Experiment instance: {instance}")
+
+# Poll for experiment document availability in datastore
+max_wait_seconds = 120
+poll_interval_seconds = 10
+start_time = time.time()
+
+while True:
+    try:
+        # Attempt to retrieve the experiment document from datastore
+        exp_docs = api.cdb_get_document_experiment(instance=instance)
+        
+        if exp_docs:
+            exp_doc = exp_docs[0]
+            doc_status = exp_doc.get('status', {})
+            experiment_state = doc_status.get('experiment-state', 'unknown')
+            
+            print(f"Datastore status: {experiment_state}")
+            
+            # Check if experiment has reached a terminal state in datastore
+            if experiment_state.lower() in ['finished', 'failed']:
+                print(f"Experiment document is consistent in datastore")
+                break
+        
+        elapsed = time.time() - start_time
+        if elapsed >= max_wait_seconds:
+            print(f"Timeout: Experiment document not consistent after {max_wait_seconds} seconds")
+            break
+            
+        print(f"Waiting for datastore consistency... ({elapsed:.0f}s elapsed)")
+        time.sleep(poll_interval_seconds)
+        
+    except Exception as e:
+        elapsed = time.time() - start_time
+        if elapsed >= max_wait_seconds:
+            print(f"Timeout: Error accessing datastore after {max_wait_seconds} seconds: {e}")
+            raise
+        print(f"Waiting for datastore... ({elapsed:.0f}s elapsed)")
+        time.sleep(poll_interval_seconds)
+
+# Now you can safely access experiment data from datastore
+print(f"Experiment exit status: {exp_doc.get('status', {}).get('exit-status', 'N/A')}")
+```
+
+### Providing inputs from a PersistentVolumeClaim (PVC)
+
+You can provide input files from a PersistentVolumeClaim (PVC) that exists in your OpenShift namespace. This is useful when you have large input files or datasets already stored in persistent storage.
+
+To use a PVC for input files:
+
+1. Define the volume in the `volumes` array with a unique `identifier`
+2. Reference that identifier in the `volume` field of your input file specification
+3. Specify the path to the file within the PVC using the `filename` field
+
+Example: Using a PVC named `my-data-pvc` that contains input files
+
+```python
+payload = {
+    "inputs": [{
+        "filename": "data/input_file.csv",
+        "volume": "my-inputs"
+    }],
+    "volumes": [{
+        "identifier": "my-inputs",
+        "type": {
+            "persistentVolumeClaim": "my-data-pvc"
+        },
+        "subPath": "experiment-inputs",
+        "readOnly": True
+    }]
+}
+```
+
+In this example:
+- The PVC `my-data-pvc` is mounted with the identifier `my-inputs`
+- The `subPath` field specifies that only the `experiment-inputs` subdirectory within the PVC is mounted
+- The input file is read from `data/input_file.csv` within that mounted subdirectory
+- The volume is mounted as read-only for safety
+
+You can also mount the entire PVC by omitting the `subPath` field:
+
+```python
+payload = {
+    "inputs": [{
+        "filename": "input_file.csv",
+        "volume": "my-data"
+    }],
+    "volumes": [{
+        "identifier": "my-data",
+        "type": {
+            "persistentVolumeClaim": "my-data-pvc"
+        }
+    }]
+}
+```
+
+<InlineNotification>
+
+Multiple input and data files can reference the same volume identifier, allowing you to provide multiple files from a single PVC using only one volume entry.
+
+</InlineNotification>
 
 ### Providing inputs via S3
 
