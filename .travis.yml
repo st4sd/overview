@@ -12,9 +12,9 @@ jobs:
       language: node_js
       os: linux
       node_js: lts/*
-      before_script: 
+      before_script:
         - npm install gh-pages --save-dev
-      script: 
+      script:
         - yarn build --prefix-paths --verbose
         - bash test/check_broken_links.sh
     - stage: test-and-push-website
@@ -24,6 +24,7 @@ jobs:
       before_script:
         - npm install gh-pages --save-dev
       script:
+        # use node v18
         - yarn build --prefix-paths --verbose
         - bash test/check_broken_links.sh
         - npx gh-pages -d public

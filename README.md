@@ -54,17 +54,9 @@ If you want to refresh your local installation run `gatsby clean`.
 
 You can also try `gatsby clean`
 
-## Production builds
+## Update the website
 
-As the website is served on GitHub from a sub-path, we need to use a flag when building with Gatsby to correctly support this.
-This difference could sometimes lead to assets to not working as expected, and thus **it is strongly recommended** to build the website for production and test it locally before merging changes. This can be done with the following commands:
-
-```bash
-gatsby build --prefix-paths
-gatsby serve --prefix-paths
-```
-
-The website will then be available at the sub-path configured in `gatsby-config.js`.
+To build, test and push the website, check the (now deactivated) CI/CD script in [.travis.yml](.travis.yml).
 
 ## Help and Support
 
